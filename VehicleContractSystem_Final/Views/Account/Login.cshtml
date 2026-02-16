@@ -1,0 +1,79 @@
+﻿@model LoginViewModel
+@{
+    ViewData["Title"] = "تسجيل الدخول";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <i class="bi bi-box-arrow-in-right text-primary" style="font-size: 3rem;"></i>
+                    <h3 class="mt-3">تسجيل الدخول</h3>
+                    <p class="text-muted">مرحباً بعودتك!</p>
+                </div>
+
+                <form asp-action="Login" method="post">
+                    <input type="hidden" asp-for="@ViewData["ReturnUrl"]" />
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="EmailOrPhone" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input asp-for="EmailOrPhone" class="form-control" placeholder="example@email.com أو 07701234567" autofocus />
+                        </div>
+                        <span asp-validation-for="EmailOrPhone" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input asp-for="Password" class="form-control" type="password" />
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input asp-for="RememberMe" class="form-check-input" type="checkbox" />
+                        <label asp-for="RememberMe" class="form-check-label"></label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mb-3">
+                        <i class="bi bi-box-arrow-in-right"></i> دخول
+                    </button>
+
+                    <div class="text-center mb-3">
+                        <a href="#">نسيت كلمة المرور؟</a>
+                    </div>
+
+                    <div class="text-center mb-3">
+                        <div class="d-flex align-items-center mb-3">
+                            <hr class="flex-grow-1">
+                            <span class="px-3 text-muted">أو</span>
+                            <hr class="flex-grow-1">
+                        </div>
+
+                        <form asp-controller="Account" asp-action="ExternalLogin" method="post">
+                            <input type="hidden" name="provider" value="Google" />
+                            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-google"></i> تسجيل الدخول بحساب Google
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="mb-0">ليس لديك حساب؟ <a asp-action="Register">تسجيل جديد</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

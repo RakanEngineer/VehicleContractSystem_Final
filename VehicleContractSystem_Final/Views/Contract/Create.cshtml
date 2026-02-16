@@ -1,0 +1,339 @@
+﻿@model VehicleContractSystem_Final.Models.ViewModel.ContractViewModel
+@inject IStringLocalizer<VehicleContractSystem_Final.Resources.SharedResources> Localizer
+@{
+    ViewData["Title"] = Localizer["CreateNewContract"];
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="container-fluid" dir=@(isRtl? "rtl" : "ltr")>
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-file-earmark-plus"></i> @Localizer["CreateNewContract"]</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">@Localizer["Home"]</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Contract" asp-action="Index">@Localizer["Contracts"]</a></li>
+                    <li class="breadcrumb-item active">@Localizer["CreateNewContract"]</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <form asp-action="Create" method="post" id="contractForm">
+        <div class="row">
+            <!-- بيانات البائع -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-person"></i> @Localizer["SellerInformation"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="Contract.SellerName" class="form-label"></label>
+                            <input asp-for="Contract.SellerName" class="form-control" />
+                            <span asp-validation-for="Contract.SellerName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Contract.SellerPhone" class="form-label"></label>
+                            <input asp-for="Contract.SellerPhone" class="form-control" placeholder="07XXXXXXXXX" />
+                            <span asp-validation-for="Contract.SellerPhone" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Contract.SellerIdNumber" class="form-label"></label>
+                            <input asp-for="Contract.SellerIdNumber" class="form-control" />
+                            <span asp-validation-for="Contract.SellerIdNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Contract.SellerAddress" class="form-label"></label>
+                            <textarea asp-for="Contract.SellerAddress" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Contract.SellerAddress" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- بيانات المشتري -->
+            <div class="col-lg-6 mb-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-person-check"></i> @Localizer["BuyerInformation"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="Contract.BuyerName" class="form-label"></label>
+                            <input asp-for="Contract.BuyerName" class="form-control" />
+                            <span asp-validation-for="Contract.BuyerName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Contract.BuyerPhone" class="form-label"></label>
+                            <input asp-for="Contract.BuyerPhone" class="form-control" placeholder="07XXXXXXXXX" />
+                            <span asp-validation-for="Contract.BuyerPhone" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Contract.BuyerIdNumber" class="form-label"></label>
+                            <input asp-for="Contract.BuyerIdNumber" class="form-control" />
+                            <span asp-validation-for="Contract.BuyerIdNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Contract.BuyerAddress" class="form-label"></label>
+                            <textarea asp-for="Contract.BuyerAddress" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Contract.BuyerAddress" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- بيانات المركبة -->
+            <div class="col-lg-8 mb-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-car-front"></i> @Localizer["VehicleInformation"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Vehicle.VehicleTypeId" class="form-label">@Localizer["VehicleType"]</label>
+                                <select asp-for="Vehicle.VehicleTypeId" class="form-select" asp-items="Model.VehicleTypes">
+                                    <option value="">-- @Localizer["SelectVehicleType"] --</option>
+                                </select>
+                                <span asp-validation-for="Vehicle.VehicleTypeId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Vehicle.VehicleModelId" class="form-label">@Localizer["VehicleModel"]</label>
+                                <select asp-for="Vehicle.VehicleModelId" class="form-select" asp-items="Model.VehicleModels">
+                                    <option value="">-- @Localizer["SelectVehicleModel"] --</option>
+                                </select>
+                                <span asp-validation-for="Vehicle.VehicleModelId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Vehicle.ColorId" class="form-label">@Localizer["Color"]</label>
+                                <select asp-for="Vehicle.ColorId" class="form-select" asp-items="Model.Colors">
+                                    <option value="">-- @Localizer["SelectColor"] --</option>
+                                </select>
+                                <span asp-validation-for="Vehicle.ColorId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Vehicle.ManufactureYear" class="form-label">@Localizer["ManufactureYear"]</label>
+                                <input asp-for="Vehicle.ManufactureYear" class="form-control" type="number" min="1990" max="2025" />
+                                <span asp-validation-for="Vehicle.ManufactureYear" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Vehicle.LicenseNumber" class="form-label">@Localizer["LicenseNumber"]</label>
+                                <input asp-for="Vehicle.LicenseNumber" class="form-control" />
+                                <span asp-validation-for="Vehicle.LicenseNumber" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Vehicle.ChassisNumber" class="form-label">@Localizer["ChassisNumber"]</label>
+                                <input asp-for="Vehicle.ChassisNumber" class="form-control" />
+                                <span asp-validation-for="Vehicle.ChassisNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- المعلومات المالية -->
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="bi bi-cash-stack"></i> @Localizer["FinancialInformation"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="Contract.VehiclePrice" class="form-label"></label>
+                            <input asp-for="Contract.VehiclePrice" class="form-control" type="number" step="0.01" id="vehiclePrice" />
+                            <span asp-validation-for="Contract.VehiclePrice" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Contract.PaidAmount" class="form-label"></label>
+                            <input asp-for="Contract.PaidAmount" class="form-control" type="number" step="0.01" id="paidAmount" readonly />
+                            <span asp-validation-for="Contract.PaidAmount" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">@Localizer["RemainingAmount"]</label>
+                            <input type="text" class="form-control bg-light" id="remainingAmount" readonly />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Contract.ContractDate" class="form-label"></label>
+                            <input asp-for="Contract.ContractDate" class="form-control" type="date" />
+                            <span asp-validation-for="Contract.ContractDate" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- العنوان -->
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-geo-alt"></i> @Localizer["AddressDetails"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label asp-for="Contract.ProvinceId" class="form-label">المحافظة</label>
+                                <select asp-for="Contract.ProvinceId" class="form-select" id="provinceSelect">
+@*                                     <option value="">@Localizer["SelectProvince"]</option>
+ *@                                <option value="">يرجى اختيار المحافظة</option>
+                                    @foreach (var province in Model.Provinces)
+                                    {
+                                        <option value="@province.Id">@province.NameAr</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-3 mb-3">
+                                <label asp-for="Contract.CityId" class="form-label"></label>
+                                <select asp-for="Contract.CityId" class="form-select" id="citySelect">
+                                    <option value="">@Localizer["SelectCity"]</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2 mb-3">
+                                <label asp-for="Contract.Neighborhood" class="form-label"></label>
+                                <input asp-for="Contract.Neighborhood" class="form-control" />
+                            </div>
+
+                            <div class="col-md-2 mb-3">
+                                <label asp-for="Contract.AlleyNumber" class="form-label"></label>
+                                <input asp-for="Contract.AlleyNumber" class="form-control" />
+                            </div>
+
+                            <div class="col-md-2 mb-3">
+                                <label asp-for="Contract.HouseNumber" class="form-label"></label>
+                                <input asp-for="Contract.HouseNumber" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الملاحظات -->
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <label asp-for="Contract.Notes" class="form-label"></label>
+                        <textarea asp-for="Contract.Notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الأزرار -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-save"></i> @Localizer["SaveData"]
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> @Localizer["Cancel"]
+                    </a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        $(document).ready(function() {
+            // حساب المبلغ المتبقي
+            function calculateRemaining() {
+                var price = parseFloat($('#vehiclePrice').val()) || 0;
+                var paid = parseFloat($('#paidAmount').val()) || 0;
+                var remaining = price - paid;
+                $('#remainingAmount').val(remaining.toFixed(2) + ' @Localizer["Currency"]');
+            }
+
+            $('#vehiclePrice, #paidAmount').on('input', calculateRemaining);
+
+            // تحميل المدن عند اختيار المحافظة
+            $('#provinceSelect').change(function() {
+                var provinceId = $(this).val();
+                if (provinceId) {
+                    $.get('@Url.Action("GetCitiesByProvince", "Contract")', { provinceId: provinceId }, function(data) {
+                        var citySelect = $('#citySelect');
+                        citySelect.empty();
+                        citySelect.append('<option value="">@Localizer["SelectCity"]</option>');
+                        $.each(data, function(i, city) {
+                            citySelect.append($('<option></option>').val(city.value).html(city.text));
+                        });
+                    });
+                } else {
+                    $('#citySelect').empty().append('<option value="">@Localizer["SelectCity"]</option>');
+                }
+            });
+        });
+    </script>
+
+    <script>
+        $(document).ready(function() {
+            $('#provinceSelect').change(function() {
+                var provinceId = $(this).val();
+                $('#citySelect').html('<option value="">جاري التحميل...</option>');
+
+                if (provinceId) {
+                    $.ajax({
+                        url: '@Url.Action("GetCities", "Contract")',
+                        type: 'GET',
+                        data: { provinceId: provinceId },
+                        success: function(data) {
+                            $('#citySelect').html('<option value="">يرجى اختيار المدينة</option>');
+                            $.each(data, function(i, city) {
+                                $('#citySelect').append($('<option></option>').val(city.value).html(city.text));
+                            });
+                        },
+                        error: function() {
+                            $('#citySelect').html('<option value="">خطأ في التحميل</option>');
+                        }
+                    });
+                } else {
+                    $('#citySelect').html('<option value="">يرجى اختيار المدينة</option>');
+                }
+            });
+        });
+    </script>
+
+    @* <script>
+        $(document).ready(function() {
+            $('#provinceSelect').change(function() {
+                var provinceId = $(this).val();
+                var citySelect = $('#citySelect');
+
+                citySelect.empty(); // إزالة القيم القديمة
+                citySelect.append('<option value="">@Localizer["SelectCity"]</option>');
+
+                if (provinceId) {
+                    $.get('@Url.Action("GetCitiesByProvince", "Contract")', { provinceId: provinceId }, function(data) {
+                        $.each(data, function(i, city) {
+                            citySelect.append($('<option></option>').val(city.value).text(city.text));
+                        });
+                    });
+                }
+            });
+        });
+    </script> *@
+}

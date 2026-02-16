@@ -1,0 +1,290 @@
+﻿@model VehicleContractSystem_Final.Models.Contract
+@inject IStringLocalizer<VehicleContractSystem_Final.Resources.SharedResources> Localizer
+@{
+    ViewData["Title"] = Localizer["Details"];
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="container-fluid" dir=@(isRtl ? "rtl" : "ltr")>
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-file-earmark-text"></i> @Localizer["ContractDetails"]</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">@Localizer["Home"]</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Contract" asp-action="Index">@Localizer["Contracts"]</a></li>
+                    <li class="breadcrumb-item active">@Model.ContractNumber</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-auto">
+            <div class="btn-group">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                    <i class="bi bi-pencil"></i> @Localizer["Edit"]
+                </a>
+                <a asp-action="Print" asp-route-id="@Model.Id" class="btn btn-primary" target="_blank">
+                    <i class="bi bi-printer"></i> @Localizer["Print"]
+                </a>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> @Localizer["BackToList"]
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contract Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h4 class="mb-0">@Model.ContractNumber</h4>
+                            <small>@Model.ContractDate.ToString("yyyy-MM-dd")</small>
+                        </div>
+                        <div class="col-auto">
+                            <span class="badge @(Model.Status == VehicleContractSystem_Final.Enums.ContractStatus.Open ? "bg-success" : "bg-secondary") fs-6">
+                                @Localizer[Model.Status.ToString()]
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Seller Info -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-person"></i> @Localizer["SellerInformation"]</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="40%">@Localizer["Name"]:</th>
+                            <td>@Model.SellerName</td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["Phone"]:</th>
+                            <td><a href="tel:@Model.SellerPhone">@Model.SellerPhone</a></td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["IdNumber"]:</th>
+                            <td>@Model.SellerIdNumber</td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["Address"]:</th>
+                            <td>@Model.SellerAddress</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buyer Info -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-person-check"></i> @Localizer["BuyerInformation"]</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="40%">@Localizer["Name"]:</th>
+                            <td>@Model.BuyerName</td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["Phone"]:</th>
+                            <td><a href="tel:@Model.BuyerPhone">@Model.BuyerPhone</a></td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["IdNumber"]:</th>
+                            <td>@Model.BuyerIdNumber</td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["Address"]:</th>
+                            <td>@Model.BuyerAddress</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicle Info -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-car-front"></i> @Localizer["VehicleInformation"]</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>@Localizer["VehicleType"]:</strong><br />
+                            @Model.Vehicle.VehicleType.Name
+                        </div>
+                        <div class="col-md-3">
+                            <strong>@Localizer["VehicleModel"]:</strong><br />
+                            @Model.Vehicle.VehicleModel.Name
+                        </div>
+                        <div class="col-md-3">
+                            <strong>@Localizer["Color"]:</strong><br />
+                            @Model.Vehicle.Color.Name
+                        </div>
+                        <div class="col-md-3">
+                            <strong>@Localizer["ManufactureYear"]:</strong><br />
+                            @Model.Vehicle.ManufactureYear
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>@Localizer["LicenseNumber"]:</strong><br />
+                            <span class="fs-5 text-primary">@Model.Vehicle.LicenseNumber</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>@Localizer["ChassisNumber"]:</strong><br />
+                            <span class="fs-6">@Model.Vehicle.ChassisNumber</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Info -->
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card border-warning">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="bi bi-cash-stack"></i> @Localizer["FinancialInformation"]</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>@Localizer["VehiclePrice"]:</span>
+                        <strong class="fs-5">@Model.VehiclePrice.ToString("N0")</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>@Localizer["PaidAmount"]:</span>
+                        <strong class="fs-5 text-success">@Model.PaidAmount.ToString("N0")</strong>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>@Localizer["RemainingAmount"]:</span>
+                        <strong class="fs-4 text-danger">@Model.RemainingAmount.ToString("N0")</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Address -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-geo-alt"></i> @Localizer["AddressDetails"]</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>@Localizer["Province"]:</strong><br />
+                            @Model.Province?.NameAr
+                        </div>
+                        <div class="col-md-3">
+                            <strong>@Localizer["City"]:</strong><br />
+                            @Model.City?.NameAr
+                        </div>
+                        <div class="col-md-2">
+                            <strong>@Localizer["Neighborhood"]:</strong><br />
+                            @Model.Neighborhood
+                        </div>
+                        <div class="col-md-2">
+                            <strong>@Localizer["AlleyNumber"]:</strong><br />
+                            @Model.AlleyNumber
+                        </div>
+                        <div class="col-md-2">
+                            <strong>@Localizer["HouseNumber"]:</strong><br />
+                            @Model.HouseNumber
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes -->
+    @if (!string.IsNullOrEmpty(Model.Notes))
+    {
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-sticky"></i> @Localizer["Notes"]</h5>
+                    </div>
+                    <div class="card-body">
+                        @Model.Notes
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Payments -->
+    @if (Model.Payments.Any())
+    {
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-wallet2"></i> @Localizer["Payments"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>@Localizer["Date"]</th>
+                                    <th>@Localizer["Amount"]</th>
+                                    <th>@Localizer["PaymentMethod"]</th>
+                                    <th>@Localizer["Notes"]</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var payment in Model.Payments.OrderByDescending(p => p.PaymentDate))
+                                {
+                                    <tr>
+                                        <td>@payment.PaymentDate.ToString("yyyy-MM-dd")</td>
+                                        <td><strong>@payment.Amount.ToString("N0")</strong></td>
+                                        <td>@payment.PaymentMethod</td>
+                                        <td>@payment.Notes</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-info">
+                                    <th>@Localizer["Total"]</th>
+                                    <th colspan="3"><strong>@Model.PaidAmount.ToString("N0")</strong></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Audit Info -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <small class="text-muted">
+                        <i class="bi bi-clock-history"></i> @Localizer["CreatedAt"]: @Model.CreatedAt.ToString("yyyy-MM-dd HH:mm") |
+                        <i class="bi bi-person"></i> @Localizer["CreatedBy"]: @Model.CreatedByUser?.FullName
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

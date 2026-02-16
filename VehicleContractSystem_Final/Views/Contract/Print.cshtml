@@ -1,0 +1,185 @@
+﻿@model VehicleContractSystem_Final.Models.ApplicationUser
+@inject IStringLocalizer<VehicleContractSystem_Final.Resources.SharedResources> Localizer
+@{
+    ViewData["Title"] = Localizer["Profile"];
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="container-fluid" dir="@(isRtl ? "rtl" : "ltr")">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-person-circle"></i> @Localizer["MyProfile"]</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- User Info -->
+        <div class="col-lg-4 mb-4">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <div class="mb-3">
+                        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center"
+                             style="width: 100px; height: 100px; font-size: 3rem;">
+                            <i class="bi bi-person"></i>
+                        </div>
+                    </div>
+
+                    <h4 class="mb-1">@Model.FullName</h4>
+                    <p class="text-muted">@Model.Email</p>
+
+                    @if (Model.IsApproved)
+                    {
+                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> @Localizer["Approved"]</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning"><i class="bi bi-clock"></i> @Localizer["Pending"]</span>
+                    }
+
+                    @if (Model.IsProMember)
+                    {
+                        <span class="badge bg-primary ms-2"><i class="bi bi-star"></i> Pro</span>
+                    }
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-bar-chart"></i> @Localizer["Statistics"]</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>@Localizer["CreatedContracts"]:</span>
+                        <strong class="text-primary">@Model.CreatedContracts.Count</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>@Localizer["MemberSince"]:</span>
+                        <strong>@Model.RegisteredAt.ToString("yyyy-MM-dd")</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal Information -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> @Localizer["PersonalInformation"]</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="30%">@Localizer["FirstName"]:</th>
+                            <td>@Model.FirstName</td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["LastName"]:</th>
+                            <td>@Model.LastName</td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["Email"]:</th>
+                            <td>
+                                @Model.Email
+                                @if (Model.EmailConfirmed)
+                                {
+                                    <span class="badge bg-success ms-2">@Localizer["Verified"]</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["Phone"]:</th>
+                            <td>
+                                @Model.PhoneNumber
+                                @if (Model.PhoneNumberConfirmed)
+                                {
+                                    <span class="badge bg-success ms-2">@Localizer["Verified"]</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["PersonalNumber"]:</th>
+                            <td>@Model.PersonalNumber</td>
+                        </tr>
+                    </table>
+
+                    <div class="mt-3">
+                        <a asp-action="EditProfile" class="btn btn-warning">
+                            <i class="bi bi-pencil"></i> @Localizer["EditProfile"]
+                        </a>
+                        <a asp-action="ChangePassword" class="btn btn-outline-primary">
+                            <i class="bi bi-key"></i> @Localizer["ChangePassword"]
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Office Info -->
+            @if (Model.Office != null)
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-building"></i> @Localizer["MyOffice"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <h5>@Model.Office.Name</h5>
+                        <p class="mb-2">
+                            <i class="bi bi-card-text text-muted"></i>
+                            <strong>@Localizer["LicenseNumber"]:</strong> @Model.Office.LicenseNumber
+                        </p>
+                        <p class="mb-2">
+                            <i class="bi bi-geo-alt text-muted"></i>
+                            @Model.Office.Address
+                        </p>
+                        <p class="mb-2">
+                            <i class="bi bi-telephone text-muted"></i>
+                            <a href="tel:@Model.Office.Phone">@Model.Office.Phone</a>
+                        </p>
+
+                        <a asp-controller="Office" asp-action="Details" asp-route-id="@Model.Office.Id" class="btn btn-sm btn-info">
+                            <i class="bi bi-eye"></i> @Localizer["ViewOffice"]
+                        </a>
+                    </div>
+                </div>
+            }
+
+            <!-- Recent Activity -->
+            @if (Model.CreatedContracts.Any())
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-clock-history"></i> @Localizer["RecentActivity"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            @foreach (var contract in Model.CreatedContracts.OrderByDescending(c => c.CreatedAt).Take(5))
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>@contract.ContractNumber</strong>
+                                            <small class="text-muted d-block">
+                                                @contract.SellerName → @contract.BuyerName
+                                            </small>
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted d-block">@contract.CreatedAt.ToString("yyyy-MM-dd")</small>
+                                            <a asp-controller="Contract" asp-action="Details" asp-route-id="@contract.Id" class="btn btn-sm btn-outline-primary">
+                                                @Localizer["View"]
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <a asp-controller="Contract" asp-action="Index" class="btn btn-sm btn-primary">
+                                @Localizer["ViewAllContracts"]
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

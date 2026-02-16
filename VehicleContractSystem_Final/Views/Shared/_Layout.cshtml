@@ -1,0 +1,258 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - نظام إدارة عقود السيارات</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        .btn {
+            border-radius: 8px;
+        }
+        .stats-card {
+            border-left: 4px solid #007bff;
+            transition: transform 0.2s;
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        .notification-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 0.7rem;
+        }
+        .dropdown-menu {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .notification-item {
+            border-bottom: 1px solid #eee;
+            padding: 10px;
+        }
+        .notification-item:hover {
+            background-color: #f8f9fa;
+        }
+        .notification-item.unread {
+            background-color: #e7f3ff;
+        }
+        .footer {
+            margin-top: 50px;
+            padding: 20px 0;
+            background-color: #343a40;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-dark bg-primary">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-car-front-fill"></i> نظام إدارة عقود السيارات
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Home" asp-action="Index">
+                                    <i class="bi bi-house-door"></i> الرئيسية
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Contract" asp-action="Index">
+                                    <i class="bi bi-file-text"></i> العقود
+                                </a>
+                            </li>
+                            @if (User.IsInRole("SuperAdmin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Office" asp-action="Index">
+                                        <i class="bi bi-building"></i> المكاتب
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Account" asp-action="PendingUsers">
+                                        <i class="bi bi-person-check"></i> المستخدمين المعلقين
+                                    </a>
+                                </li>
+                            }
+                        }
+                    </ul>
+                    <ul class="navbar-nav ms-auto">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item dropdown position-relative">
+                                <a class="nav-link" href="#" id="notificationDropdown" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-bell"></i>
+                                    <span class="badge bg-danger notification-badge" id="notificationCount" style="display:none;">0</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" style="width: 350px;">
+                                    <li class="dropdown-header">الإشعارات</li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li id="notificationList">
+                                    <li class="text-center p-3 text-muted">لا توجد إشعارات</li>
+                                    
+                                </ul>
+                            </li>
+                            
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i> @User.Identity.Name
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> الملف الشخصي</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> الإعدادات</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="px-3">
+                                    <button type="submit" class="btn btn-danger btn-sm w-100">
+                                        <i class="bi bi-box-arrow-left"></i> تسجيل الخروج
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Account" asp-action="Login">
+                            <i class="bi bi-box-arrow-in-right"></i> تسجيل الدخول
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Account" asp-action="Register">
+                            <i class="bi bi-person-plus"></i> تسجيل جديد
+                        </a>
+                    </li>
+                }
+            </div>
+        </nav>
+    </header>
+
+    <div class="container my-4">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["InfoMessage"] != null)
+        {
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="bi bi-info-circle"></i> @TempData["InfoMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="footer text-center">
+        <div class="container">
+            <p>&copy; 2026 - نظام إدارة عقود السيارات - جميع الحقوق محفوظة</p>
+            <p class="mb-0">
+                <small>
+                    <a href="#" class="text-white-50 me-3">سياسة الخصوصية</a>
+                    <a href="#" class="text-white-50 me-3">الشروط والأحكام</a>
+                    <a href="#" class="text-white-50">الدعم الفني</a>
+                </small>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
+
+
+@* <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - VehicleContractSystem_Final</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/VehicleContractSystem_Final.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">VehicleContractSystem_Final</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li>
+                    </ul>
+                    <partial name="_LoginPartial" />
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2026 - VehicleContractSystem_Final - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+ *@

@@ -1,0 +1,138 @@
+﻿@model VehicleContractSystem_Final.Models.Payment
+@inject IStringLocalizer<VehicleContractSystem_Final.Resources.SharedResources> Localizer
+@{
+    ViewData["Title"] = Localizer["AddPayment"];
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+    var contract = ViewBag.Contract as VehicleContractSystem_Final.Models.Contract;
+}
+
+<div class="container-fluid" dir=@(isRtl ? "rtl" : "ltr")>
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-cash-coin"></i> @Localizer["AddPayment"]</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">@Localizer["Home"]</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Contract" asp-action="Index">@Localizer["Contracts"]</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Contract" asp-action="Details" asp-route-id="@contract?.Id">@contract?.ContractNumber</a></li>
+                    <li class="breadcrumb-item active">@Localizer["AddPayment"]</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    @if (contract != null)
+    {
+        <!-- Contract Summary -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>@Localizer["ContractNumber"]:</strong><br />
+                                <span class="text-primary fs-5">@contract.ContractNumber</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>@Localizer["Seller"]:</strong><br />
+                                @contract.SellerName
+                            </div>
+                            <div class="col-md-3">
+                                <strong>@Localizer["Buyer"]:</strong><br />
+                                @contract.BuyerName
+                            </div>
+                            <div class="col-md-3">
+                                <strong>@Localizer["RemainingAmount"]:</strong><br />
+                                <span class="text-danger fs-5">@contract.RemainingAmount.ToString("N0")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Form -->
+        <div class="row">
+            <div class="col-lg-6 mx-auto">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-plus-circle"></i> @Localizer["NewPayment"]</h5>
+                    </div>
+                    <div class="card-body">
+                        <form asp-action="Add" method="post">
+                            <input type="hidden" asp-for="ContractId" value="@contract.Id" />
+
+                            <div class="mb-3">
+                                <label asp-for="Amount" class="form-label"></label>
+                                <div class="input-group">
+                                    <input asp-for="Amount" class="form-control" type="number" step="0.01" max="@contract.RemainingAmount" id="paymentAmount" />
+                                    <span class="input-group-text">@Localizer["Currency"]</span>
+                                </div>
+                                <span asp-validation-for="Amount" class="text-danger"></span>
+                                <small class="form-text text-muted">
+                                    @Localizer["MaxAmount"]: @contract.RemainingAmount.ToString("N0")
+                                </small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="PaymentDate" class="form-label"></label>
+                                <input asp-for="PaymentDate" class="form-control" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                                <span asp-validation-for="PaymentDate" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="PaymentMethod" class="form-label"></label>
+                                <select asp-for="PaymentMethod" class="form-select">
+                                    <option value="Cash">@Localizer["Cash"]</option>
+                                    <option value="BankTransfer">@Localizer["BankTransfer"]</option>
+                                    <option value="Check">@Localizer["Check"]</option>
+                                </select>
+                                <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Notes" class="form-label"></label>
+                                <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+                                <span asp-validation-for="Notes" class="text-danger"></span>
+                            </div>
+
+                            <hr />
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="bi bi-check-circle"></i> @Localizer["AddPayment"]
+                                </button>
+                                <a asp-controller="Contract" asp-action="Details" asp-route-id="@contract.Id" class="btn btn-secondary btn-lg">
+                                    <i class="bi bi-x-circle"></i> @Localizer["Cancel"]
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Quick Payment Buttons -->
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h6>@Localizer["QuickPayment"]:</h6>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-outline-primary" onclick="setPaymentAmount(1000000)">1,000,000</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="setPaymentAmount(2000000)">2,000,000</button>
+                            <button type="button" class="btn btn-outline-primary" onclick="setPaymentAmount(5000000)">5,000,000</button>
+                            <button type="button" class="btn btn-outline-success" onclick="setPaymentAmount(@contract.RemainingAmount)">@Localizer["PayFull"]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        function setPaymentAmount(amount) {
+            document.getElementById('paymentAmount').value = amount;
+        }
+    </script>
+}

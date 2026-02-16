@@ -1,0 +1,107 @@
+﻿@model VehicleContractSystem_Final.Models.Contract
+@inject IStringLocalizer<VehicleContractSystem_Final.Resources.SharedResources> Localizer
+@{
+    ViewData["Title"] = Localizer["DeleteContract"];
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="container-fluid" dir="@(isRtl ? "rtl" : "ltr")">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="text-danger"><i class="bi bi-trash"></i> @Localizer["DeleteContract"]</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">@Localizer["Home"]</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Contract" asp-action="Index">@Localizer["Contracts"]</a></li>
+                    <li class="breadcrumb-item active">@Localizer["Delete"]</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
+                <div>
+                    <h4 class="alert-heading">@Localizer["ConfirmDeletion"]</h4>
+                    <p class="mb-0">@Localizer["DeleteWarningMessage"]</p>
+                </div>
+            </div>
+
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> @Localizer["ContractDetails"]</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="30%">@Localizer["ContractNumber"]:</th>
+                            <td><strong class="text-danger">@Model.ContractNumber</strong></td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["ContractDate"]:</th>
+                            <td>@Model.ContractDate.ToString("yyyy-MM-dd")</td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["Seller"]:</th>
+                            <td>@Model.SellerName</td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["Buyer"]:</th>
+                            <td>@Model.BuyerName</td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["Vehicle"]:</th>
+                            <td>@Model.Vehicle.VehicleModel.Name - @Model.Vehicle.LicenseNumber</td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["VehiclePrice"]:</th>
+                            <td><strong>@Model.VehiclePrice.ToString("N0")</strong></td>
+                        </tr>
+                        <tr>
+                            <th>@Localizer["Status"]:</th>
+                            <td>
+                                <span class="badge @(Model.Status == VehicleContractSystem_Final.Enums.ContractStatus.Open ? "bg-success" : "bg-secondary")">
+                                    @Localizer[Model.Status.ToString()]
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+
+                    @if (Model.Payments.Any())
+                    {
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-circle"></i>
+                            <strong>@Localizer["Warning"]:</strong> @Localizer["ContractHasPayments"] (@Model.Payments.Count @Localizer["Payments"])
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card mt-3 border-info">
+                <div class="card-body">
+                    <h6 class="card-title text-info"><i class="bi bi-info-circle"></i> @Localizer["ImportantNote"]</h6>
+                    <ul class="mb-0">
+                        <li>@Localizer["DeletePermanent"]</li>
+                        <li>@Localizer["DeleteAllRelated"]</li>
+                        <li>@Localizer["CannotUndo"]</li>
+                    </ul>
+                </div>
+            </div>
+
+            <form asp-action="Delete" method="post" class="mt-4">
+                <input type="hidden" asp-for="Id" />
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-danger btn-lg" onclick="return confirm('@Localizer["ConfirmDeleteMessage"]')">
+                        <i class="bi bi-trash"></i> @Localizer["DeleteConfirm"]
+                    </button>
+                    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-x-circle"></i> @Localizer["Cancel"]
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

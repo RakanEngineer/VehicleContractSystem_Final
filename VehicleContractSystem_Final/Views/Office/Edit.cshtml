@@ -1,0 +1,119 @@
+﻿@model VehicleContractSystem_Final.Models.Office
+@inject IStringLocalizer<VehicleContractSystem_Final.Resources.SharedResources> Localizer
+@{
+    ViewData["Title"] = Localizer["EditOffice"];
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="container-fluid" dir="@(isRtl ? "rtl" : "ltr")">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="bi bi-pencil-square"></i> @Localizer["EditOffice"]</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">@Localizer["Home"]</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Office" asp-action="Index">@Localizer["Offices"]</a></li>
+                    <li class="breadcrumb-item active">@Localizer["Edit"]</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> @Localizer["OfficeInformation"]</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label"></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="LicenseNumber" class="form-label"></label>
+                            <input asp-for="LicenseNumber" class="form-control" />
+                            <span asp-validation-for="LicenseNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Address" class="form-label"></label>
+                            <textarea asp-for="Address" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Phone" class="form-label"></label>
+                                <input asp-for="Phone" class="form-control" />
+                                <span asp-validation-for="Phone" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Email" class="form-label"></label>
+                                <input asp-for="Email" class="form-control" type="email" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="EstablishedDate" class="form-label"></label>
+                            <input asp-for="EstablishedDate" class="form-control" type="date" />
+                            <span asp-validation-for="EstablishedDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label"></label>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> @Localizer["SaveChanges"]
+                            </button>
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> @Localizer["Cancel"]
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Statistics Card -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> @Localizer["Statistics"]</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="display-6 text-primary">@Model.Staff.Count</div>
+                            <small class="text-muted">@Localizer["Staff"]</small>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="display-6 text-success">@Model.Contracts.Count</div>
+                            <small class="text-muted">@Localizer["Contracts"]</small>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="display-6 text-warning">@Model.Contracts.Count(c => c.Status == VehicleContractSystem_Final.Enums.ContractStatus.Open)</div>
+                            <small class="text-muted">@Localizer["OpenContracts"]</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,100 @@
+﻿@model List<ApplicationUser>
+@inject VehicleContractSystem_Final.Data.ApplicationDbContext Context
+@{
+    ViewData["Title"] = "المستخدمين في انتظار الموافقة";
+}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="bi bi-person-check"></i> المستخدمين في انتظار الموافقة</h2>
+        <p class="text-muted">راجع وافق على طلبات التسجيل الجديدة</p>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+            <h4 class="mt-3">لا توجد طلبات معلقة</h4>
+            <p class="text-muted">جميع المستخدمين تمت الموافقة عليهم</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var user in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                                 style="width: 50px; height: 50px; font-size: 1.5rem;">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h5 class="mb-0">@user.FullName</h5>
+                                <small class="text-muted">
+                                    <i class="bi bi-clock"></i> @user.RegisteredAt.ToString("yyyy-MM-dd HH:mm")
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <i class="bi bi-envelope text-muted"></i>
+                            <small>@user.Email</small>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(user.PhoneNumber))
+                        {
+                            <div class="mb-2">
+                                <i class="bi bi-telephone text-muted"></i>
+                                <small>@user.PhoneNumber</small>
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <i class="bi bi-credit-card text-muted"></i>
+                            <small>@user.PersonalNumber</small>
+                        </div>
+
+                        <hr>
+
+                        <form asp-action="ApproveUser" method="post" class="d-inline">
+                            <input type="hidden" name="userId" value="@user.Id" />
+
+                            <div class="mb-3">
+                                <label class="form-label">تعيين إلى مكتب</label>
+                                <select name="officeId" class="form-select form-select-sm">
+                                    <option value="">-- بدون مكتب --</option>
+                                    @foreach (var office in Context.Offices.ToList())
+                                    {
+                                        <option value="@office.Id">@office.Name</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="bi bi-check-lg"></i> موافقة
+                                </button>
+                            </div>
+                        </form>
+
+                        <form asp-action="RejectUser" method="post" class="d-inline mt-2">
+                            <input type="hidden" name="userId" value="@user.Id" />
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="return confirm('هل أنت متأكد من رفض هذا الطلب؟ سيتم حذف الحساب نهائياً.')">
+                                    <i class="bi bi-x-lg"></i> رفض
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

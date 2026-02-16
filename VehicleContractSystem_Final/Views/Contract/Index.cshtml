@@ -1,0 +1,136 @@
+﻿@using VehicleContractSystem_Final.Enums
+@model List<Contract>
+@{
+    ViewData["Title"] = "العقود";
+    var viewMode = ViewBag.ViewMode as string;
+}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="bi bi-file-text"></i> إدارة العقود</h2>
+        <p class="text-muted">
+            @if (viewMode == "all")
+            {
+                <span>جميع العقود في النظام</span>
+            }
+            else if (viewMode == "office")
+            {
+                <span>جميع عقود مكتبك</span>
+            }
+            else
+            {
+                <span>عقودك الشخصية</span>
+            }
+        </p>
+    </div>
+    <div class="col-auto">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> عقد جديد
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover" id="contractsTable">
+                    <thead>
+                        <tr>
+                            <th>رقم العقد</th>
+                            <th>البائع</th>
+                            <th>المشتري</th>
+                            <th>رقم الشاصي</th>
+                            <th>التاريخ</th>
+                            @if (viewMode == "all" || viewMode == "office")
+                            {
+                                <th>المنشئ</th>
+                            }
+                            @if (viewMode == "all")
+                            {
+                                <th>المكتب</th>
+                            }
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var contract in Model)
+                        {
+                            <tr>
+                                <td><strong>@contract.ContractNumber</strong></td>
+                                <td>@contract.SellerName</td>
+                                <td>@contract.BuyerName</td>
+                                <td>@contract.ChassisNumber</td>
+                                <td>@contract.CreatedAt.ToString("yyyy-MM-dd")</td>
+                                @if (viewMode == "all" || viewMode == "office")
+                                {
+                                    <td>@contract.CreatedByUser?.FullName</td>
+                                }
+                                @if (viewMode == "all")
+                                {
+                                    <td>@contract.Office?.Name</td>
+                                }
+                                <td>
+                                    @if (contract.Status == ContractStatus.Open)
+                                    {
+                                        <span class="badge bg-success">مفتوح</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">مغلق</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a asp-action="Details" asp-route-id="@contract.Id"
+                                           class="btn btn-info" title="عرض">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        @if (contract.Status == ContractStatus.Open)
+                                        {
+                                            <a asp-action="Edit" asp-route-id="@contract.Id"
+                                               class="btn btn-warning" title="تعديل">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        }
+                                        <a asp-action="Print" asp-route-id="@contract.Id"
+                                           class="btn btn-primary" title="طباعة" target="_blank">
+                                            <i class="bi bi-printer"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-inbox fs-1 text-muted"></i>
+                <h4 class="mt-3">لا توجد عقود</h4>
+                <p class="text-muted">ابدأ بإنشاء عقد جديد</p>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> إنشاء أول عقد
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#contractsTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/ar.json'
+                },
+                order: [[4, 'desc']], // ترتيب حسب التاريخ
+                pageLength: 25
+            });
+        });
+    </script>
+}

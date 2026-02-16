@@ -1,0 +1,237 @@
+﻿@using VehicleContractSystem_Final.Enums
+@using VehicleContractSystem_Final.Models.ViewModel
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "الصفحة الرئيسية";
+}
+
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="mb-0">
+            <i class="bi bi-speedometer2"></i> لوحة التحكم
+        </h2>
+        <p class="text-muted">مرحباً @Model.UserName - @Model.UserRole</p>
+        @if (!string.IsNullOrEmpty(Model.OfficeName))
+        {
+            <p class="text-muted"><i class="bi bi-building"></i> @Model.OfficeName</p>
+        }
+    </div>
+    <div class="col-auto">
+        <a asp-controller="Contract" asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> عقد جديد
+        </a>
+    </div>
+</div>
+
+<!-- إحصائيات سريعة -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">إجمالي العقود</h6>
+                        <h2 class="mb-0">@Model.TotalContracts</h2>
+                    </div>
+                    <i class="bi bi-file-text fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card stats-card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">عقود مفتوحة</h6>
+                        <h2 class="mb-0">@Model.OpenContracts</h2>
+                    </div>
+                    <i class="bi bi-folder2-open fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card stats-card bg-secondary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">عقود مغلقة</h6>
+                        <h2 class="mb-0">@Model.ClosedContracts</h2>
+                    </div>
+                    <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card stats-card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">عقود اليوم</h6>
+                        <h2 class="mb-0">@Model.TodayContracts</h2>
+                    </div>
+                    <i class="bi bi-calendar-check fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (User.IsInRole("SuperAdmin"))
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card stats-card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-1">إجمالي المستخدمين</h6>
+                            <h2 class="mb-0">@Model.TotalUsers</h2>
+                        </div>
+                        <i class="bi bi-people fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card stats-card bg-dark text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-1">إجمالي المكاتب</h6>
+                            <h2 class="mb-0">@Model.TotalOffices</h2>
+                        </div>
+                        <i class="bi bi-building fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <!-- العقود الأخيرة -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-clock-history"></i> أحدث العقود</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentContracts.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>رقم العقد</th>
+                                    <th>البائع</th>
+                                    <th>المشتري</th>
+                                    <th>التاريخ</th>
+                                    <th>الحالة</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var contract in Model.RecentContracts)
+                                {
+                                    <tr>
+                                        <td><strong>@contract.ContractNumber</strong></td>
+                                        <td>@contract.SellerName</td>
+                                        <td>@contract.BuyerName</td>
+                                        <td>@contract.CreatedAt.ToString("yyyy-MM-dd")</td>
+                                        <td>
+                                            @if (contract.Status == ContractStatus.Open)
+                                            {
+                                                <span class="badge bg-success">مفتوح</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">مغلق</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <a asp-controller="Contract" asp-action="Details" asp-route-id="@contract.Id"
+                                               class="btn btn-sm btn-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center">
+                        <a asp-controller="Contract" asp-action="Index" class="btn btn-outline-primary">
+                            عرض جميع العقود <i class="bi bi-arrow-left"></i>
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-inbox fs-1"></i>
+                        <p>لا توجد عقود بعد</p>
+                        <a asp-controller="Contract" asp-action="Create" class="btn btn-primary">
+                            <i class="bi bi-plus-lg"></i> إنشاء أول عقد
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- أفضل الموظفين -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-trophy"></i> أفضل الموظفين</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.TopPerformers.Any())
+                {
+                    <ul class="list-group list-group-flush">
+                        @for (int i = 0; i < Model.TopPerformers.Count; i++)
+                        {
+                            var performer = Model.TopPerformers[i];
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    @if (i == 0)
+                                    {
+                                        <i class="bi bi-trophy-fill text-warning"></i>
+                                    }
+                                    else if (i == 1)
+                                    {
+                                        <i class="bi bi-trophy-fill text-secondary"></i>
+                                    }
+                                    else if (i == 2)
+                                    {
+                                        <i class="bi bi-trophy-fill" style="color: #cd7f32;"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-person-fill text-muted"></i>
+                                    }
+                                    @performer.FullName
+                                </div>
+                                <span class="badge bg-primary rounded-pill">@performer.ContractCount</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-people fs-1"></i>
+                        <p>لا توجد بيانات بعد</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

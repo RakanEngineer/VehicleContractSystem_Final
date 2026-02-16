@@ -1,0 +1,109 @@
+﻿@* @{
+    ViewData["Title"] = "Privacy Policy";
+}
+<h1>@ViewData["Title"]</h1> *@
+
+<p>Use this page to detail your site's privacy policy.</p>
+
+@inject IStringLocalizer<VehicleContractSystem_Final.Resources.SharedResources> Localizer
+@{
+    ViewData["Title"] = Localizer["Privacy"];
+    var isRtl = System.Globalization.CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+}
+
+<div class="container" dir=@(isRtl ? "rtl" : "ltr")>
+    <div class="row mb-4">
+        <div class="col">
+            <h1><i class="bi bi-shield-check"></i> @Localizer["PrivacyPolicy"]</h1>
+            <p class="text-muted">@Localizer["LastUpdated"]: @DateTime.Now.ToString("yyyy-MM-dd")</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title">@Localizer["Introduction"]</h4>
+                    <p class="card-text">
+                        @Localizer["PrivacyIntroText"]
+                    </p>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title"><i class="bi bi-clipboard-data"></i> @Localizer["DataCollection"]</h4>
+                    <p>@Localizer["DataCollectionText"]</p>
+                    <ul>
+                        <li>@Localizer["PersonalInformation"]</li>
+                        <li>@Localizer["ContactInformation"]</li>
+                        <li>@Localizer["ContractData"]</li>
+                        <li>@Localizer["VehicleInformation"]</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title"><i class="bi bi-lock"></i> @Localizer["DataProtection"]</h4>
+                    <p>@Localizer["DataProtectionText"]</p>
+                    <ul>
+                        <li>@Localizer["EncryptionUsed"]</li>
+                        <li>@Localizer["SecureServers"]</li>
+                        <li>@Localizer["AccessControl"]</li>
+                        <li>@Localizer["RegularBackups"]</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title"><i class="bi bi-people"></i> @Localizer["DataSharing"]</h4>
+                    <p>@Localizer["DataSharingText"]</p>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        @Localizer["NoThirdPartySharing"]
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title"><i class="bi bi-person-check"></i> @Localizer["YourRights"]</h4>
+                    <p>@Localizer["YourRightsText"]</p>
+                    <ul>
+                        <li>@Localizer["RightToAccess"]</li>
+                        <li>@Localizer["RightToCorrect"]</li>
+                        <li>@Localizer["RightToDelete"]</li>
+                        <li>@Localizer["RightToExport"]</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title"><i class="bi bi-cookie"></i> @Localizer["Cookies"]</h4>
+                    <p>@Localizer["CookiesText"]</p>
+                </div>
+            </div>
+
+            <div class="card mb-4 border-warning">
+                <div class="card-body">
+                    <h4 class="card-title"><i class="bi bi-envelope"></i> @Localizer["ContactUs"]</h4>
+                    <p>@Localizer["PrivacyContactText"]</p>
+                    <p>
+                        <strong>@Localizer["Email"]:</strong> privacy@vehiclecontract.com<br />
+                        <strong>@Localizer["Phone"]:</strong> 07701234567
+                    </p>
+                </div>
+            </div>
+
+            <div class="text-center mt-4 mb-4">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+                    <i class="bi bi-arrow-left"></i> @Localizer["BackToHome"]
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
