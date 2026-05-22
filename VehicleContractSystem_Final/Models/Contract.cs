@@ -180,17 +180,17 @@ namespace VehicleContractSystem_Final.Models
 
         ////
         // المبلغ الإجمالي للسيارة
-        [Display(Name = "Vehicle Price")]
+        [Display(Name = "سعر المركبة")]
         [Column(TypeName = "decimal(18,2)")]
         public decimal VehiclePrice { get; set; } = 0;
 
         // المدفوعات
         public List<Payment> Payments { get; set; } = new();
 
-        [Display(Name = "Paid Amount")]
+        [Display(Name = "المبلغ المدفوع")]
         public decimal PaidAmount => Payments.Sum(p => p.Amount);
 
-        [Display(Name = "Remaining Amount")]
+        [Display(Name = "المبلغ المتبقي")]
         public decimal RemainingAmount => VehiclePrice - PaidAmount;
 
         // اختياري: كائن مركبة لتسهيل الاستخدام

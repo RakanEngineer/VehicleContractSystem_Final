@@ -1,3 +1,6 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="AGENTS.md" />
+  </Folder>
   <Project Path="VehicleContractSystem_Final/VehicleContractSystem_Final.csproj" />
 </Solution>

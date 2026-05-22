@@ -281,7 +281,7 @@ namespace VehicleContractSystem_Final.Migrations
 
                     b.HasIndex("ProvinceId");
 
-                    b.ToTable("Cities", (string)null);
+                    b.ToTable("Cities");
 
                     b.HasData(
                         new
@@ -409,7 +409,7 @@ namespace VehicleContractSystem_Final.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Colors", (string)null);
+                    b.ToTable("Colors");
                 });
 
             modelBuilder.Entity("VehicleContractSystem_Final.Models.Contract", b =>
@@ -574,7 +574,7 @@ namespace VehicleContractSystem_Final.Migrations
 
                     b.HasIndex("ProvinceId");
 
-                    b.ToTable("Contracts", (string)null);
+                    b.ToTable("Contracts");
                 });
 
             modelBuilder.Entity("VehicleContractSystem_Final.Models.Notification", b =>
@@ -619,7 +619,7 @@ namespace VehicleContractSystem_Final.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("VehicleContractSystem_Final.Models.Office", b =>
@@ -663,7 +663,7 @@ namespace VehicleContractSystem_Final.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Offices", (string)null);
+                    b.ToTable("Offices");
 
                     b.HasData(
                         new
@@ -732,7 +732,7 @@ namespace VehicleContractSystem_Final.Migrations
 
                     b.HasIndex("RecordedById");
 
-                    b.ToTable("Payment", (string)null);
+                    b.ToTable("Payment");
                 });
 
             modelBuilder.Entity("VehicleContractSystem_Final.Models.Province", b =>
@@ -753,7 +753,7 @@ namespace VehicleContractSystem_Final.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Provinces", (string)null);
+                    b.ToTable("Provinces");
 
                     b.HasData(
                         new
@@ -930,7 +930,7 @@ namespace VehicleContractSystem_Final.Migrations
 
                     b.HasIndex("VehicleTypeId");
 
-                    b.ToTable("Vehicles", (string)null);
+                    b.ToTable("Vehicles");
                 });
 
             modelBuilder.Entity("VehicleContractSystem_Final.Models.VehicleModel", b =>
@@ -949,9 +949,37 @@ namespace VehicleContractSystem_Final.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("VehicleTypeId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.ToTable("VehicleModels", (string)null);
+                    b.HasIndex("VehicleTypeId");
+
+                    b.ToTable("VehicleModels");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            NameAr = "تويوتا كامري",
+                            NameEn = "Toyota Camry",
+                            VehicleTypeId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            NameAr = "نيسان التيما",
+                            NameEn = "Nissan Altima",
+                            VehicleTypeId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            NameAr = "كيا سيراتو",
+                            NameEn = "Kia Cerato",
+                            VehicleTypeId = 1
+                        });
                 });
 
             modelBuilder.Entity("VehicleContractSystem_Final.Models.VehicleType", b =>
@@ -972,7 +1000,7 @@ namespace VehicleContractSystem_Final.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("VehicleTypes", (string)null);
+                    b.ToTable("VehicleTypes");
 
                     b.HasData(
                         new
@@ -1167,6 +1195,17 @@ namespace VehicleContractSystem_Final.Migrations
                     b.Navigation("VehicleType");
                 });
 
+            modelBuilder.Entity("VehicleContractSystem_Final.Models.VehicleModel", b =>
+                {
+                    b.HasOne("VehicleContractSystem_Final.Models.VehicleType", "VehicleType")
+                        .WithMany("VehicleModels")
+                        .HasForeignKey("VehicleTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("VehicleType");
+                });
+
             modelBuilder.Entity("VehicleContractSystem_Final.Models.ApplicationUser", b =>
                 {
                     b.Navigation("CreatedContracts");
@@ -1201,6 +1240,11 @@ namespace VehicleContractSystem_Final.Migrations
             modelBuilder.Entity("VehicleContractSystem_Final.Models.VehicleModel", b =>
                 {
                     b.Navigation("Vehicles");
+                });
+
+            modelBuilder.Entity("VehicleContractSystem_Final.Models.VehicleType", b =>
+                {
+                    b.Navigation("VehicleModels");
                 });
 #pragma warning restore 612, 618
         }

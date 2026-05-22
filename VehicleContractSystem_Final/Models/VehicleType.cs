@@ -23,5 +23,7 @@ namespace VehicleContractSystem_Final.Models
                 return CultureInfo.CurrentCulture.Name.StartsWith("ar") ? NameAr : NameEn;
             }
         }
+
+        public ICollection<VehicleModel> VehicleModels { get; set; } = new List<VehicleModel>();
     }
 }

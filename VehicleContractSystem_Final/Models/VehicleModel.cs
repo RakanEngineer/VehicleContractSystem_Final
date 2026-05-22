@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 
 namespace VehicleContractSystem_Final.Models
 {
@@ -14,6 +15,7 @@ namespace VehicleContractSystem_Final.Models
 
         public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
         public int VehicleTypeId { get; set; }
+        [Display(Name = "نوع المركبة")]
         public VehicleType VehicleType { get; set; }
 
     }

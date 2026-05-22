@@ -60,7 +60,12 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.Configure<RequestLocalizationOptions>(options =>
 {
-    var supportedCultures = new[] { new CultureInfo("ar"), new CultureInfo("en") };
+    var supportedCultures = new[] 
+    { 
+        new CultureInfo("ar")
+        //, 
+        //new CultureInfo("en") 
+    };
     options.DefaultRequestCulture = new RequestCulture("ar");
     options.SupportedCultures = supportedCultures;
     options.SupportedUICultures = supportedCultures;

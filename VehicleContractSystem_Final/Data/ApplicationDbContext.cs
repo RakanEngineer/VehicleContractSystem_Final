@@ -66,6 +66,13 @@ namespace VehicleContractSystem_Final.Data
                 .HasForeignKey(c => c.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<VehicleModel>()
+                .HasOne(vm => vm.VehicleType)
+                .WithMany(vt => vt.VehicleModels)
+                .HasForeignKey(vm => vm.VehicleTypeId)
+                .OnDelete(DeleteBehavior.Restrict); //  Cascade 
+
+
             // Seed data
             SeedData(builder);
         }
@@ -111,9 +118,9 @@ namespace VehicleContractSystem_Final.Data
             // =============================
 
             builder.Entity<VehicleModel>().HasData(
-                new VehicleModel { Id = 1, NameAr = "تويوتا كامري", NameEn = "Toyota Camry" },
-                new VehicleModel { Id = 2, NameAr = "نيسان التيما", NameEn = "Nissan Altima" },
-                new VehicleModel { Id = 3, NameAr = "كيا سيراتو", NameEn = "Kia Cerato" }
+                new VehicleModel { Id = 1, NameAr = "تويوتا كامري", NameEn = "Toyota Camry", VehicleTypeId = 1 },
+                new VehicleModel { Id = 2, NameAr = "نيسان التيما", NameEn = "Nissan Altima", VehicleTypeId = 1 },
+                new VehicleModel { Id = 3, NameAr = "كيا سيراتو", NameEn = "Kia Cerato", VehicleTypeId = 1 }
             );
 
             // Seed Offices

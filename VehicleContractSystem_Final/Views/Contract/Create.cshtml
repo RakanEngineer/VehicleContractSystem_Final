@@ -192,10 +192,13 @@
                                 <label asp-for="Contract.ProvinceId" class="form-label">المحافظة</label>
                                 <select asp-for="Contract.ProvinceId" class="form-select" id="provinceSelect">
 @*                                     <option value="">@Localizer["SelectProvince"]</option>
- *@                                <option value="">يرجى اختيار المحافظة</option>
+ *@                                <option value="">>@Localizer["SelectProvince"]</option>
                                     @foreach (var province in Model.Provinces)
                                     {
-                                        <option value="@province.Id">@province.NameAr</option>
+                                        <option value="@province.Id">@(isRtl? province.NameAr: province.NameEn)</option>
+
+@*                                         <option value="@province.Id">@province.NameAr</option>
+ *@
                                     }
                                 </select>
                             </div>
@@ -293,7 +296,7 @@
         $(document).ready(function() {
             $('#provinceSelect').change(function() {
                 var provinceId = $(this).val();
-                $('#citySelect').html('<option value="">جاري التحميل...</option>');
+                $('#citySelect').html('<option value="">@Localizer["Loading"]...</option>');
 
                 if (provinceId) {
                     $.ajax({
@@ -301,17 +304,17 @@
                         type: 'GET',
                         data: { provinceId: provinceId },
                         success: function(data) {
-                            $('#citySelect').html('<option value="">يرجى اختيار المدينة</option>');
+                            $('#citySelect').html('<option value="">@Localizer["SelectCity"]</option>');
                             $.each(data, function(i, city) {
                                 $('#citySelect').append($('<option></option>').val(city.value).html(city.text));
                             });
                         },
                         error: function() {
-                            $('#citySelect').html('<option value="">خطأ في التحميل</option>');
+                            $('#citySelect').html('<option value="">>@Localizer["Error"]</option>');
                         }
                     });
                 } else {
-                    $('#citySelect').html('<option value="">يرجى اختيار المدينة</option>');
+                    $('#citySelect').html('<option value="">@Localizer["SelectCity"]</option>');
                 }
             });
         });
