@@ -116,8 +116,7 @@ namespace VehicleContractSystem_Final.Controllers
             {
                 ContractNumber = GenerateContractNumber(),
                 ContractDate = DateTime.Now,
-                OfficeId = currentUser.OfficeId.Value,
-                Vehicle = new Vehicle()
+                OfficeId = currentUser.OfficeId.Value
             };
 
             var viewModel = await BuildContractViewModelAsync(contract);
@@ -139,6 +138,7 @@ namespace VehicleContractSystem_Final.Controllers
             }
 
             // Remove validation for navigation properties
+            ModelState.Remove("Contract.ContractNumber");
             ModelState.Remove("Contract.CreatedByUser");
             ModelState.Remove("Contract.CreatedByUserId");
             ModelState.Remove("Contract.Office");
@@ -149,9 +149,6 @@ namespace VehicleContractSystem_Final.Controllers
             ModelState.Remove("Contract.VehicleCategory");
             ModelState.Remove("Contract.VehicleModel");
             ModelState.Remove("Contract.VehicleColor");
-            RemoveVehicleValidation();
-
-            CopyVehicleFormValues(contract);
             await ApplyVehicleLookupValuesAsync(contract);
             await ValidateVehicleLookupsAsync(contract);
 
@@ -162,7 +159,7 @@ namespace VehicleContractSystem_Final.Controllers
                 contract.CreatedAt = DateTime.Now;
                 contract.Status = ContractStatus.Open;
 
-                if (string.IsNullOrEmpty(contract.ContractNumber))
+                if (string.IsNullOrWhiteSpace(contract.ContractNumber))
                 {
                     contract.ContractNumber = GenerateContractNumber();
                 }
@@ -205,7 +202,7 @@ namespace VehicleContractSystem_Final.Controllers
                 return RedirectToAction(nameof(Details), new { id = contract.Id });
             }
 
-            contract.Vehicle = await BuildVehicleAsync(contract);
+            await EnsureContractLookupIdsAsync(contract);
             var viewModel = await BuildContractViewModelAsync(contract);
 
             return View(viewModel);
@@ -237,7 +234,10 @@ namespace VehicleContractSystem_Final.Controllers
                 return RedirectToAction(nameof(Details), new { id = contract.Id });
             }
 
+            contract.ContractNumber = existingContract.ContractNumber;
+
             // Remove validation for navigation properties
+            ModelState.Remove("Contract.ContractNumber");
             ModelState.Remove("Contract.CreatedByUser");
             ModelState.Remove("Contract.CreatedByUserId");
             ModelState.Remove("Contract.Office");
@@ -248,9 +248,6 @@ namespace VehicleContractSystem_Final.Controllers
             ModelState.Remove("Contract.VehicleCategory");
             ModelState.Remove("Contract.VehicleModel");
             ModelState.Remove("Contract.VehicleColor");
-            RemoveVehicleValidation();
-
-            CopyVehicleFormValues(contract);
             await ApplyVehicleLookupValuesAsync(contract);
             await ValidateVehicleLookupsAsync(contract);
 
@@ -275,6 +272,9 @@ namespace VehicleContractSystem_Final.Controllers
                     existingContract.CurrentOwnerAddress = contract.CurrentOwnerAddress;
                     existingContract.AnnualRegistrationNumber = contract.AnnualRegistrationNumber;
                     existingContract.VehicleBrand = contract.VehicleBrand;
+                    existingContract.VehicleTypeId = contract.VehicleTypeId;
+                    existingContract.VehicleModelId = contract.VehicleModelId;
+                    existingContract.ColorId = contract.ColorId;
                     existingContract.VehicleModel = contract.VehicleModel;
                     existingContract.ManufactureYear = contract.ManufactureYear;
                     existingContract.VehicleCategory = contract.VehicleCategory;
@@ -570,8 +570,6 @@ namespace VehicleContractSystem_Final.Controllers
 
         private async Task<ContractViewModel> BuildContractViewModelAsync(Contract contract)
         {
-            contract.Vehicle ??= new Vehicle();
-
             return new ContractViewModel
             {
                 Contract = contract,
@@ -584,15 +582,15 @@ namespace VehicleContractSystem_Final.Controllers
                     {
                         Value = v.Id.ToString(),
                         Text = v.NameAr,
-                        Selected = contract.Vehicle.VehicleTypeId == v.Id
+                        Selected = contract.VehicleTypeId == v.Id
                     }).ToListAsync(),
                 VehicleModels = await _context.VehicleModels
-                    .Where(v => contract.Vehicle.VehicleTypeId == 0 || v.VehicleTypeId == contract.Vehicle.VehicleTypeId)
+                    .Where(v => !contract.VehicleTypeId.HasValue || v.VehicleTypeId == contract.VehicleTypeId.Value)
                     .Select(v => new SelectListItem
                     {
                         Value = v.Id.ToString(),
                         Text = v.NameAr,
-                        Selected = contract.Vehicle.VehicleModelId == v.Id
+                        Selected = contract.VehicleModelId == v.Id
                     }).ToListAsync(),
                 Colors = await _context.Colors
                     .OrderBy(c => c.Id)
@@ -600,36 +598,31 @@ namespace VehicleContractSystem_Final.Controllers
             };
         }
 
-        private async Task<Vehicle> BuildVehicleAsync(Contract contract)
+        private async Task EnsureContractLookupIdsAsync(Contract contract)
         {
+            if (contract.VehicleModelId.HasValue && contract.ColorId.HasValue && contract.VehicleTypeId.HasValue)
+                return;
+
             var vehicleModel = await _context.VehicleModels
                 .FirstOrDefaultAsync(m => m.NameAr == contract.VehicleModel);
             var color = await _context.Colors
                 .FirstOrDefaultAsync(c => c.NameAr == contract.VehicleColor);
 
-            return new Vehicle
-            {
-                VehicleTypeId = vehicleModel?.VehicleTypeId ?? 0,
-                VehicleModelId = vehicleModel?.Id ?? 0,
-                ColorId = color?.Id ?? 0,
-                ManufactureYear = contract.ManufactureYear,
-                LicenseNumber = contract.LicenseNumber,
-                ChassisNumber = contract.ChassisNumber
-            };
+            contract.VehicleModelId ??= vehicleModel?.Id;
+            contract.VehicleTypeId ??= vehicleModel?.VehicleTypeId;
+            contract.ColorId ??= color?.Id;
         }
 
         private async Task ApplyVehicleLookupValuesAsync(Contract contract)
         {
-            contract.Vehicle ??= new Vehicle();
-
-            var vehicleType = contract.Vehicle.VehicleTypeId > 0
-                ? await _context.VehicleTypes.FindAsync(contract.Vehicle.VehicleTypeId)
+            var vehicleType = contract.VehicleTypeId.HasValue
+                ? await _context.VehicleTypes.FindAsync(contract.VehicleTypeId.Value)
                 : null;
-            var vehicleModel = contract.Vehicle.VehicleModelId > 0
-                ? await _context.VehicleModels.FindAsync(contract.Vehicle.VehicleModelId)
+            var vehicleModel = contract.VehicleModelId.HasValue
+                ? await _context.VehicleModels.FindAsync(contract.VehicleModelId.Value)
                 : null;
-            var color = contract.Vehicle.ColorId > 0
-                ? await _context.Colors.FindAsync(contract.Vehicle.ColorId)
+            var color = contract.ColorId.HasValue
+                ? await _context.Colors.FindAsync(contract.ColorId.Value)
                 : null;
 
             contract.VehicleCategory = vehicleType?.NameAr ?? string.Empty;
@@ -639,39 +632,23 @@ namespace VehicleContractSystem_Final.Controllers
 
         private async Task ValidateVehicleLookupsAsync(Contract contract)
         {
-            if (!await _context.Colors.AnyAsync(c => c.Id == contract.Vehicle.ColorId))
-                ModelState.AddModelError("Contract.Vehicle.ColorId", "يرجى اختيار لون مركبة صحيح");
+            if (!contract.ColorId.HasValue || !await _context.Colors.AnyAsync(c => c.Id == contract.ColorId.Value))
+                ModelState.AddModelError("Contract.ColorId", "يرجى اختيار لون مركبة صحيح");
 
-            if (!await _context.VehicleTypes.AnyAsync(t => t.Id == contract.Vehicle.VehicleTypeId))
-                ModelState.AddModelError("Contract.Vehicle.VehicleTypeId", "يرجى اختيار نوع مركبة صحيح");
+            if (!contract.VehicleTypeId.HasValue || !await _context.VehicleTypes.AnyAsync(t => t.Id == contract.VehicleTypeId.Value))
+                ModelState.AddModelError("Contract.VehicleTypeId", "يرجى اختيار نوع مركبة صحيح");
 
-            if (!await _context.VehicleModels.AnyAsync(m => m.Id == contract.Vehicle.VehicleModelId))
-                ModelState.AddModelError("Contract.Vehicle.VehicleModelId", "يرجى اختيار موديل مركبة صحيح");
-        }
+            if (!contract.VehicleModelId.HasValue || !await _context.VehicleModels.AnyAsync(m => m.Id == contract.VehicleModelId.Value))
+            {
+                ModelState.AddModelError("Contract.VehicleModelId", "يرجى اختيار موديل مركبة صحيح");
+                return;
+            }
 
-        private static void CopyVehicleFormValues(Contract contract)
-        {
-            contract.Vehicle ??= new Vehicle();
-            contract.ManufactureYear = contract.Vehicle.ManufactureYear;
-            contract.LicenseNumber = contract.Vehicle.LicenseNumber;
-            contract.ChassisNumber = contract.Vehicle.ChassisNumber;
-        }
-
-        private void RemoveVehicleValidation()
-        {
-            ModelState.Remove("Contract.Vehicle.VehicleType");
-            ModelState.Remove("Contract.Vehicle.VehicleModel");
-            ModelState.Remove("Contract.Vehicle.Color");
-            ModelState.Remove("Contract.Vehicle.Owner");
-            ModelState.Remove("Contract.Vehicle.OwnerId");
-            ModelState.Remove("Contract.Vehicle.VehicleModelName");
-            ModelState.Remove("Contract.Vehicle.VehicleBrand");
-            ModelState.Remove("Contract.Vehicle.VehicleColorName");
-            ModelState.Remove("Contract.Vehicle.VehicleCategory");
-            ModelState.Remove("Contract.Vehicle.RegistrationProvince");
-            ModelState.Remove("Contract.ManufactureYear");
-            ModelState.Remove("Contract.LicenseNumber");
-            ModelState.Remove("Contract.ChassisNumber");
+            if (contract.VehicleTypeId.HasValue &&
+                !await _context.VehicleModels.AnyAsync(m => m.Id == contract.VehicleModelId.Value && m.VehicleTypeId == contract.VehicleTypeId.Value))
+            {
+                ModelState.AddModelError("Contract.VehicleModelId", "موديل المركبة لا يتبع نوع المركبة المحدد");
+            }
         }
 
         private void LogModelStateErrors()

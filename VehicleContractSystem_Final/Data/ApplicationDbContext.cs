@@ -91,6 +91,24 @@ namespace VehicleContractSystem_Final.Data
                 .HasForeignKey(c => c.CityId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Entity<Contract>()
+                .HasOne<VehicleType>()
+                .WithMany()
+                .HasForeignKey(c => c.VehicleTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Contract>()
+                .HasOne<VehicleModel>()
+                .WithMany()
+                .HasForeignKey(c => c.VehicleModelId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Contract>()
+                .HasOne<Color>()
+                .WithMany()
+                .HasForeignKey(c => c.ColorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.Entity<Payment>()
                 .HasOne(p => p.Contract)
                 .WithMany(c => c.Payments)

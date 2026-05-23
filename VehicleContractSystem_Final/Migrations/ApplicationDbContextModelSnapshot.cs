@@ -497,6 +497,9 @@ namespace VehicleContractSystem_Final.Migrations
                     b.Property<int?>("CityId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ColorId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("ContractDate")
                         .HasColumnType("datetime2");
 
@@ -593,8 +596,14 @@ namespace VehicleContractSystem_Final.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("VehicleModelId")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("VehiclePrice")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("VehicleTypeId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -602,6 +611,8 @@ namespace VehicleContractSystem_Final.Migrations
                         .IsUnique();
 
                     b.HasIndex("CityId");
+
+                    b.HasIndex("ColorId");
 
                     b.HasIndex("ContractNumber")
                         .IsUnique();
@@ -611,6 +622,10 @@ namespace VehicleContractSystem_Final.Migrations
                     b.HasIndex("OfficeId");
 
                     b.HasIndex("ProvinceId");
+
+                    b.HasIndex("VehicleModelId");
+
+                    b.HasIndex("VehicleTypeId");
 
                     b.ToTable("Contracts");
                 });
@@ -1142,6 +1157,11 @@ namespace VehicleContractSystem_Final.Migrations
                         .HasForeignKey("CityId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("VehicleContractSystem_Final.Models.Color", null)
+                        .WithMany()
+                        .HasForeignKey("ColorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("VehicleContractSystem_Final.Models.ApplicationUser", "CreatedByUser")
                         .WithMany("CreatedContracts")
                         .HasForeignKey("CreatedByUserId")
@@ -1157,6 +1177,16 @@ namespace VehicleContractSystem_Final.Migrations
                     b.HasOne("VehicleContractSystem_Final.Models.Province", "Province")
                         .WithMany()
                         .HasForeignKey("ProvinceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VehicleContractSystem_Final.Models.VehicleModel", null)
+                        .WithMany()
+                        .HasForeignKey("VehicleModelId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VehicleContractSystem_Final.Models.VehicleType", null)
+                        .WithMany()
+                        .HasForeignKey("VehicleTypeId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("City");

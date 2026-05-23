@@ -378,6 +378,10 @@ namespace VehicleContractSystem_Final.Data
             if (contract != null)
                 return contract;
 
+            var vehicleType = await _context.VehicleTypes.FirstAsync(v => v.NameAr == "سيارة");
+            var vehicleModelLookup = await _context.VehicleModels.FirstAsync(v => v.NameAr == vehicleModel);
+            var colorLookup = await _context.Colors.FirstAsync(c => c.NameAr == vehicleColor);
+
             contract = new Contract
             {
                 ContractNumber = contractNumber,
@@ -395,6 +399,9 @@ namespace VehicleContractSystem_Final.Data
                 BuyerAddress = "بغداد",
                 CurrentOwnerName = sellerName,
                 VehicleBrand = vehicleBrand,
+                VehicleTypeId = vehicleType.Id,
+                VehicleModelId = vehicleModelLookup.Id,
+                ColorId = colorLookup.Id,
                 VehicleModel = vehicleModel,
                 VehicleCategory = "سيارة",
                 VehicleColor = vehicleColor,

@@ -12,6 +12,14 @@ namespace VehicleContractSystem_Final.Models.ViewModel
         public IEnumerable<SelectListItem> VehicleModels { get; set; } = new List<SelectListItem>();
         public List<Color> Colors { get; set; } = new();
 
+        public IEnumerable<SelectListItem> ColorList =>
+            Colors.Select(c => new SelectListItem
+            {
+                Value = c.Id.ToString(),
+                Text = c.NameAr,
+                Selected = Contract.ColorId == c.Id
+            });
+
         public IEnumerable<SelectListItem> ProvinceList =>
             Provinces.Select(p => new SelectListItem
             {

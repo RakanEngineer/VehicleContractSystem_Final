@@ -85,6 +85,15 @@ namespace VehicleContractSystem_Final.Models
         [Display(Name = "الماركة")]
         public string VehicleBrand { get; set; } = string.Empty;
 
+        [Display(Name = "نوع المركبة")]
+        public int? VehicleTypeId { get; set; }
+
+        [Display(Name = "موديل المركبة")]
+        public int? VehicleModelId { get; set; }
+
+        [Display(Name = "لون المركبة")]
+        public int? ColorId { get; set; }
+
         [Required]
         [Display(Name = "الموديل")]
         public string VehicleModel { get; set; } = string.Empty;
@@ -193,8 +202,5 @@ namespace VehicleContractSystem_Final.Models
         [Display(Name = "المبلغ المتبقي")]
         public decimal RemainingAmount => VehiclePrice - PaidAmount;
 
-        // اختياري: كائن مركبة لتسهيل الاستخدام
-        [NotMapped]
-        public Vehicle Vehicle { get; set; } = new(); // فقط لواجهة المستخدم أو ViewModel
     }
 }
