@@ -53,11 +53,7 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
-
-    if (app.Environment.IsDevelopment())
-    {
-        await DataSeeder.SeedAsync(context, services);
-    }
+    await DataSeeder.SeedAsync(context, services, app.Environment);
 }
 
 // Configure the HTTP request pipeline.

@@ -303,7 +303,7 @@ namespace VehicleContractSystem_Final.Controllers
         public async Task<IActionResult> PendingUsers()
         {
             var pendingUsers = await _userManager.Users
-                .Where(u => !u.IsApproved)
+                .Where(u => !u.IsApproved && u.OfficeId == null)
                 .OrderByDescending(u => u.RegisteredAt)
                 .ToListAsync();
 
@@ -333,10 +333,16 @@ namespace VehicleContractSystem_Final.Controllers
             if (user == null)
                 return NotFound();
 
+            if (!officeId.HasValue || !await _context.Offices.AnyAsync(o => o.Id == officeId.Value))
+            {
+                TempData["ErrorMessage"] = "يرجى اختيار مكتب صالح قبل الموافقة على المستخدم";
+                return RedirectToAction(nameof(PendingUsers));
+            }
+
             user.IsApproved = true;
             user.ApprovedAt = DateTime.Now;
             user.ApprovedBy = User.Identity?.Name;
-            user.OfficeId = officeId;
+            user.OfficeId = officeId.Value;
 
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)
