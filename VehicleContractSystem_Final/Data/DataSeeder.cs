@@ -28,6 +28,8 @@ namespace VehicleContractSystem_Final.Data
                 await AddRolesAsync([RolesNames.SuperAdmin, RolesNames.OfficeAdmin, RolesNames.User]);
 
                 ApplicationUser admin = await CreateUserAsync("admin@vehiclecontract.se", "Super", "Admin", "19800101-1111", "Admin@123", "0760");
+                admin.IsApproved = true;
+                await _userManager.UpdateAsync(admin);
                 ApplicationUser office = await CreateUserAsync("office@vehiclecontract.se", "Office", "Admin", "19760101-1111", "Office@123", "0780");
                 ApplicationUser user = await CreateUserAsync("user@vehiclecontract.se", "User", "User", "19840101-2222", "User@123", "0790");
 
@@ -53,7 +55,8 @@ namespace VehicleContractSystem_Final.Data
         private static async Task<ApplicationUser> CreateUserAsync(string email, string fName, string lName, string personalNumber, string password, string phoneNumber)
         {
             ApplicationUser? found = await _userManager.FindByEmailAsync(email);
-            if (found is not null) return null!;
+            if (found is not null)
+                return found;
 
             ApplicationUser user = new()
             {

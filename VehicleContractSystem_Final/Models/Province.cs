@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 
 namespace VehicleContractSystem_Final.Models
 {
@@ -12,10 +11,8 @@ namespace VehicleContractSystem_Final.Models
         public string NameAr { get; set; } = string.Empty;
 
         [Required]
-        [Display(Name = "Province Name")]
+        [Display(Name = "اسم المحافظة بالإنجليزية")]
         public string NameEn { get; set; } = string.Empty;
-        public string Name =>
-        CultureInfo.CurrentCulture.Name == "ar" ? NameAr : NameEn;
 
         public ICollection<City> Cities { get; set; } = new List<City>();
     }

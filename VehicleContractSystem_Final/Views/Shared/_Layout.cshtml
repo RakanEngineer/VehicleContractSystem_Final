@@ -1,15 +1,5 @@
-﻿@using System.ComponentModel
-@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
-@{
-    var culture = System.Globalization.CultureInfo.CurrentCulture.Name;
-    var isRtl = System.Globalization.CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
-}
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
- 
-@* <html lang="@culture" dir="@(isRtl ? "rtl" : "ltr")">
- *@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,7 +8,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
     <style>
-        /* ⭐ الحل الأساسي - Sticky Footer */
         html, body {
             height: 100%;
             margin: 0;
@@ -35,45 +24,56 @@
         main {
             flex: 1 0 auto;
         }
+
         .navbar-brand {
             font-weight: bold;
             font-size: 1.3rem;
         }
+
         .card {
             border: none;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             border-radius: 10px;
         }
+
         .btn {
             border-radius: 8px;
         }
+
         .stats-card {
             border-left: 4px solid #007bff;
             transition: transform 0.2s;
         }
+
         .stats-card:hover {
             transform: translateY(-5px);
         }
+
         .notification-badge {
             position: absolute;
             top: 8px;
             right: 8px;
             font-size: 0.7rem;
         }
+
         .dropdown-menu {
             max-height: 400px;
             overflow-y: auto;
         }
+
         .notification-item {
             border-bottom: 1px solid #eee;
             padding: 10px;
         }
+
         .notification-item:hover {
             background-color: #f8f9fa;
         }
+
         .notification-item.unread {
             background-color: #e7f3ff;
         }
+
         .footer {
             padding: 20px 0;
             background-color: #343a40;
@@ -116,7 +116,7 @@
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link" asp-controller="Account" asp-action="PendingUsers">
-                                        <i class="bi bi-person-check"></i> المستخدمين المعلقين
+                                        <i class="bi bi-person-check"></i> المستخدمون المعلقون
                                     </a>
                                 </li>
                             }
@@ -134,62 +134,44 @@
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" style="width: 350px;">
                                     <li class="dropdown-header">الإشعارات</li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li id="notificationList">
-                                    <li class="text-center p-3 text-muted">لا توجد إشعارات</li>
-                                    
+                                    <li id="notificationList" class="text-center p-3 text-muted">لا توجد إشعارات</li>
                                 </ul>
                             </li>
-                       
-                           @*  <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                    <i class="bi bi-globe"></i> @(isRtl ? "العربية" : "English")
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item" href="?culture=ar">
-                                            🇮🇶 العربية
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="?culture=en">
-                                            🇬🇧 English
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li> *@
 
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-person-circle"></i> @User.Identity.Name
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> الملف الشخصي</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> الإعدادات</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="px-3">
-                                    <button type="submit" class="btn btn-danger btn-sm w-100">
-                                        <i class="bi bi-box-arrow-left"></i> تسجيل الخروج
-                                    </button>
-                                </form>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-person-circle"></i> @User.Identity.Name
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                    <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> الملف الشخصي</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> الإعدادات</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" class="px-3">
+                                            <button type="submit" class="btn btn-danger btn-sm w-100">
+                                                <i class="bi bi-box-arrow-left"></i> تسجيل الخروج
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </li>
-                        </ul>
-                    </li>
-                }
-                else
-                {
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Account" asp-action="Login">
-                            <i class="bi bi-box-arrow-in-right"></i> تسجيل الدخول
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Account" asp-action="Register">
-                            <i class="bi bi-person-plus"></i> تسجيل جديد
-                        </a>
-                    </li>
-                }
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Login">
+                                    <i class="bi bi-box-arrow-in-right"></i> تسجيل الدخول
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Account" asp-action="Register">
+                                    <i class="bi bi-person-plus"></i> تسجيل جديد
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
             </div>
         </nav>
     </header>
@@ -243,58 +225,3 @@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
-
-
-
-@* <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - VehicleContractSystem_Final</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/VehicleContractSystem_Final.styles.css" asp-append-version="true" />
-</head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">VehicleContractSystem_Final</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <partial name="_LoginPartial" />
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - VehicleContractSystem_Final - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
-</body>
-</html>
- *@

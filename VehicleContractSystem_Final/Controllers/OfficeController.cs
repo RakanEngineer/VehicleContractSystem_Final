@@ -42,16 +42,7 @@ namespace VehicleContractSystem_Final.Controllers
             if (office == null)
                 return NotFound();
 
-            var viewModel = new OfficeViewModel
-            {
-                Office = office,
-                Staff = office.Staff.ToList(),
-                TotalContracts = office.Contracts.Count,
-                OpenContracts = office.Contracts.Count(c => c.Status == ContractStatus.Open),
-                ClosedContracts = office.Contracts.Count(c => c.Status == ContractStatus.Closed)
-            };
-
-            return View(viewModel);
+            return View(office);
         }
 
         // GET: Office/Create

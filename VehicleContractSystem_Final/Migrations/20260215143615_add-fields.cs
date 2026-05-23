@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace VehicleContractSystem_Final.Migrations
 {
     /// <inheritdoc />
-    public partial class addfields : Migration
+    public partial class AddFields : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

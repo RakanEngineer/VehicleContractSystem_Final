@@ -4,10 +4,10 @@ namespace VehicleContractSystem_Final.Enums
 {
     public enum ContractStatus
     {
-        [Display(Name = "Open")]
+        [Display(Name = "مفتوح")]
         Open = 1,
         
-        [Display(Name = "Closed")]
+        [Display(Name = "مغلق")]
         Closed = 2
     }
 }

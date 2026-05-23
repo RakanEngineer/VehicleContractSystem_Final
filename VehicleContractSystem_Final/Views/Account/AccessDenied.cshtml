@@ -1,10 +1,8 @@
-﻿@inject IStringLocalizer<VehicleContractSystem_Final.Resources.SharedResources> Localizer
-@{
-    ViewData["Title"] = Localizer["AccessDenied"];
-    var isRtl = System.Globalization.CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+﻿@{
+    ViewData["Title"] = "تم رفض الوصول";
 }
 
-<div class="container" dir=@(isRtl ? "rtl" : "ltr")>
+<div class="container" dir="rtl">
     <div class="row justify-content-center mt-5">
         <div class="col-md-6">
             <div class="card border-danger">
@@ -13,23 +11,23 @@
                         <i class="bi bi-shield-exclamation text-danger" style="font-size: 5rem;"></i>
                     </div>
 
-                    <h2 class="text-danger mb-3">@Localizer["AccessDenied"]</h2>
+                    <h2 class="text-danger mb-3">تم رفض الوصول</h2>
 
                     <p class="text-muted mb-4">
-                        @Localizer["AccessDeniedMessage"]
+                        ليس لديك صلاحية للوصول إلى هذه الصفحة
                     </p>
 
                     <div class="alert alert-warning" role="alert">
                         <i class="bi bi-info-circle"></i>
-                        @Localizer["NoPermissionMessage"]
+                        لا تملك الصلاحية المطلوبة
                     </div>
 
                     <div class="d-flex gap-2 justify-content-center mt-4">
                         <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
-                            <i class="bi bi-house"></i> @Localizer["Home"]
+                            <i class="bi bi-house"></i> الرئيسية
                         </a>
                         <a href="javascript:history.back()" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left"></i> @Localizer["Back"]
+                            <i class="bi bi-arrow-left"></i> رجوع
                         </a>
                     </div>
                 </div>
@@ -37,15 +35,16 @@
 
             <div class="card mt-3">
                 <div class="card-body">
-                    <h6 class="card-title">@Localizer["NeedHelp"]</h6>
+                    <h6 class="card-title">هل تحتاج مساعدة؟</h6>
                     <p class="card-text small text-muted">
-                        @Localizer["ContactAdminMessage"]
+                        يرجى التواصل مع مدير النظام
                     </p>
                     <a href="mailto:admin@vehiclecontract.com" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-envelope"></i> @Localizer["ContactSupport"]
+                        <i class="bi bi-envelope"></i> تواصل مع الدعم الفني
                     </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+

@@ -35,7 +35,9 @@ namespace VehicleContractSystem_Final.Services
                 var authToken = _configuration["WhatsApp:Twilio:AuthToken"];
                 var fromNumber = _configuration["WhatsApp:Twilio:FromNumber"]; // whatsapp:+14155238886
 
-                if (string.IsNullOrEmpty(accountSid) || string.IsNullOrEmpty(authToken))
+                if (string.IsNullOrEmpty(accountSid) ||
+                    string.IsNullOrEmpty(authToken) ||
+                    string.IsNullOrEmpty(fromNumber))
                 {
                     Console.WriteLine("WhatsApp credentials not configured");
                     return false;

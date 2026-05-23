@@ -1,19 +1,17 @@
 ﻿@model VehicleContractSystem_Final.Models.Office
-@inject IStringLocalizer<VehicleContractSystem_Final.Resources.SharedResources> Localizer
 @{
-    ViewData["Title"] = Localizer["CreateNewOffice"];
-    var isRtl = System.Globalization.CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+    ViewData["Title"] = "إنشاء مكتب جديد";
 }
 
-<div class="container-fluid" dir="@(isRtl ? "rtl" : "ltr")">
+<div class="container-fluid" dir="rtl">
     <div class="row mb-4">
         <div class="col">
-            <h2><i class="bi bi-building"></i> @Localizer["CreateNewOffice"]</h2>
+            <h2><i class="bi bi-building"></i> إنشاء مكتب جديد</h2>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">@Localizer["Home"]</a></li>
-                    <li class="breadcrumb-item"><a asp-controller="Office" asp-action="Index">@Localizer["Offices"]</a></li>
-                    <li class="breadcrumb-item active">@Localizer["CreateNew"]</li>
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">الرئيسية</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Office" asp-action="Index">المكاتب</a></li>
+                    <li class="breadcrumb-item active">إنشاء جديد</li>
                 </ol>
             </nav>
         </div>
@@ -23,7 +21,7 @@
         <div class="col-lg-8 mx-auto">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> @Localizer["OfficeInformation"]</h5>
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> بيانات المكتب</h5>
                 </div>
                 <div class="card-body">
                     <form asp-action="Create" method="post">
@@ -76,10 +74,10 @@
 
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> @Localizer["Save"]
+                                <i class="bi bi-save"></i> حفظ
                             </button>
                             <a asp-action="Index" class="btn btn-secondary">
-                                <i class="bi bi-x-circle"></i> @Localizer["Cancel"]
+                                <i class="bi bi-x-circle"></i> إلغاء
                             </a>
                         </div>
                     </form>
@@ -92,3 +90,4 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
+

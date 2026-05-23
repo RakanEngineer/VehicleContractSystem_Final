@@ -13,7 +13,7 @@ namespace VehicleContractSystem_Final.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20260215143615_add-fields")]
-    partial class addfields
+    partial class AddFields
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

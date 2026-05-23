@@ -1,19 +1,17 @@
 ﻿@model VehicleContractSystem_Final.Models.Office
-@inject IStringLocalizer<VehicleContractSystem_Final.Resources.SharedResources> Localizer
 @{
-    ViewData["Title"] = Localizer["EditOffice"];
-    var isRtl = System.Globalization.CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+    ViewData["Title"] = "تعديل المكتب";
 }
 
-<div class="container-fluid" dir="@(isRtl ? "rtl" : "ltr")">
+<div class="container-fluid" dir="rtl">
     <div class="row mb-4">
         <div class="col">
-            <h2><i class="bi bi-pencil-square"></i> @Localizer["EditOffice"]</h2>
+            <h2><i class="bi bi-pencil-square"></i> تعديل المكتب</h2>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">@Localizer["Home"]</a></li>
-                    <li class="breadcrumb-item"><a asp-controller="Office" asp-action="Index">@Localizer["Offices"]</a></li>
-                    <li class="breadcrumb-item active">@Localizer["Edit"]</li>
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">الرئيسية</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Office" asp-action="Index">المكاتب</a></li>
+                    <li class="breadcrumb-item active">تعديل</li>
                 </ol>
             </nav>
         </div>
@@ -23,7 +21,7 @@
         <div class="col-lg-8 mx-auto">
             <div class="card">
                 <div class="card-header bg-warning">
-                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> @Localizer["OfficeInformation"]</h5>
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> بيانات المكتب</h5>
                 </div>
                 <div class="card-body">
                     <form asp-action="Edit" method="post">
@@ -78,10 +76,10 @@
 
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> @Localizer["SaveChanges"]
+                                <i class="bi bi-save"></i> حفظ التغييرات
                             </button>
                             <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">
-                                <i class="bi bi-x-circle"></i> @Localizer["Cancel"]
+                                <i class="bi bi-x-circle"></i> إلغاء
                             </a>
                         </div>
                     </form>
@@ -91,21 +89,21 @@
             <!-- Statistics Card -->
             <div class="card mt-4">
                 <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> @Localizer["Statistics"]</h5>
+                    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> الإحصائيات</h5>
                 </div>
                 <div class="card-body">
                     <div class="row text-center">
                         <div class="col-md-4">
                             <div class="display-6 text-primary">@Model.Staff.Count</div>
-                            <small class="text-muted">@Localizer["Staff"]</small>
+                            <small class="text-muted">الموظفون</small>
                         </div>
                         <div class="col-md-4">
                             <div class="display-6 text-success">@Model.Contracts.Count</div>
-                            <small class="text-muted">@Localizer["Contracts"]</small>
+                            <small class="text-muted">العقود</small>
                         </div>
                         <div class="col-md-4">
                             <div class="display-6 text-warning">@Model.Contracts.Count(c => c.Status == VehicleContractSystem_Final.Enums.ContractStatus.Open)</div>
-                            <small class="text-muted">@Localizer["OpenContracts"]</small>
+                            <small class="text-muted">العقود المفتوحة</small>
                         </div>
                     </div>
                 </div>
@@ -117,3 +115,4 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
+

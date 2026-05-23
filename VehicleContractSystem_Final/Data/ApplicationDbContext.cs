@@ -19,6 +19,7 @@ namespace VehicleContractSystem_Final.Data
         public DbSet<Province> Provinces { get; set; }
         public DbSet<City> Cities { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Payment> Payments { get; set; }
         public DbSet<VehicleModel> VehicleModels { get; set; }
         public DbSet<Color> Colors { get; set; }
 
@@ -71,6 +72,66 @@ namespace VehicleContractSystem_Final.Data
                 .WithMany(vt => vt.VehicleModels)
                 .HasForeignKey(vm => vm.VehicleTypeId)
                 .OnDelete(DeleteBehavior.Restrict); //  Cascade 
+
+            builder.Entity<City>()
+                .HasOne(c => c.Province)
+                .WithMany(p => p.Cities)
+                .HasForeignKey(c => c.ProvinceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Contract>()
+                .HasOne(c => c.Province)
+                .WithMany()
+                .HasForeignKey(c => c.ProvinceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Contract>()
+                .HasOne(c => c.City)
+                .WithMany()
+                .HasForeignKey(c => c.CityId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Payment>()
+                .HasOne(p => p.Contract)
+                .WithMany(c => c.Payments)
+                .HasForeignKey(p => p.ContractId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Payment>()
+                .HasOne(p => p.RecordedBy)
+                .WithMany()
+                .HasForeignKey(p => p.RecordedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Notification>()
+                .HasOne(n => n.User)
+                .WithMany(u => u.Notifications)
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Vehicle>()
+                .HasOne(v => v.Owner)
+                .WithMany(u => u.Vehicles)
+                .HasForeignKey(v => v.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Vehicle>()
+                .HasOne(v => v.VehicleType)
+                .WithMany()
+                .HasForeignKey(v => v.VehicleTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Vehicle>()
+                .HasOne(v => v.VehicleModel)
+                .WithMany(vm => vm.Vehicles)
+                .HasForeignKey(v => v.VehicleModelId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Vehicle>()
+                .HasOne(v => v.Color)
+                .WithMany(c => c.Vehicles)
+                .HasForeignKey(v => v.ColorId)
+                .OnDelete(DeleteBehavior.Restrict);
 
 
             // Seed data

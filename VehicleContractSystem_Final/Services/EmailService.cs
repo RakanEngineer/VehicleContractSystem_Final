@@ -24,8 +24,22 @@ namespace VehicleContractSystem_Final.Services
         {
             try
             {
+                var fromEmail = _configuration["EmailSettings:From"];
+                var smtpServer = _configuration["EmailSettings:SmtpServer"];
+                var userName = _configuration["EmailSettings:Username"];
+                var password = _configuration["EmailSettings:Password"];
+
+                if (string.IsNullOrWhiteSpace(fromEmail) ||
+                    string.IsNullOrWhiteSpace(smtpServer) ||
+                    string.IsNullOrWhiteSpace(userName) ||
+                    string.IsNullOrWhiteSpace(password))
+                {
+                    Console.WriteLine("Email settings not configured");
+                    return;
+                }
+
                 var email = new MimeMessage();
-                email.From.Add(MailboxAddress.Parse(_configuration["EmailSettings:From"]));
+                email.From.Add(MailboxAddress.Parse(fromEmail));
                 email.To.Add(MailboxAddress.Parse(toEmail));
                 email.Subject = subject;
 
@@ -37,14 +51,14 @@ namespace VehicleContractSystem_Final.Services
 
                 using var smtp = new SmtpClient();
                 await smtp.ConnectAsync(
-                    _configuration["EmailSettings:SmtpServer"],
+                    smtpServer,
                     int.Parse(_configuration["EmailSettings:Port"] ?? "587"),
                     SecureSocketOptions.StartTls
                 );
 
                 await smtp.AuthenticateAsync(
-                    _configuration["EmailSettings:Username"],
-                    _configuration["EmailSettings:Password"]
+                    userName,
+                    password
                 );
 
                 await smtp.SendAsync(email);

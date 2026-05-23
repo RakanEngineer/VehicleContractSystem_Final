@@ -1,28 +1,26 @@
 ﻿@model VehicleContractSystem_Final.Models.Office
-@inject IStringLocalizer<VehicleContractSystem_Final.Resources.SharedResources> Localizer
 @{
     ViewData["Title"] = Model.Name;
-    var isRtl = System.Globalization.CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
 }
 
-<div class="container-fluid" dir=@(isRtl ? "rtl" : "ltr")>
+<div class="container-fluid" dir="rtl">
     <div class="row mb-4">
         <div class="col">
             <h2><i class="bi bi-building"></i> @Model.Name</h2>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">@Localizer["Home"]</a></li>
-                    <li class="breadcrumb-item"><a asp-controller="Office" asp-action="Index">@Localizer["Offices"]</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">الرئيسية</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Office" asp-action="Index">المكاتب</a></li>
                     <li class="breadcrumb-item active">@Model.Name</li>
                 </ol>
             </nav>
         </div>
         <div class="col-auto">
             <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
-                <i class="bi bi-pencil"></i> @Localizer["Edit"]
+                <i class="bi bi-pencil"></i> تعديل
             </a>
             <a asp-action="Index" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> @Localizer["BackToList"]
+                <i class="bi bi-arrow-left"></i> العودة للقائمة
             </a>
         </div>
     </div>
@@ -32,39 +30,39 @@
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> @Localizer["OfficeInformation"]</h5>
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> بيانات المكتب</h5>
                 </div>
                 <div class="card-body">
                     <table class="table table-borderless">
                         <tr>
-                            <th width="30%">@Localizer["Name"]:</th>
+                            <th width="30%">الاسم:</th>
                             <td><strong>@Model.Name</strong></td>
                         </tr>
                         <tr>
-                            <th>@Localizer["LicenseNumber"]:</th>
+                            <th>رقم اللوحة:</th>
                             <td>@Model.LicenseNumber</td>
                         </tr>
                         <tr>
-                            <th>@Localizer["Address"]:</th>
+                            <th>العنوان:</th>
                             <td>@Model.Address</td>
                         </tr>
                         <tr>
-                            <th>@Localizer["Phone"]:</th>
+                            <th>الهاتف:</th>
                             <td><a href="tel:@Model.Phone">@Model.Phone</a></td>
                         </tr>
                         <tr>
-                            <th>@Localizer["Email"]:</th>
+                            <th>البريد الإلكتروني:</th>
                             <td><a href="mailto:@Model.Email">@Model.Email</a></td>
                         </tr>
                         <tr>
-                            <th>@Localizer["EstablishedDate"]:</th>
+                            <th>تاريخ التأسيس:</th>
                             <td>@Model.EstablishedDate.ToString("yyyy-MM-dd")</td>
                         </tr>
                         <tr>
-                            <th>@Localizer["Status"]:</th>
+                            <th>الحالة:</th>
                             <td>
                                 <span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary")">
-                                    @(Model.IsActive? Localizer["Active"] : Localizer["Inactive"])
+                                    @(Model.IsActive? "نشط" : "غير نشط")
                                 </span>
                             </td>
                         </tr>
@@ -76,22 +74,22 @@
         <div class="col-lg-4">
             <div class="card bg-light">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> @Localizer["Statistics"]</h5>
+                    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> الإحصائيات</h5>
                 </div>
                 <div class="card-body text-center">
                     <div class="mb-3">
                         <div class="display-4 text-primary">@Model.Staff.Count</div>
-                        <small class="text-muted">@Localizer["Staff"]</small>
+                        <small class="text-muted">الموظفون</small>
                     </div>
                     <hr />
                     <div class="mb-3">
                         <div class="display-4 text-success">@Model.Contracts.Count</div>
-                        <small class="text-muted">@Localizer["Contracts"]</small>
+                        <small class="text-muted">العقود</small>
                     </div>
                     <hr />
                     <div>
                         <div class="display-4 text-info">@Model.Contracts.Count(c => c.Status == VehicleContractSystem_Final.Enums.ContractStatus.Open)</div>
-                        <small class="text-muted">@Localizer["OpenContracts"]</small>
+                        <small class="text-muted">العقود المفتوحة</small>
                     </div>
                 </div>
             </div>
@@ -103,7 +101,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-people"></i> @Localizer["Staff"] (@Model.Staff.Count)</h5>
+                    <h5 class="mb-0"><i class="bi bi-people"></i> الموظفون (@Model.Staff.Count)</h5>
                 </div>
                 <div class="card-body">
                     @if (Model.Staff.Any())
@@ -112,11 +110,11 @@
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>@Localizer["Name"]</th>
-                                        <th>@Localizer["Email"]</th>
-                                        <th>@Localizer["Phone"]</th>
-                                        <th>@Localizer["Role"]</th>
-                                        <th>@Localizer["Status"]</th>
+                                        <th>الاسم</th>
+                                        <th>البريد الإلكتروني</th>
+                                        <th>الهاتف</th>
+                                        <th>الدور</th>
+                                        <th>الحالة</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -127,11 +125,11 @@
                                             <td>@staff.Email</td>
                                             <td>@staff.PhoneNumber</td>
                                             <td>
-                                                <span class="badge bg-info">@Localizer["User"]</span>
+                                                <span class="badge bg-info">المستخدم</span>
                                             </td>
                                             <td>
                                                 <span class="badge @(staff.IsApproved ? "bg-success" : "bg-warning")">
-                                                    @(staff.IsApproved? Localizer["Approved"] : Localizer["Pending"])
+                                                    @(staff.IsApproved? "موافق عليه" : "معلق")
                                                 </span>
                                             </td>
                                         </tr>
@@ -142,7 +140,7 @@
                     }
                     else
                     {
-                        <p class="text-center text-muted py-3">@Localizer["NoStaff"]</p>
+                        <p class="text-center text-muted py-3">لا يوجد موظفون</p>
                     }
                 </div>
             </div>
@@ -154,7 +152,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> @Localizer["RecentContracts"]</h5>
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> أحدث العقود</h5>
                 </div>
                 <div class="card-body">
                     @if (Model.Contracts.Any())
@@ -163,12 +161,12 @@
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>@Localizer["ContractNumber"]</th>
-                                        <th>@Localizer["Seller"]</th>
-                                        <th>@Localizer["Buyer"]</th>
-                                        <th>@Localizer["Date"]</th>
-                                        <th>@Localizer["Amount"]</th>
-                                        <th>@Localizer["Status"]</th>
+                                        <th>رقم العقد</th>
+                                        <th>البائع</th>
+                                        <th>المشتري</th>
+                                        <th>التاريخ</th>
+                                        <th>المبلغ</th>
+                                        <th>الحالة</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -183,7 +181,7 @@
                                             <td>@contract.VehiclePrice.ToString("N0")</td>
                                             <td>
                                                 <span class="badge @(contract.Status == VehicleContractSystem_Final.Enums.ContractStatus.Open ? "bg-success" : "bg-secondary")">
-                                                    @Localizer[contract.Status.ToString()]
+                                                    @(contract.Status == VehicleContractSystem_Final.Enums.ContractStatus.Open ? "مفتوح" : "مغلق")
                                                 </span>
                                             </td>
                                             <td>
@@ -199,10 +197,11 @@
                     }
                     else
                     {
-                        <p class="text-center text-muted py-3">@Localizer["NoContracts"]</p>
+                        <p class="text-center text-muted py-3">لا توجد عقود</p>
                     }
                 </div>
             </div>
         </div>
     </div>
 </div>
+

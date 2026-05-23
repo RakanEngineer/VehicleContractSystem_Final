@@ -5,17 +5,15 @@
 
 <p>Use this page to detail your site's privacy policy.</p>
 
-@inject IStringLocalizer<VehicleContractSystem_Final.Resources.SharedResources> Localizer
 @{
-    ViewData["Title"] = Localizer["Privacy"];
-    var isRtl = System.Globalization.CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+    ViewData["Title"] = "الخصوصية";
 }
 
-<div class="container" dir=@(isRtl ? "rtl" : "ltr")>
+<div class="container" dir="rtl">
     <div class="row mb-4">
         <div class="col">
-            <h1><i class="bi bi-shield-check"></i> @Localizer["PrivacyPolicy"]</h1>
-            <p class="text-muted">@Localizer["LastUpdated"]: @DateTime.Now.ToString("yyyy-MM-dd")</p>
+            <h1><i class="bi bi-shield-check"></i> سياسة الخصوصية</h1>
+            <p class="text-muted">آخر تحديث: @DateTime.Now.ToString("yyyy-MM-dd")</p>
         </div>
     </div>
 
@@ -23,87 +21,88 @@
         <div class="col-lg-8 mx-auto">
             <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title">@Localizer["Introduction"]</h4>
+                    <h4 class="card-title">مقدمة</h4>
                     <p class="card-text">
-                        @Localizer["PrivacyIntroText"]
+                        توضح هذه الصفحة كيفية التعامل مع بيانات النظام
                     </p>
                 </div>
             </div>
 
             <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title"><i class="bi bi-clipboard-data"></i> @Localizer["DataCollection"]</h4>
-                    <p>@Localizer["DataCollectionText"]</p>
+                    <h4 class="card-title"><i class="bi bi-clipboard-data"></i> جمع البيانات</h4>
+                    <p>نجمع البيانات اللازمة لإدارة العقود فقط</p>
                     <ul>
-                        <li>@Localizer["PersonalInformation"]</li>
-                        <li>@Localizer["ContactInformation"]</li>
-                        <li>@Localizer["ContractData"]</li>
-                        <li>@Localizer["VehicleInformation"]</li>
+                        <li>المعلومات الشخصية</li>
+                        <li>معلومات الاتصال</li>
+                        <li>بيانات العقد</li>
+                        <li>بيانات المركبة</li>
                     </ul>
                 </div>
             </div>
 
             <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title"><i class="bi bi-lock"></i> @Localizer["DataProtection"]</h4>
-                    <p>@Localizer["DataProtectionText"]</p>
+                    <h4 class="card-title"><i class="bi bi-lock"></i> حماية البيانات</h4>
+                    <p>يتم حماية البيانات وفق صلاحيات المستخدمين</p>
                     <ul>
-                        <li>@Localizer["EncryptionUsed"]</li>
-                        <li>@Localizer["SecureServers"]</li>
-                        <li>@Localizer["AccessControl"]</li>
-                        <li>@Localizer["RegularBackups"]</li>
+                        <li>يتم استخدام الحماية المناسبة للبيانات</li>
+                        <li>خوادم آمنة</li>
+                        <li>التحكم بالوصول</li>
+                        <li>يتم أخذ نسخ احتياطية دورية</li>
                     </ul>
                 </div>
             </div>
 
             <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title"><i class="bi bi-people"></i> @Localizer["DataSharing"]</h4>
-                    <p>@Localizer["DataSharingText"]</p>
+                    <h4 class="card-title"><i class="bi bi-people"></i> مشاركة البيانات</h4>
+                    <p>لا تتم مشاركة البيانات إلا عند الحاجة القانونية أو التشغيلية</p>
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i>
-                        @Localizer["NoThirdPartySharing"]
+                        لا توجد مشاركة مع أطراف ثالثة
                     </div>
                 </div>
             </div>
 
             <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title"><i class="bi bi-person-check"></i> @Localizer["YourRights"]</h4>
-                    <p>@Localizer["YourRightsText"]</p>
+                    <h4 class="card-title"><i class="bi bi-person-check"></i> حقوقك</h4>
+                    <p>يمكنك طلب مراجعة أو تصحيح البيانات وفق الصلاحيات المتاحة</p>
                     <ul>
-                        <li>@Localizer["RightToAccess"]</li>
-                        <li>@Localizer["RightToCorrect"]</li>
-                        <li>@Localizer["RightToDelete"]</li>
-                        <li>@Localizer["RightToExport"]</li>
+                        <li>حق الوصول</li>
+                        <li>حق التصحيح</li>
+                        <li>حق الحذف</li>
+                        <li>حق التصدير</li>
                     </ul>
                 </div>
             </div>
 
             <div class="card mb-4">
                 <div class="card-body">
-                    <h4 class="card-title"><i class="bi bi-cookie"></i> @Localizer["Cookies"]</h4>
-                    <p>@Localizer["CookiesText"]</p>
+                    <h4 class="card-title"><i class="bi bi-cookie"></i> ملفات الارتباط</h4>
+                    <p>نستخدم ملفات الارتباط اللازمة لتشغيل النظام</p>
                 </div>
             </div>
 
             <div class="card mb-4 border-warning">
                 <div class="card-body">
-                    <h4 class="card-title"><i class="bi bi-envelope"></i> @Localizer["ContactUs"]</h4>
-                    <p>@Localizer["PrivacyContactText"]</p>
+                    <h4 class="card-title"><i class="bi bi-envelope"></i> تواصل معنا</h4>
+                    <p>للاستفسار حول الخصوصية يرجى التواصل مع إدارة النظام</p>
                     <p>
-                        <strong>@Localizer["Email"]:</strong> privacy@vehiclecontract.com<br />
-                        <strong>@Localizer["Phone"]:</strong> 07701234567
+                        <strong>البريد الإلكتروني:</strong> privacy@vehiclecontract.com<br />
+                        <strong>الهاتف:</strong> 07701234567
                     </p>
                 </div>
             </div>
 
             <div class="text-center mt-4 mb-4">
                 <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
-                    <i class="bi bi-arrow-left"></i> @Localizer["BackToHome"]
+                    <i class="bi bi-arrow-left"></i> العودة للرئيسية
                 </a>
             </div>
         </div>
     </div>
 </div>
+
 

@@ -1,19 +1,17 @@
 ﻿@model VehicleContractSystem_Final.Models.Contract
-@inject IStringLocalizer<VehicleContractSystem_Final.Resources.SharedResources> Localizer
 @{
-    ViewData["Title"] = Localizer["DeleteContract"];
-    var isRtl = System.Globalization.CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+    ViewData["Title"] = "حذف العقد";
 }
 
-<div class="container-fluid" dir="@(isRtl ? "rtl" : "ltr")">
+<div class="container-fluid" dir="rtl">
     <div class="row mb-4">
         <div class="col">
-            <h2 class="text-danger"><i class="bi bi-trash"></i> @Localizer["DeleteContract"]</h2>
+            <h2 class="text-danger"><i class="bi bi-trash"></i> حذف العقد</h2>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">@Localizer["Home"]</a></li>
-                    <li class="breadcrumb-item"><a asp-controller="Contract" asp-action="Index">@Localizer["Contracts"]</a></li>
-                    <li class="breadcrumb-item active">@Localizer["Delete"]</li>
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">الرئيسية</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Contract" asp-action="Index">العقود</a></li>
+                    <li class="breadcrumb-item active">حذف</li>
                 </ol>
             </nav>
         </div>
@@ -24,46 +22,46 @@
             <div class="alert alert-danger d-flex align-items-center" role="alert">
                 <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
                 <div>
-                    <h4 class="alert-heading">@Localizer["ConfirmDeletion"]</h4>
-                    <p class="mb-0">@Localizer["DeleteWarningMessage"]</p>
+                    <h4 class="alert-heading">تأكيد الحذف</h4>
+                    <p class="mb-0">يرجى التأكد قبل متابعة الحذف</p>
                 </div>
             </div>
 
             <div class="card border-danger">
                 <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> @Localizer["ContractDetails"]</h5>
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> تفاصيل العقد</h5>
                 </div>
                 <div class="card-body">
                     <table class="table table-borderless">
                         <tr>
-                            <th width="30%">@Localizer["ContractNumber"]:</th>
+                            <th width="30%">رقم العقد:</th>
                             <td><strong class="text-danger">@Model.ContractNumber</strong></td>
                         </tr>
                         <tr>
-                            <th>@Localizer["ContractDate"]:</th>
+                            <th>تاريخ العقد:</th>
                             <td>@Model.ContractDate.ToString("yyyy-MM-dd")</td>
                         </tr>
                         <tr>
-                            <th>@Localizer["Seller"]:</th>
+                            <th>البائع:</th>
                             <td>@Model.SellerName</td>
                         </tr>
                         <tr>
-                            <th>@Localizer["Buyer"]:</th>
+                            <th>المشتري:</th>
                             <td>@Model.BuyerName</td>
                         </tr>
                         <tr>
-                            <th>@Localizer["Vehicle"]:</th>
-                            <td>@Model.Vehicle.VehicleModel.Name - @Model.Vehicle.LicenseNumber</td>
+                            <th>المركبة:</th>
+                            <td>@Model.VehicleBrand @Model.VehicleModel - @Model.LicenseNumber</td>
                         </tr>
                         <tr>
-                            <th>@Localizer["VehiclePrice"]:</th>
+                            <th>سعر المركبة:</th>
                             <td><strong>@Model.VehiclePrice.ToString("N0")</strong></td>
                         </tr>
                         <tr>
-                            <th>@Localizer["Status"]:</th>
+                            <th>الحالة:</th>
                             <td>
                                 <span class="badge @(Model.Status == VehicleContractSystem_Final.Enums.ContractStatus.Open ? "bg-success" : "bg-secondary")">
-                                    @Localizer[Model.Status.ToString()]
+                                    @(Model.Status == VehicleContractSystem_Final.Enums.ContractStatus.Open ? "مفتوح" : "مغلق")
                                 </span>
                             </td>
                         </tr>
@@ -73,7 +71,7 @@
                     {
                         <div class="alert alert-warning">
                             <i class="bi bi-exclamation-circle"></i>
-                            <strong>@Localizer["Warning"]:</strong> @Localizer["ContractHasPayments"] (@Model.Payments.Count @Localizer["Payments"])
+                            <strong>تحذير:</strong> هذا العقد يحتوي على دفعات (@Model.Payments.Count الدفعات)
                         </div>
                     }
                 </div>
@@ -81,11 +79,11 @@
 
             <div class="card mt-3 border-info">
                 <div class="card-body">
-                    <h6 class="card-title text-info"><i class="bi bi-info-circle"></i> @Localizer["ImportantNote"]</h6>
+                    <h6 class="card-title text-info"><i class="bi bi-info-circle"></i> ملاحظة مهمة</h6>
                     <ul class="mb-0">
-                        <li>@Localizer["DeletePermanent"]</li>
-                        <li>@Localizer["DeleteAllRelated"]</li>
-                        <li>@Localizer["CannotUndo"]</li>
+                        <li>سيتم الحذف بشكل نهائي</li>
+                        <li>احذف السجلات المرتبطة أولاً</li>
+                        <li>لا يمكن التراجع عن هذا الإجراء</li>
                     </ul>
                 </div>
             </div>
@@ -94,14 +92,15 @@
                 <input type="hidden" asp-for="Id" />
 
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-danger btn-lg" onclick="return confirm('@Localizer["ConfirmDeleteMessage"]')">
-                        <i class="bi bi-trash"></i> @Localizer["DeleteConfirm"]
+                    <button type="submit" class="btn btn-danger btn-lg" onclick="return confirm('هل أنت متأكد من الحذف؟')">
+                        <i class="bi bi-trash"></i> تأكيد الحذف
                     </button>
                     <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary btn-lg">
-                        <i class="bi bi-x-circle"></i> @Localizer["Cancel"]
+                        <i class="bi bi-x-circle"></i> إلغاء
                     </a>
                 </div>
             </form>
         </div>
     </div>
 </div>
+

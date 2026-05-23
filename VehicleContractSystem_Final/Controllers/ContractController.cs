@@ -86,6 +86,7 @@ namespace VehicleContractSystem_Final.Controllers
                 .Include(c => c.CreatedByUser)
                 .Include(c => c.Province)
                 .Include(c => c.City)
+                .Include(c => c.Payments)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (contract == null)
@@ -111,37 +112,14 @@ namespace VehicleContractSystem_Final.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var viewModel = new ContractViewModel
+            var contract = new Contract
             {
-                Provinces = await _context.Provinces.ToListAsync(),
-                VehicleTypes = await _context.VehicleTypes
-                .Select(v => new SelectListItem
-                {
-                    Value = v.Id.ToString(),
-                    Text = v.Name
-                }).ToListAsync(),
-                
-                VehicleModels = await _context.VehicleModels
-                .Select(v => new SelectListItem
-                {
-                    Value = v.Id.ToString(),
-                    Text = v.Name
-                }).ToListAsync(),
-
-                Colors = await _context.Colors
-                .Select(c => new SelectListItem
-                {
-                    Value = c.Id.ToString(),
-                    Text = c.Name
-                }).ToListAsync(),
-
-                Contract = new Contract
-                {
-                    ContractNumber = GenerateContractNumber(),
-                    ContractDate = DateTime.Now,
-                    OfficeId = currentUser.OfficeId.Value
-                }
+                ContractNumber = GenerateContractNumber(),
+                ContractDate = DateTime.Now,
+                OfficeId = currentUser.OfficeId.Value
             };
+
+            var viewModel = await BuildContractViewModelAsync(contract, new VehicleViewModel());
 
             return View(viewModel);
         }
@@ -149,8 +127,9 @@ namespace VehicleContractSystem_Final.Controllers
         // POST: Contract/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Contract contract)
+        public async Task<IActionResult> Create(ContractViewModel viewModel)
         {
+            var contract = viewModel.Contract;
             var currentUser = await _currentUserService.GetCurrentUserAsync();
             if (currentUser == null || currentUser.OfficeId == null)
             {
@@ -159,10 +138,18 @@ namespace VehicleContractSystem_Final.Controllers
             }
 
             // Remove validation for navigation properties
-            ModelState.Remove("CreatedByUser");
-            ModelState.Remove("Office");
-            ModelState.Remove("Province");
-            ModelState.Remove("City");
+            ModelState.Remove("Contract.CreatedByUser");
+            ModelState.Remove("Contract.CreatedByUserId");
+            ModelState.Remove("Contract.Office");
+            ModelState.Remove("Contract.OfficeId");
+            ModelState.Remove("Contract.Province");
+            ModelState.Remove("Contract.City");
+            ModelState.Remove("Contract.Payments");
+            ModelState.Remove("Contract.VehicleCategory");
+            ModelState.Remove("Contract.VehicleModel");
+            ModelState.Remove("Contract.VehicleColor");
+
+            await ApplyVehicleLookupValuesAsync(contract, viewModel.Vehicle);
 
             if (ModelState.IsValid)
             {
@@ -183,35 +170,7 @@ namespace VehicleContractSystem_Final.Controllers
                 return RedirectToAction(nameof(Details), new { id = contract.Id });
             }
 
-            var viewModel = new ContractViewModel
-            {
-                VehicleTypes = await _context.VehicleTypes
-                .Select(v => new SelectListItem
-                {
-                    Value = v.Id.ToString(),
-                    Text = v.Name
-                }).ToListAsync(),
-
-                VehicleModels = await _context.VehicleModels
-                .Select(v => new SelectListItem
-                {
-                    Value = v.Id.ToString(),
-                    Text = v.Name
-                }).ToListAsync(),
-
-                Colors = await _context.Colors
-                .Select(c => new SelectListItem
-                {
-                    Value = c.Id.ToString(),
-                    Text = c.Name
-                }).ToListAsync(),
-
-                Contract = contract,
-                Provinces = await _context.Provinces.ToListAsync(),
-                Cities = contract.ProvinceId.HasValue
-                    ? await _context.Cities.Where(c => c.ProvinceId == contract.ProvinceId).ToListAsync()
-                    : new List<City>()
-            };
+            viewModel = await BuildContractViewModelAsync(contract, viewModel.Vehicle);
 
             return View(viewModel);
         }
@@ -222,7 +181,9 @@ namespace VehicleContractSystem_Final.Controllers
             if (id == null)
                 return NotFound();
 
-            var contract = await _context.Contracts.FindAsync(id);
+            var contract = await _context.Contracts
+                .Include(c => c.Payments)
+                .FirstOrDefaultAsync(c => c.Id == id);
             if (contract == null)
                 return NotFound();
 
@@ -239,14 +200,7 @@ namespace VehicleContractSystem_Final.Controllers
                 return RedirectToAction(nameof(Details), new { id = contract.Id });
             }
 
-            var viewModel = new ContractViewModel
-            {
-                Contract = contract,
-                Provinces = await _context.Provinces.ToListAsync(),
-                Cities = contract.ProvinceId.HasValue
-                    ? await _context.Cities.Where(c => c.ProvinceId == contract.ProvinceId).ToListAsync()
-                    : new List<City>()
-            };
+            var viewModel = await BuildContractViewModelAsync(contract, await BuildVehicleViewModelAsync(contract));
 
             return View(viewModel);
         }
@@ -254,8 +208,9 @@ namespace VehicleContractSystem_Final.Controllers
         // POST: Contract/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Contract contract)
+        public async Task<IActionResult> Edit(int id, ContractViewModel viewModel)
         {
+            var contract = viewModel.Contract;
             if (id != contract.Id)
                 return NotFound();
 
@@ -277,10 +232,18 @@ namespace VehicleContractSystem_Final.Controllers
             }
 
             // Remove validation for navigation properties
-            ModelState.Remove("CreatedByUser");
-            ModelState.Remove("Office");
-            ModelState.Remove("Province");
-            ModelState.Remove("City");
+            ModelState.Remove("Contract.CreatedByUser");
+            ModelState.Remove("Contract.CreatedByUserId");
+            ModelState.Remove("Contract.Office");
+            ModelState.Remove("Contract.OfficeId");
+            ModelState.Remove("Contract.Province");
+            ModelState.Remove("Contract.City");
+            ModelState.Remove("Contract.Payments");
+            ModelState.Remove("Contract.VehicleCategory");
+            ModelState.Remove("Contract.VehicleModel");
+            ModelState.Remove("Contract.VehicleColor");
+
+            await ApplyVehicleLookupValuesAsync(contract, viewModel.Vehicle);
 
             if (ModelState.IsValid)
             {
@@ -308,6 +271,8 @@ namespace VehicleContractSystem_Final.Controllers
                     existingContract.VehicleCategory = contract.VehicleCategory;
                     existingContract.VehicleColor = contract.VehicleColor;
                     existingContract.ChassisNumber = contract.ChassisNumber;
+                    existingContract.LicenseNumber = contract.LicenseNumber;
+                    existingContract.VehiclePrice = contract.VehiclePrice;
                     existingContract.Notes = contract.Notes;
                     existingContract.ProvinceId = contract.ProvinceId;
                     existingContract.CityId = contract.CityId;
@@ -332,14 +297,7 @@ namespace VehicleContractSystem_Final.Controllers
                 }
             }
 
-            var viewModel = new ContractViewModel
-            {
-                Contract = contract,
-                Provinces = await _context.Provinces.ToListAsync(),
-                Cities = contract.ProvinceId.HasValue
-                    ? await _context.Cities.Where(c => c.ProvinceId == contract.ProvinceId).ToListAsync()
-                    : new List<City>()
-            };
+            viewModel = await BuildContractViewModelAsync(contract, viewModel.Vehicle);
 
             return View(viewModel);
         }
@@ -349,7 +307,9 @@ namespace VehicleContractSystem_Final.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Close(int id)
         {
-            var contract = await _context.Contracts.FindAsync(id);
+            var contract = await _context.Contracts
+                .Include(c => c.Payments)
+                .FirstOrDefaultAsync(c => c.Id == id);
             if (contract == null)
                 return NotFound();
 
@@ -382,6 +342,7 @@ namespace VehicleContractSystem_Final.Controllers
                 .Include(c => c.CreatedByUser)
                 .Include(c => c.Province)
                 .Include(c => c.City)
+                .Include(c => c.Payments)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (contract == null)
@@ -425,6 +386,12 @@ namespace VehicleContractSystem_Final.Controllers
                 return RedirectToAction(nameof(Details), new { id = contract.Id });
             }
 
+            if (contract.Payments.Any())
+            {
+                TempData["ErrorMessage"] = "لا يمكن حذف عقد يحتوي على دفعات";
+                return RedirectToAction(nameof(Details), new { id = contract.Id });
+            }
+
             _context.Contracts.Remove(contract);
             await _context.SaveChangesAsync();
 
@@ -437,7 +404,7 @@ namespace VehicleContractSystem_Final.Controllers
         {
             var models = await _context.VehicleModels
                 .Where(m => m.VehicleTypeId == vehicleTypeId)
-                .Select(m => new { value = m.Id, text = m.Name })
+                .Select(m => new { value = m.Id, text = m.NameAr })
                 .ToListAsync();
 
             return Json(models);
@@ -466,6 +433,7 @@ namespace VehicleContractSystem_Final.Controllers
                 .Include(c => c.CreatedByUser)
                 .Include(c => c.Province)
                 .Include(c => c.City)
+                .Include(c => c.Payments)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (contract == null)
@@ -502,6 +470,7 @@ namespace VehicleContractSystem_Final.Controllers
                 .Include(c => c.CreatedByUser)
                 .Include(c => c.Province)
                 .Include(c => c.City)
+                .Include(c => c.Payments)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (contract == null)
@@ -587,6 +556,76 @@ namespace VehicleContractSystem_Final.Controllers
         private bool ContractExists(int id)
         {
             return _context.Contracts.Any(e => e.Id == id);
+        }
+
+        private async Task<ContractViewModel> BuildContractViewModelAsync(Contract contract, VehicleViewModel vehicle)
+        {
+            return new ContractViewModel
+            {
+                Contract = contract,
+                Vehicle = vehicle,
+                Provinces = await _context.Provinces.ToListAsync(),
+                Cities = contract.ProvinceId.HasValue
+                    ? await _context.Cities.Where(c => c.ProvinceId == contract.ProvinceId).ToListAsync()
+                    : new List<City>(),
+                VehicleTypes = await _context.VehicleTypes
+                    .Select(v => new SelectListItem
+                    {
+                        Value = v.Id.ToString(),
+                        Text = v.NameAr,
+                        Selected = vehicle.VehicleTypeId == v.Id
+                    }).ToListAsync(),
+                VehicleModels = await _context.VehicleModels
+                    .Where(v => !vehicle.VehicleTypeId.HasValue || v.VehicleTypeId == vehicle.VehicleTypeId.Value)
+                    .Select(v => new SelectListItem
+                    {
+                        Value = v.Id.ToString(),
+                        Text = v.NameAr,
+                        Selected = vehicle.VehicleModelId == v.Id
+                    }).ToListAsync(),
+                Colors = await _context.Colors
+                    .Select(c => new SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.NameAr,
+                        Selected = vehicle.ColorId == c.Id
+                    }).ToListAsync()
+            };
+        }
+
+        private async Task<VehicleViewModel> BuildVehicleViewModelAsync(Contract contract)
+        {
+            var vehicleModel = await _context.VehicleModels
+                .FirstOrDefaultAsync(m => m.NameAr == contract.VehicleModel);
+            var color = await _context.Colors
+                .FirstOrDefaultAsync(c => c.NameAr == contract.VehicleColor);
+
+            return new VehicleViewModel
+            {
+                VehicleTypeId = vehicleModel?.VehicleTypeId,
+                VehicleModelId = vehicleModel?.Id,
+                ColorId = color?.Id,
+                ManufactureYear = contract.ManufactureYear,
+                LicenseNumber = contract.LicenseNumber,
+                ChassisNumber = contract.ChassisNumber
+            };
+        }
+
+        private async Task ApplyVehicleLookupValuesAsync(Contract contract, VehicleViewModel vehicle)
+        {
+            var vehicleType = vehicle.VehicleTypeId.HasValue
+                ? await _context.VehicleTypes.FindAsync(vehicle.VehicleTypeId.Value)
+                : null;
+            var vehicleModel = vehicle.VehicleModelId.HasValue
+                ? await _context.VehicleModels.FindAsync(vehicle.VehicleModelId.Value)
+                : null;
+            var color = vehicle.ColorId.HasValue
+                ? await _context.Colors.FindAsync(vehicle.ColorId.Value)
+                : null;
+
+            contract.VehicleCategory = vehicleType?.NameAr ?? string.Empty;
+            contract.VehicleModel = vehicleModel?.NameAr ?? string.Empty;
+            contract.VehicleColor = color?.NameAr ?? string.Empty;
         }
     }
 }

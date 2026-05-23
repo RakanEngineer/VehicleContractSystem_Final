@@ -5,19 +5,19 @@ namespace VehicleContractSystem_Final.Models
     public class Vehicle
     {
         public int Id { get; set; }
-        public int? VehicleTypeId { get; set; }
+        public int VehicleTypeId { get; set; }
 
-        [Required(ErrorMessage = "Please select a vehicle type.")]
-        public VehicleType? VehicleType { get; set; }
+        [Required(ErrorMessage = "يرجى اختيار نوع المركبة")]
+        public VehicleType VehicleType { get; set; } = null!;
 
         [Required]
         public int VehicleModelId { get; set; }  // جديد
-        public VehicleModel? VehicleModel { get; set; } // جديد
+        public VehicleModel VehicleModel { get; set; } = null!; // جديد
 
         [Required]
 
         public int ColorId { get; set; } // جديد
-        public Color? Color { get; set; } // جديد
+        public Color Color { get; set; } = null!; // جديد
 
 
         [Required]
@@ -37,7 +37,7 @@ namespace VehicleContractSystem_Final.Models
         public int NumberOfWheels { get; set; }
 
         public string OwnerId { get; set; } = string.Empty;
-        public ApplicationUser? Owner { get; set; }
+        public ApplicationUser Owner { get; set; } = null!;
     
     }
 }

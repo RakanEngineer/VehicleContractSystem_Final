@@ -1,6 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using VehicleContractSystem_Final.Resources;
 
 namespace VehicleContractSystem_Final.Models
 {
@@ -9,33 +8,30 @@ namespace VehicleContractSystem_Final.Models
         public int Id { get; set; }
 
         [Required]
-        [Display(Name = "Contract", ResourceType = typeof(SharedResources))]
+        [Display(Name = "العقد")]
         public int ContractId { get; set; }
         public Contract Contract { get; set; } = null!;
 
         [Required]
-        [Range(0, double.MaxValue, ErrorMessageResourceName = "InvalidAmount",
-               ErrorMessageResourceType = typeof(SharedResources))]
-        [Display(Name = "Amount", ResourceType = typeof(SharedResources))]
+        [Range(0.01, double.MaxValue, ErrorMessage = "يجب أن يكون مبلغ الدفعة أكبر من صفر")]
+        [Display(Name = "المبلغ")]
         [Column(TypeName = "decimal(18,2)")]
         public decimal Amount { get; set; }
 
-        [Display(Name = "PaymentDate", ResourceType = typeof(SharedResources))]
+        [Display(Name = "تاريخ الدفعة")]
         public DateTime PaymentDate { get; set; } = DateTime.Now;
 
-        [Display(Name = "PaymentMethod", ResourceType = typeof(SharedResources))]
-        public string PaymentMethod { get; set; } = "Cash"; // Cash, BankTransfer, Check
+        [Display(Name = "طريقة الدفع")]
+        public string PaymentMethod { get; set; } = "نقداً";
 
-        [Display(Name = "Notes", ResourceType = typeof(SharedResources))]
+        [Display(Name = "الملاحظات")]
         public string Notes { get; set; } = "";
 
-        // Audit Fields
-        [Display(Name = "RecordedBy", ResourceType = typeof(SharedResources))]
+        [Display(Name = "مسجل الدفعة")]
         public string RecordedByUserId { get; set; } = "";
         public ApplicationUser RecordedBy { get; set; } = null!;
 
-        [Display(Name = "CreatedAt", ResourceType = typeof(SharedResources))]
+        [Display(Name = "تاريخ الإنشاء")]
         public DateTime CreatedAt { get; set; } = DateTime.Now;
-
     }
 }

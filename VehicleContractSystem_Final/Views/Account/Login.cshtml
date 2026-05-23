@@ -15,7 +15,7 @@
                 </div>
 
                 <form asp-action="Login" method="post">
-                    <input type="hidden" asp-for="@ViewData["ReturnUrl"]" />
+                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
                     <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
                     <div class="mb-3">

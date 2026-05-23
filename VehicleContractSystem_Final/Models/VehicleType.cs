@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 
 namespace VehicleContractSystem_Final.Models
 {
@@ -12,17 +11,6 @@ namespace VehicleContractSystem_Final.Models
 
         [Required]
         public string NameEn { get; set; } = string.Empty;
-
-        // Helper property for localization
-        //public string Name =>
-        //    CultureInfo.CurrentCulture.Name == "ar" ? NameAr : NameEn;
-        public string Name
-        {
-            get
-            {
-                return CultureInfo.CurrentCulture.Name.StartsWith("ar") ? NameAr : NameEn;
-            }
-        }
 
         public ICollection<VehicleModel> VehicleModels { get; set; } = new List<VehicleModel>();
     }

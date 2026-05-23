@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using VehicleContractSystem_Final.Data;
 using VehicleContractSystem_Final.Models;
+using VehicleContractSystem_Final.Models.ViewModel;
 using VehicleContractSystem_Final.Services;
 
 namespace VehicleContractSystem_Final.Controllers
@@ -306,7 +307,20 @@ namespace VehicleContractSystem_Final.Controllers
                 .OrderByDescending(u => u.RegisteredAt)
                 .ToListAsync();
 
-            return View(pendingUsers);
+            var offices = await _context.Offices
+                .OrderBy(o => o.Name)
+                .Select(o => new SelectListItem
+                {
+                    Value = o.Id.ToString(),
+                    Text = o.Name
+                })
+                .ToListAsync();
+
+            return View(new PendingUsersViewModel
+            {
+                Users = pendingUsers,
+                Offices = offices
+            });
         }
 
         // POST: Account/ApproveUser
@@ -383,74 +397,4 @@ namespace VehicleContractSystem_Final.Controllers
         }
     }
 
-    // ViewModels
-    public class RegisterViewModel
-    {
-        [Required(ErrorMessage = "البريد الإلكتروني مطلوب")]
-        [EmailAddress(ErrorMessage = "البريد الإلكتروني غير صحيح")]
-        [Display(Name = "البريد الإلكتروني")]
-        public string Email { get; set; } = string.Empty;
-
-        [Display(Name = "رقم الهاتف")]
-        [Phone(ErrorMessage = "رقم الهاتف غير صحيح")]
-        public string? PhoneNumber { get; set; }
-
-        [Required(ErrorMessage = "كلمة المرور مطلوبة")]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "كلمة المرور يجب أن تكون 6 أحرف على الأقل")]
-        [DataType(DataType.Password)]
-        [Display(Name = "كلمة المرور")]
-        public string Password { get; set; } = string.Empty;
-
-        [DataType(DataType.Password)]
-        [Display(Name = "تأكيد كلمة المرور")]
-        [Compare("Password", ErrorMessage = "كلمة المرور غير متطابقة")]
-        public string ConfirmPassword { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "الاسم الأول مطلوب")]
-        [Display(Name = "الاسم الأول")]
-        public string FirstName { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "اسم العائلة مطلوب")]
-        [Display(Name = "اسم العائلة")]
-        public string LastName { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "رقم الهوية مطلوب")]
-        [StringLength(13)]
-        [Display(Name = "رقم الهوية")]
-        public string PersonalNumber { get; set; } = string.Empty;
-    }
-
-    public class LoginViewModel
-    {
-        [Required(ErrorMessage = "البريد الإلكتروني أو رقم الهاتف مطلوب")]
-        [Display(Name = "البريد الإلكتروني أو رقم الهاتف")]
-        public string EmailOrPhone { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "كلمة المرور مطلوبة")]
-        [DataType(DataType.Password)]
-        [Display(Name = "كلمة المرور")]
-        public string Password { get; set; } = string.Empty;
-
-        [Display(Name = "تذكرني")]
-        public bool RememberMe { get; set; }
-    }
-
-    public class ExternalLoginViewModel
-    {
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
-
-        [Required]
-        public string FirstName { get; set; } = string.Empty;
-
-        [Required]
-        public string LastName { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(13)]
-        public string PersonalNumber { get; set; } = string.Empty;
-
-        public string? PhoneNumber { get; set; }
-    }
 }

@@ -718,21 +718,17 @@ namespace VehicleContractSystem_Final.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("RecordedById")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("RecordedByUserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ContractId");
 
-                    b.HasIndex("RecordedById");
+                    b.HasIndex("RecordedByUserId");
 
-                    b.ToTable("Payment");
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("VehicleContractSystem_Final.Models.Province", b =>
@@ -1095,7 +1091,7 @@ namespace VehicleContractSystem_Final.Migrations
                     b.HasOne("VehicleContractSystem_Final.Models.Province", "Province")
                         .WithMany("Cities")
                         .HasForeignKey("ProvinceId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Province");
@@ -1105,7 +1101,8 @@ namespace VehicleContractSystem_Final.Migrations
                 {
                     b.HasOne("VehicleContractSystem_Final.Models.City", "City")
                         .WithMany()
-                        .HasForeignKey("CityId");
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("VehicleContractSystem_Final.Models.ApplicationUser", "CreatedByUser")
                         .WithMany("CreatedContracts")
@@ -1121,7 +1118,8 @@ namespace VehicleContractSystem_Final.Migrations
 
                     b.HasOne("VehicleContractSystem_Final.Models.Province", "Province")
                         .WithMany()
-                        .HasForeignKey("ProvinceId");
+                        .HasForeignKey("ProvinceId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("City");
 
@@ -1136,7 +1134,8 @@ namespace VehicleContractSystem_Final.Migrations
                 {
                     b.HasOne("VehicleContractSystem_Final.Models.ApplicationUser", "User")
                         .WithMany("Notifications")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("User");
                 });
@@ -1146,13 +1145,13 @@ namespace VehicleContractSystem_Final.Migrations
                     b.HasOne("VehicleContractSystem_Final.Models.Contract", "Contract")
                         .WithMany("Payments")
                         .HasForeignKey("ContractId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("VehicleContractSystem_Final.Models.ApplicationUser", "RecordedBy")
                         .WithMany()
-                        .HasForeignKey("RecordedById")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("RecordedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Contract");
@@ -1165,25 +1164,25 @@ namespace VehicleContractSystem_Final.Migrations
                     b.HasOne("VehicleContractSystem_Final.Models.Color", "Color")
                         .WithMany("Vehicles")
                         .HasForeignKey("ColorId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("VehicleContractSystem_Final.Models.ApplicationUser", "Owner")
                         .WithMany("Vehicles")
                         .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("VehicleContractSystem_Final.Models.VehicleModel", "VehicleModel")
                         .WithMany("Vehicles")
                         .HasForeignKey("VehicleModelId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("VehicleContractSystem_Final.Models.VehicleType", "VehicleType")
                         .WithMany()
                         .HasForeignKey("VehicleTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Color");
