@@ -109,11 +109,10 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Vehicle.VehicleTypeId" class="form-label"></label>
-                                <select asp-for="Vehicle.VehicleTypeId" asp-items="Model.VehicleTypes" class="form-select" id="vehicleTypeSelect">
+                                <select asp-for="Contract.Vehicle.VehicleTypeId" asp-items="Model.VehicleTypes" class="form-select" id="vehicleTypeSelect">
                                     <option value="">اختر نوع المركبة</option>
                                 </select>
-                                <span asp-validation-for="Vehicle.VehicleTypeId" class="text-danger"></span>
+                                <span asp-validation-for="Contract.Vehicle.VehicleTypeId" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6 mb-3">
@@ -123,19 +122,21 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Vehicle.VehicleModelId" class="form-label"></label>
-                                <select asp-for="Vehicle.VehicleModelId" asp-items="Model.VehicleModels" class="form-select" id="vehicleModelSelect">
+                                <select asp-for="Contract.Vehicle.VehicleModelId" asp-items="Model.VehicleModels" class="form-select" id="vehicleModelSelect">
                                     <option value="">اختر موديل المركبة</option>
                                 </select>
-                                <span asp-validation-for="Vehicle.VehicleModelId" class="text-danger"></span>
+                                <span asp-validation-for="Contract.Vehicle.VehicleModelId" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Vehicle.ColorId" class="form-label"></label>
-                                <select asp-for="Vehicle.ColorId" asp-items="Model.Colors" class="form-select">
+                                <select asp-for="Contract.Vehicle.ColorId" class="form-select">
                                     <option value="">اختر لون المركبة</option>
+                                    @foreach (var color in Model.Colors)
+                                    {
+                                        <option value="@color.Id">@color.NameAr</option>
+                                    }
                                 </select>
-                                <span asp-validation-for="Vehicle.ColorId" class="text-danger"></span>
+                                <span asp-validation-for="Contract.Vehicle.ColorId" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6 mb-3">

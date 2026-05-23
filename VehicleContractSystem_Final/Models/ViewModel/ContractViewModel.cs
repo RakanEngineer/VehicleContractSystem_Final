@@ -8,11 +8,9 @@ namespace VehicleContractSystem_Final.Models.ViewModel
         public List<Province> Provinces { get; set; } = new();
         public List<City> Cities { get; set; } = new();
 
-        public VehicleViewModel Vehicle { get; set; } = new VehicleViewModel();
-
         public IEnumerable<SelectListItem> VehicleTypes { get; set; } = new List<SelectListItem>();
         public IEnumerable<SelectListItem> VehicleModels { get; set; } = new List<SelectListItem>();
-        public IEnumerable<SelectListItem> Colors { get; set; } = new List<SelectListItem>();
+        public List<Color> Colors { get; set; } = new();
 
         public IEnumerable<SelectListItem> ProvinceList =>
             Provinces.Select(p => new SelectListItem

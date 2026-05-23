@@ -184,6 +184,15 @@ namespace VehicleContractSystem_Final.Data
                 new VehicleModel { Id = 3, NameAr = "كيا سيراتو", NameEn = "Kia Cerato", VehicleTypeId = 1 }
             );
 
+            builder.Entity<Color>().HasData(
+                new Color { Id = 1, NameAr = "أبيض", NameEn = "White" },
+                new Color { Id = 2, NameAr = "أسود", NameEn = "Black" },
+                new Color { Id = 3, NameAr = "فضي", NameEn = "Silver" },
+                new Color { Id = 4, NameAr = "رمادي", NameEn = "Gray" },
+                new Color { Id = 5, NameAr = "أحمر", NameEn = "Red" },
+                new Color { Id = 6, NameAr = "أزرق", NameEn = "Blue" }
+            );
+
             // Seed Offices
             builder.Entity<Office>().HasData(
                 new Office

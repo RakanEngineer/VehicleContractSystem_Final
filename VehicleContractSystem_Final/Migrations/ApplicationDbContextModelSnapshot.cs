@@ -410,6 +410,44 @@ namespace VehicleContractSystem_Final.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Colors");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            NameAr = "أبيض",
+                            NameEn = "White"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            NameAr = "أسود",
+                            NameEn = "Black"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            NameAr = "فضي",
+                            NameEn = "Silver"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            NameAr = "رمادي",
+                            NameEn = "Gray"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            NameAr = "أحمر",
+                            NameEn = "Red"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            NameAr = "أزرق",
+                            NameEn = "Blue"
+                        });
                 });
 
             modelBuilder.Entity("VehicleContractSystem_Final.Models.Contract", b =>

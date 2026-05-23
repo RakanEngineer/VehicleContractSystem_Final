@@ -195,6 +195,6 @@ namespace VehicleContractSystem_Final.Models
 
         // اختياري: كائن مركبة لتسهيل الاستخدام
         [NotMapped]
-        public Vehicle? Vehicle { get; set; } // فقط لواجهة المستخدم أو ViewModel
+        public Vehicle Vehicle { get; set; } = new(); // فقط لواجهة المستخدم أو ViewModel
     }
 }

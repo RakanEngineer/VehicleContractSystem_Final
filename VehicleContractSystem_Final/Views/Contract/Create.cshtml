@@ -104,11 +104,11 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Vehicle.VehicleTypeId" class="form-label"></label>
-                                <select asp-for="Vehicle.VehicleTypeId" asp-items="Model.VehicleTypes" class="form-select" id="vehicleTypeSelect">
+                                <label asp-for="Contract.Vehicle.VehicleTypeId" class="form-label"></label>
+                                <select asp-for="Contract.Vehicle.VehicleTypeId" asp-items="Model.VehicleTypes" class="form-select" id="vehicleTypeSelect">
                                     <option value="">اختر نوع المركبة</option>
                                 </select>
-                                <span asp-validation-for="Vehicle.VehicleTypeId" class="text-danger"></span>
+                                <span asp-validation-for="Contract.Vehicle.VehicleTypeId" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6 mb-3">
@@ -118,37 +118,41 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Vehicle.VehicleModelId" class="form-label"></label>
-                                <select asp-for="Vehicle.VehicleModelId" asp-items="Model.VehicleModels" class="form-select" id="vehicleModelSelect">
+                                <label asp-for="Contract.Vehicle.VehicleModelId" class="form-label"></label>
+                                <select asp-for="Contract.Vehicle.VehicleModelId" asp-items="Model.VehicleModels" class="form-select" id="vehicleModelSelect">
                                     <option value="">اختر موديل المركبة</option>
                                 </select>
-                                <span asp-validation-for="Vehicle.VehicleModelId" class="text-danger"></span>
+                                <span asp-validation-for="Contract.Vehicle.VehicleModelId" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Vehicle.ColorId" class="form-label"></label>
-                                <select asp-for="Vehicle.ColorId" asp-items="Model.Colors" class="form-select">
+                                <label asp-for="Contract.Vehicle.ColorId" class="form-label"></label>
+                                <select asp-for="Contract.Vehicle.ColorId" class="form-select">
                                     <option value="">اختر لون المركبة</option>
+                                    @foreach (var color in Model.Colors)
+                                    {
+                                        <option value="@color.Id">@color.NameAr</option>
+                                    }
                                 </select>
-                                <span asp-validation-for="Vehicle.ColorId" class="text-danger"></span>
+                                <span asp-validation-for="Contract.Vehicle.ColorId" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.ManufactureYear" class="form-label"></label>
-                                <input asp-for="Contract.ManufactureYear" class="form-control" type="number" min="1990" max="2026" />
-                                <span asp-validation-for="Contract.ManufactureYear" class="text-danger"></span>
+                                <label asp-for="Contract.Vehicle.ManufactureYear" class="form-label"></label>
+                                <input asp-for="Contract.Vehicle.ManufactureYear" class="form-control" type="number" min="1990" max="2026" />
+                                <span asp-validation-for="Contract.Vehicle.ManufactureYear" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.LicenseNumber" class="form-label"></label>
-                                <input asp-for="Contract.LicenseNumber" class="form-control" />
-                                <span asp-validation-for="Contract.LicenseNumber" class="text-danger"></span>
+                                <label asp-for="Contract.Vehicle.LicenseNumber" class="form-label"></label>
+                                <input asp-for="Contract.Vehicle.LicenseNumber" class="form-control" />
+                                <span asp-validation-for="Contract.Vehicle.LicenseNumber" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.ChassisNumber" class="form-label"></label>
-                                <input asp-for="Contract.ChassisNumber" class="form-control" />
-                                <span asp-validation-for="Contract.ChassisNumber" class="text-danger"></span>
+                                <label asp-for="Contract.Vehicle.ChassisNumber" class="form-label"></label>
+                                <input asp-for="Contract.Vehicle.ChassisNumber" class="form-control" />
+                                <span asp-validation-for="Contract.Vehicle.ChassisNumber" class="text-danger"></span>
                             </div>
                         </div>
                     </div>
