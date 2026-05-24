@@ -10,7 +10,7 @@ namespace VehicleContractSystem_Final.Models
 
         public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
         public int VehicleTypeId { get; set; }
-        [Display(Name = "نوع المركبة")]
+        [Display(Name = "صنف المركبة")]
         public VehicleType VehicleType { get; set; } = null!;
 
     }

@@ -85,7 +85,7 @@ namespace VehicleContractSystem_Final.Models
         [Display(Name = "الماركة")]
         public string VehicleBrand { get; set; } = string.Empty;
 
-        [Display(Name = "نوع المركبة")]
+        [Display(Name = "صنف المركبة")]
         public int? VehicleTypeId { get; set; }
 
         [Display(Name = "موديل المركبة")]
@@ -94,26 +94,50 @@ namespace VehicleContractSystem_Final.Models
         [Display(Name = "لون المركبة")]
         public int? ColorId { get; set; }
 
-        [Required]
-        [Display(Name = "الموديل")]
+        [Required(ErrorMessage = "يرجى إدخال موديل المركبة")]
+        [Display(Name = "موديل المركبة")]
         public string VehicleModel { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "سنة الصنع")]
         public int ManufactureYear { get; set; }
 
-        [Display(Name = "النوع")]
+        [Display(Name = "صنف المركبة")]
         public string VehicleCategory { get; set; } = string.Empty;
 
         [Display(Name = "اللون")]
         public string VehicleColor { get; set; } = string.Empty;
 
         [Required]
+        [MaxLength(450)]
         [Display(Name = "رقم الشاصي")]
         public string ChassisNumber { get; set; } = string.Empty;
         [Required]
         [Display(Name = "رقم السيارة")]
         public string LicenseNumber { get; set; } = string.Empty;
+
+        [Display(Name = "المركبة")]
+        public int? VehicleId { get; set; }
+
+        public Vehicle? Vehicle { get; set; }
+
+        [Display(Name = "صنف المركبة وقت التعاقد")]
+        public string? VehicleTypeNameSnapshot { get; set; }
+
+        [Display(Name = "موديل المركبة وقت التعاقد")]
+        public string? VehicleModelNameSnapshot { get; set; }
+
+        [Display(Name = "لون المركبة وقت التعاقد")]
+        public string? VehicleColorNameSnapshot { get; set; }
+
+        [Display(Name = "رقم المركبة وقت التعاقد")]
+        public string? LicenseNumberSnapshot { get; set; }
+
+        [Display(Name = "رقم الشاصي وقت التعاقد")]
+        public string? ChassisNumberSnapshot { get; set; }
+
+        [Display(Name = "سنة الصنع وقت التعاقد")]
+        public int? ManufactureYearSnapshot { get; set; }
 
         // معلومات العنوان - Address Information
         // ===================================================

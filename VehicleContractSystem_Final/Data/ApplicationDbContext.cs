@@ -36,12 +36,12 @@ namespace VehicleContractSystem_Final.Data
                 .HasIndex(v => v.LicenseNumber)
                 .IsUnique();
 
-            builder.Entity<Contract>()
-                .HasIndex(c => c.ContractNumber)
+            builder.Entity<Vehicle>()
+                .HasIndex(v => v.ChassisNumber)
                 .IsUnique();
 
             builder.Entity<Contract>()
-                .HasIndex(c => c.ChassisNumber)
+                .HasIndex(c => c.ContractNumber)
                 .IsUnique();
 
             // Relationships
@@ -65,6 +65,12 @@ namespace VehicleContractSystem_Final.Data
                 .HasOne(c => c.CreatedByUser)
                 .WithMany(u => u.CreatedContracts)
                 .HasForeignKey(c => c.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Contract>()
+                .HasOne(c => c.Vehicle)
+                .WithMany()
+                .HasForeignKey(c => c.VehicleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<VehicleModel>()
@@ -143,6 +149,7 @@ namespace VehicleContractSystem_Final.Data
                 .HasOne(v => v.VehicleModel)
                 .WithMany(vm => vm.Vehicles)
                 .HasForeignKey(v => v.VehicleModelId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Vehicle>()

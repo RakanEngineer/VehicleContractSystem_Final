@@ -323,3 +323,156 @@ Maintain:
 - production-ready code
 - Arabic-first vehicle contract management system
 
+---
+
+# FUTURE ARCHITECTURE ROADMAP
+
+## Long-Term System Direction
+
+The system is evolving toward:
+
+```text
+Vehicle-centric architecture
+with immutable contract snapshots
+```
+
+Similar to professional vehicle marketplace systems.
+
+---
+
+## Vehicle Entity Rules
+
+Vehicle is a real persistent entity.
+
+Vehicle must contain:
+
+- VehicleTypeId
+- VehicleModelId
+- ColorId
+- LicenseNumber
+- ChassisNumber
+- ManufactureYear
+- OwnerId
+- Status (future-ready)
+
+Vehicle data must be reusable across:
+- contracts
+- listings
+- ownership transfer
+- marketplace modules
+
+---
+
+## Contract Snapshot Rules
+
+Contracts are legal immutable documents.
+
+Contract MUST store snapshot fields copied from Vehicle at creation time.
+
+Examples:
+
+- VehicleTypeNameSnapshot
+- VehicleModelNameSnapshot
+- VehicleColorNameSnapshot
+- LicenseNumberSnapshot
+- ChassisNumberSnapshot
+- ManufactureYearSnapshot
+
+Never rely on live Vehicle data when:
+- printing contracts
+- exporting PDFs
+- viewing historical contracts
+
+---
+
+## Relationship Rules
+
+Contract must reference Vehicle:
+
+```csharp
+public int VehicleId { get; set; }
+public Vehicle Vehicle { get; set; } = null!;
+```
+
+Vehicle may have multiple contracts historically.
+
+Use:
+
+```csharp
+.OnDelete(DeleteBehavior.Restrict)
+```
+
+for all critical relationships.
+
+---
+
+## Migration Safety Rules
+
+Never perform destructive migrations directly.
+
+Migration strategy must be:
+
+1. Add nullable columns first
+2. Backfill data
+3. Verify integrity
+4. Then enforce constraints
+
+Never drop old columns before migration verification.
+
+---
+
+## UI Rules For Vehicle Workflow
+
+Vehicle selection and creation should use:
+- lookup dropdowns
+- searchable vehicle forms
+- reusable vehicle workflows
+
+Contract views should display snapshot data only.
+
+---
+
+## Marketplace Readiness
+
+Future system modules may include:
+
+- vehicle marketplace
+- ownership history
+- vehicle listings
+- vehicle inspections
+- installment sales
+- online contracts
+- QR verification
+- public vehicle pages
+
+Architecture decisions must preserve future scalability.
+
+# AI AGENT EXECUTION RULES
+
+Before making architectural changes:
+
+1. Analyze:
+   - DbContext
+   - Models
+   - Controllers
+   - Views
+   - Existing migrations
+
+2. Explain impact before destructive changes.
+
+3. Prefer incremental refactoring over rewrites.
+
+4. Never:
+   - remove data blindly
+   - recreate databases unnecessarily
+   - drop production columns without migration strategy
+
+5. All generated code must:
+   - compile successfully
+   - pass migrations
+   - preserve existing data
+
+6. Always prioritize:
+   - stability
+   - maintainability
+   - future scalability

@@ -2,10 +2,20 @@
 @{
     ViewData["Title"] = "طباعة العقد";
     Layout = null;
+
     var qrCodeBase64 = ViewBag.QRCodeBase64 as string;
     var officeName = string.IsNullOrWhiteSpace(Model.Office?.Name) ? "نظام إدارة عقود المركبات" : Model.Office.Name;
     var officeLicense = string.IsNullOrWhiteSpace(Model.Office?.LicenseNumber) ? "غير محدد" : Model.Office.LicenseNumber;
     var officeAddress = string.IsNullOrWhiteSpace(Model.Office?.Address) ? "غير محدد" : Model.Office.Address;
+    var officePhone = string.IsNullOrWhiteSpace(Model.Office?.Phone) ? "غير محدد" : Model.Office.Phone;
+
+    var vehicleTypeName = string.IsNullOrWhiteSpace(Model.VehicleTypeNameSnapshot) ? Model.VehicleCategory : Model.VehicleTypeNameSnapshot;
+    var vehicleModelName = string.IsNullOrWhiteSpace(Model.VehicleModelNameSnapshot) ? Model.VehicleModel : Model.VehicleModelNameSnapshot;
+    var vehicleColorName = string.IsNullOrWhiteSpace(Model.VehicleColorNameSnapshot) ? Model.VehicleColor : Model.VehicleColorNameSnapshot;
+    var licenseNumber = string.IsNullOrWhiteSpace(Model.LicenseNumberSnapshot) ? Model.LicenseNumber : Model.LicenseNumberSnapshot;
+    var chassisNumber = string.IsNullOrWhiteSpace(Model.ChassisNumberSnapshot) ? Model.ChassisNumber : Model.ChassisNumberSnapshot;
+    var manufactureYear = Model.ManufactureYearSnapshot ?? Model.ManufactureYear;
+    var contractStatus = Model.Status == VehicleContractSystem_Final.Enums.ContractStatus.Open ? "مفتوح" : "مغلق";
 }
 
 @functions {
@@ -13,7 +23,7 @@
         string.IsNullOrWhiteSpace(value) ? "-" : value;
 
     private static string Money(decimal value) =>
-        $"{value:N0} دينار";
+        $"${value:N0}";
 }
 
 <!DOCTYPE html>
@@ -24,7 +34,7 @@
     <title>@ViewData["Title"] - @Model.ContractNumber</title>
     <style>
         @@page {
-            size: A4;
+            size: A4 portrait;
             margin: 10mm;
         }
 
@@ -37,112 +47,173 @@
             margin: 0;
             padding: 0;
             direction: rtl;
-            font-family: Arial, Tahoma, sans-serif;
-            background: #eef1f4;
-            color: #101418;
-            font-size: 11px;
-            line-height: 1.35;
+            font-family: "Cairo", "Tajawal", Tahoma, sans-serif;
+            background: #eef0f2;
+            color: #15191d;
+            font-size: 10.4px;
+            line-height: 1.32;
         }
 
         .print-toolbar {
             width: 210mm;
-            margin: 14px auto 8px;
+            margin: 12px auto 8px;
             display: flex;
             gap: 8px;
-            justify-content: flex-start;
         }
 
-        .print-button,
-        .back-link {
+        .print-toolbar button,
+        .print-toolbar a {
             border: 0;
             border-radius: 4px;
             padding: 8px 14px;
-            font-size: 13px;
+            font: inherit;
             cursor: pointer;
             text-decoration: none;
-            font-family: inherit;
         }
 
-        .print-button {
-            background: #173f5f;
+        .print-toolbar button {
+            background: #1d3f5f;
             color: #fff;
         }
 
-        .back-link {
-            background: #6c757d;
+        .print-toolbar a {
+            background: #68717a;
             color: #fff;
         }
 
         .sheet {
             width: 210mm;
             min-height: 297mm;
-            margin: 0 auto 18px;
+            margin: 0 auto 16px;
             padding: 10mm;
             background: #fff;
-            border: 1px solid #d9dee4;
-            box-shadow: 0 8px 28px rgba(16, 20, 24, .08);
-            overflow: hidden;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, .08);
         }
 
-        .contract-frame {
+        .contract {
             min-height: 277mm;
-            border: 1.4px solid #111820;
-            padding: 7mm;
+            max-height: 277mm;
+            border: 2px solid #1a1f24;
+            padding: 6mm;
+            overflow: hidden;
+            position: relative;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .contract::before {
+            content: "";
+            position: absolute;
+            inset: 3mm;
+            border: 1px solid #b7bec6;
+            pointer-events: none;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            min-height: 263mm;
+            gap: 4px;
+            break-inside: avoid;
+            page-break-inside: avoid;
         }
 
-        .document-header {
+        .header {
             display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 10px;
-            align-items: start;
-            border-bottom: 2px solid #111820;
-            padding-bottom: 6px;
+            grid-template-columns: 1fr 1.25fr 28mm;
+            gap: 7px;
+            align-items: stretch;
+            border-bottom: 2px solid #1a1f24;
+            padding-bottom: 5px;
         }
 
-        .office-block,
-        .meta-block {
-            font-size: 10.5px;
+        .office-box,
+        .meta-box,
+        .qr-box {
+            border: 1px solid #b8c0c8;
+            padding: 4px 6px;
+            background: #fafbfc;
         }
 
         .office-name {
             font-weight: 800;
-            font-size: 14px;
-            margin-bottom: 3px;
+            font-size: 13px;
+            margin-bottom: 2px;
         }
 
-        .document-title {
+        .title-box {
             text-align: center;
+            padding-top: 2px;
         }
 
-        .document-title h1 {
-            margin: 0 0 4px;
+        .title-box h1 {
+            margin: 0;
             font-size: 20px;
             font-weight: 900;
-            letter-spacing: 0;
         }
 
-        .document-title .subtitle {
-            border: 1px solid #111820;
-            border-radius: 999px;
-            padding: 2px 12px;
-            font-size: 10.5px;
+        .title-box .sub {
             display: inline-block;
+            margin-top: 3px;
+            padding: 2px 12px;
+            border: 1px solid #1a1f24;
+            border-radius: 999px;
+            font-size: 10px;
+            background: #f3f5f7;
         }
 
-        .meta-block {
-            justify-self: end;
-            min-width: 42mm;
+        .title-box .legal-identity {
+            margin-top: 3px;
+            font-size: 9.2px;
+            font-weight: 800;
+            color: #5b636b;
         }
 
-        .meta-row {
+        .meta-line {
             display: flex;
             justify-content: space-between;
-            gap: 8px;
-            border-bottom: 1px dotted #8b949e;
+            gap: 6px;
+            border-bottom: 1px dotted #808890;
             padding: 1px 0;
+        }
+
+        .qr-box {
+            text-align: center;
+            font-size: 8.8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .qr-box strong {
+            font-size: 9.4px;
+            line-height: 1.1;
+        }
+
+        .qr-box .qr-chassis {
+            max-width: 25mm;
+            font-size: 8.4px;
+            font-weight: 800;
+            line-height: 1.15;
+            word-break: break-all;
+        }
+
+        .qr-box img {
+            width: 20mm;
+            height: 20mm;
+            display: block;
+        }
+
+        .intro {
+            border: 1px solid #c7ced6;
+            padding: 4px 6px;
+            background: #fbfcfd;
+            text-align: justify;
+            font-size: 10px;
         }
 
         .section {
@@ -151,128 +222,144 @@
         }
 
         .section-title {
-            margin: 4px 0 3px;
-            padding: 3px 7px;
-            background: #111820;
+            background: #27313b;
             color: #fff;
             font-weight: 800;
-            font-size: 11.5px;
-            border-radius: 3px;
+            padding: 2px 7px;
+            margin: 2px 0 2px;
+            border-radius: 2px;
+            font-size: 10.8px;
         }
 
-        .info-table {
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+        }
+
+        table {
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
-            margin: 0;
         }
 
-        .info-table th,
-        .info-table td {
-            border: 1px solid #c8ced6;
-            padding: 3px 5px;
+        th,
+        td {
+            border: 1px solid #c5ccd3;
+            padding: 2.6px 4px;
             vertical-align: top;
             word-break: break-word;
         }
 
-        .info-table th {
-            width: 21%;
-            background: #f3f5f7;
-            color: #1d252d;
+        th {
+            width: 23%;
+            background: #f0f2f4;
             font-weight: 800;
+            color: #20272e;
             white-space: nowrap;
         }
 
-        .two-columns {
+        .vehicle-table th,
+        .finance-table th {
+            width: 16%;
+        }
+
+        .finance-table td {
+            text-align: center;
+            font-weight: 800;
+        }
+
+        .remaining {
+            color: #9f2217;
+        }
+
+        .payment-method {
+            color: #1d3f5f;
+        }
+
+        .chassis-number {
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #111820;
+            line-height: 1.15;
+        }
+
+        .clauses {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-
-        .statement {
-            border: 1px solid #c8ced6;
-            padding: 5px 7px;
-            margin-top: 3px;
-            text-align: justify;
-            font-size: 10.5px;
+            gap: 1px 10px;
+            margin: 0;
+            padding: 4px 18px 4px 4px;
+            border: 1px solid #c5ccd3;
             background: #fbfcfd;
+            font-size: 9.35px;
         }
 
-        .financial-table td,
-        .financial-table th {
-            text-align: center;
-        }
-
-        .financial-table .remaining {
-            font-weight: 900;
-            color: #8a1f11;
-        }
-
-        .notes-box {
-            min-height: 17mm;
-            border: 1px solid #c8ced6;
-            padding: 5px 7px;
+        .notes {
+            min-height: 10mm;
+            border: 1px solid #c5ccd3;
+            padding: 4px 6px;
             white-space: pre-wrap;
             background: #fbfcfd;
         }
 
-        .footer-area {
-            margin-top: auto;
-            padding-top: 5px;
-            break-inside: avoid;
-            page-break-inside: avoid;
-        }
-
-        .qr-and-signatures {
-            display: grid;
-            grid-template-columns: 26mm 1fr;
-            gap: 8px;
-            align-items: end;
-        }
-
-        .qr-box {
-            width: 26mm;
-            min-height: 26mm;
-            border: 1px solid #c8ced6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            font-size: 9px;
-            color: #5b6670;
-            padding: 2mm;
-        }
-
-        .qr-box img {
-            width: 22mm;
-            height: 22mm;
-            display: block;
-        }
-
         .signatures {
+            margin-top: auto;
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            padding-top: 4px;
         }
 
         .signature-box {
             height: 22mm;
-            border: 1px solid #111820;
+            border: 1px solid #1a1f24;
+            background: linear-gradient(to top, #f4f6f8 0, #f4f6f8 17px, #fff 17px);
             display: flex;
+            flex-direction: column;
             align-items: end;
             justify-content: center;
-            padding-bottom: 4px;
+            padding: 3px 4px 4px;
+            text-align: center;
             font-weight: 800;
-            background: linear-gradient(to top, #f7f8fa 0, #f7f8fa 18px, #fff 18px);
+            font-size: 9.5px;
         }
 
-        .legal-note {
-            margin-top: 5px;
-            padding-top: 4px;
-            border-top: 1px solid #c8ced6;
-            font-size: 9.5px;
-            color: #3d464f;
+        .signature-label,
+        .signature-name {
+            width: 100%;
+        }
+
+        .signature-label {
+            margin-top: auto;
+        }
+
+        .signature-name {
+            margin-top: 2px;
+            font-size: 8.6px;
+            font-weight: 700;
+            color: #4f5963;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .footer-note {
+            margin-top: 4px;
+            border-top: 1px solid #c5ccd3;
+            padding-top: 3px;
             text-align: center;
+            font-size: 8.8px;
+            color: #48515a;
+        }
+
+        .page-number {
+            text-align: center;
+            font-size: 8.4px;
+            font-weight: 800;
+            color: #5c6670;
+            margin-top: 2px;
         }
 
         @@media print {
@@ -301,21 +388,12 @@
                 min-height: auto;
                 margin: 0;
                 padding: 0;
-                border: 0;
                 box-shadow: none;
             }
 
-            .contract-frame {
+            .contract {
                 min-height: 277mm;
                 max-height: 277mm;
-                overflow: hidden;
-            }
-
-            .section,
-            .document-header,
-            .footer-area,
-            table,
-            tr {
                 break-inside: avoid;
                 page-break-inside: avoid;
             }
@@ -324,170 +402,179 @@
 </head>
 <body>
     <div class="print-toolbar no-print">
-        <button type="button" class="print-button" onclick="window.print()">طباعة العقد</button>
-        <a asp-action="Details" asp-route-id="@Model.Id" class="back-link">رجوع</a>
+        <button type="button" onclick="window.print()">طباعة العقد</button>
+        <a asp-action="Details" asp-route-id="@Model.Id">رجوع</a>
     </div>
 
     <main class="sheet" role="document" aria-label="عقد بيع وشراء مركبة">
-        <section class="contract-frame">
-            <header class="document-header">
-                <div class="office-block">
-                    <div class="office-name">@officeName</div>
-                    <div>رقم الإجازة: @officeLicense</div>
-                    <div>العنوان: @officeAddress</div>
-                    <div>الهاتف: @ValueOrDash(Model.Office?.Phone)</div>
-                </div>
+        <section class="contract">
+            <div class="content">
+                <header class="header">
+                    <div class="office-box">
+                        <div class="office-name">@officeName</div>
+                        <div>رقم الإجازة: @officeLicense</div>
+                        <div>العنوان: @officeAddress</div>
+                        <div>الهاتف: @officePhone</div>
+                    </div>
 
-                <div class="document-title">
-                    <h1>عقد بيع وشراء مركبة</h1>
-                    <div class="subtitle">وثيقة رسمية صادرة من نظام إدارة عقود المركبات</div>
-                </div>
+                    <div class="title-box">
+                        <h1>عقد بيع وشراء مركبة</h1>
+                        <div class="sub">وثيقة بيع منظمة من مكتب مجاز</div>
+                        <div class="legal-identity">مجاز من مديرية المرور العامة</div>
+                        <div class="meta-box" style="margin-top:4px">
+                            <div class="meta-line"><span>رقم العقد</span><strong>@Model.ContractNumber</strong></div>
+                            <div class="meta-line"><span>تاريخ العقد</span><strong>@Model.ContractDate.ToString("yyyy/MM/dd")</strong></div>
+                            <div class="meta-line"><span>حالة العقد</span><strong>@contractStatus</strong></div>
+                        </div>
+                    </div>
 
-                <div class="meta-block">
-                    <div class="meta-row"><span>رقم العقد</span><strong>@Model.ContractNumber</strong></div>
-                    <div class="meta-row"><span>تاريخ العقد</span><strong>@Model.ContractDate.ToString("yyyy/MM/dd")</strong></div>
-                    <div class="meta-row"><span>حالة العقد</span><strong>@Model.Status</strong></div>
-                    <div class="meta-row"><span>تاريخ الطباعة</span><strong>@DateTime.Now.ToString("yyyy/MM/dd")</strong></div>
-                </div>
-            </header>
-
-            <div class="statement">
-                أقر الطرفان بكامل أهليتهما القانونية على إبرام هذا العقد، واتفقا على بيع وشراء المركبة الموضحة بياناتها أدناه وفق المبالغ والشروط المذكورة في هذه الوثيقة.
-            </div>
-
-            <div class="two-columns">
-                <section class="section">
-                    <div class="section-title">بيانات البائع</div>
-                    <table class="info-table">
-                        <tbody>
-                            <tr><th>الاسم</th><td>@Model.SellerName</td></tr>
-                            <tr><th>رقم الهاتف</th><td>@Model.SellerPhone</td></tr>
-                            <tr><th>رقم الهوية</th><td>@Model.SellerIdNumber</td></tr>
-                            <tr><th>جهة الإصدار</th><td>@ValueOrDash(Model.SellerIdIssuer)</td></tr>
-                            <tr><th>المهنة</th><td>@ValueOrDash(Model.SellerOccupation)</td></tr>
-                            <tr><th>العنوان</th><td>@ValueOrDash(Model.SellerAddress)</td></tr>
-                        </tbody>
-                    </table>
-                </section>
-
-                <section class="section">
-                    <div class="section-title">بيانات المشتري</div>
-                    <table class="info-table">
-                        <tbody>
-                            <tr><th>الاسم</th><td>@Model.BuyerName</td></tr>
-                            <tr><th>رقم الهاتف</th><td>@Model.BuyerPhone</td></tr>
-                            <tr><th>رقم الهوية</th><td>@Model.BuyerIdNumber</td></tr>
-                            <tr><th>جهة الإصدار</th><td>@ValueOrDash(Model.BuyerIdIssuer)</td></tr>
-                            <tr><th>المهنة</th><td>@ValueOrDash(Model.BuyerOccupation)</td></tr>
-                            <tr><th>العنوان</th><td>@ValueOrDash(Model.BuyerAddress)</td></tr>
-                        </tbody>
-                    </table>
-                </section>
-            </div>
-
-            <section class="section">
-                <div class="section-title">بيانات المركبة</div>
-                <table class="info-table">
-                    <tbody>
-                        <tr>
-                            <th>المالك الحالي</th>
-                            <td>@Model.CurrentOwnerName</td>
-                            <th>عنوان المالك</th>
-                            <td>@ValueOrDash(Model.CurrentOwnerAddress)</td>
-                        </tr>
-                        <tr>
-                            <th>الماركة</th>
-                            <td>@Model.VehicleBrand</td>
-                            <th>الموديل</th>
-                            <td>@Model.VehicleModel</td>
-                        </tr>
-                        <tr>
-                            <th>سنة الصنع</th>
-                            <td>@Model.ManufactureYear</td>
-                            <th>النوع</th>
-                            <td>@ValueOrDash(Model.VehicleCategory)</td>
-                        </tr>
-                        <tr>
-                            <th>اللون</th>
-                            <td>@ValueOrDash(Model.VehicleColor)</td>
-                            <th>رقم المركبة</th>
-                            <td>@Model.LicenseNumber</td>
-                        </tr>
-                        <tr>
-                            <th>رقم الشاصي</th>
-                            <td>@Model.ChassisNumber</td>
-                            <th>رقم السنوية</th>
-                            <td>@ValueOrDash(Model.AnnualRegistrationNumber)</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-
-            <section class="section">
-                <div class="section-title">العنوان وموقع التسجيل</div>
-                <table class="info-table">
-                    <tbody>
-                        <tr>
-                            <th>المحافظة</th>
-                            <td>@ValueOrDash(Model.Province?.NameAr)</td>
-                            <th>المدينة</th>
-                            <td>@ValueOrDash(Model.City?.NameAr)</td>
-                        </tr>
-                        <tr>
-                            <th>المحلة</th>
-                            <td>@ValueOrDash(Model.Neighborhood)</td>
-                            <th>الزقاق / الدار</th>
-                            <td>@ValueOrDash(Model.AlleyNumber) / @ValueOrDash(Model.HouseNumber)</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-
-            <section class="section">
-                <div class="section-title">المعلومات المالية</div>
-                <table class="info-table financial-table">
-                    <tbody>
-                        <tr>
-                            <th>سعر المركبة</th>
-                            <td>@Money(Model.VehiclePrice)</td>
-                            <th>المبلغ المدفوع</th>
-                            <td>@Money(Model.PaidAmount)</td>
-                            <th>المبلغ المتبقي</th>
-                            <td class="remaining">@Money(Model.RemainingAmount)</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-
-            <section class="section">
-                <div class="section-title">الملاحظات</div>
-                <div class="notes-box">@ValueOrDash(Model.Notes)</div>
-            </section>
-
-            <footer class="footer-area">
-                <div class="qr-and-signatures">
                     <div class="qr-box">
                         @if (!string.IsNullOrWhiteSpace(qrCodeBase64))
                         {
                             <img src="data:image/png;base64,@qrCodeBase64" alt="رمز التحقق من العقد" />
+                            <strong>@Model.ContractNumber</strong>
+                            <span class="qr-chassis">@ValueOrDash(chassisNumber)</span>
                         }
                         else
                         {
-                            <span>رمز التحقق غير متوفر</span>
+                            <strong>رمز التحقق</strong>
+                            <span>غير متوفر</span>
                         }
                     </div>
+                </header>
 
-                    <div class="signatures">
-                        <div class="signature-box">توقيع البائع</div>
-                        <div class="signature-box">توقيع المشتري</div>
-                        <div class="signature-box">ختم وتوقيع المكتب</div>
+                <div class="intro">
+                    أقر الطرفان بكامل أهليتهما القانونية واتفقا على بيع وشراء المركبة المبينة أوصافها أدناه وفق البيانات والمبالغ والشروط الواردة في هذا العقد.
+                </div>
+
+                <div class="two-col">
+                    <section class="section">
+                        <div class="section-title">بيانات البائع</div>
+                        <table>
+                            <tbody>
+                                <tr><th>الاسم</th><td>@Model.SellerName</td></tr>
+                                <tr><th>رقم الهوية</th><td>@Model.SellerIdNumber</td></tr>
+                                <tr><th>الهاتف</th><td>@Model.SellerPhone</td></tr>
+                                <tr><th>العنوان</th><td>@ValueOrDash(Model.SellerAddress)</td></tr>
+                                <tr><th>جهة الإصدار</th><td>@ValueOrDash(Model.SellerIdIssuer)</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+
+                    <section class="section">
+                        <div class="section-title">بيانات المشتري</div>
+                        <table>
+                            <tbody>
+                                <tr><th>الاسم</th><td>@Model.BuyerName</td></tr>
+                                <tr><th>رقم الهوية</th><td>@Model.BuyerIdNumber</td></tr>
+                                <tr><th>الهاتف</th><td>@Model.BuyerPhone</td></tr>
+                                <tr><th>العنوان</th><td>@ValueOrDash(Model.BuyerAddress)</td></tr>
+                                <tr><th>جهة الإصدار</th><td>@ValueOrDash(Model.BuyerIdIssuer)</td></tr>
+                            </tbody>
+                        </table>
+                    </section>
+                </div>
+
+                <section class="section">
+                    <div class="section-title">بيانات المركبة</div>
+                    <table class="vehicle-table">
+                        <tbody>
+                            <tr>
+                                <th>صنف المركبة</th>
+                                <td>@ValueOrDash(vehicleTypeName)</td>
+                                <th>موديل المركبة</th>
+                                <td>@ValueOrDash(vehicleModelName)</td>
+                                <th>اللون</th>
+                                <td>@ValueOrDash(vehicleColorName)</td>
+                            </tr>
+                            <tr>
+                                <th>سنة الصنع</th>
+                                <td>@manufactureYear</td>
+                                <th>رقم المركبة</th>
+                                <td>@ValueOrDash(licenseNumber)</td>
+                                <th>رقم الشاصي</th>
+                                <td class="chassis-number">@ValueOrDash(chassisNumber)</td>
+                            </tr>
+                            <tr>
+                                <th>رقم السنوية</th>
+                                <td>@ValueOrDash(Model.AnnualRegistrationNumber)</td>
+                                <th>المالك الحالي</th>
+                                <td>@ValueOrDash(Model.CurrentOwnerName)</td>
+                                <th>الماركة</th>
+                                <td>@ValueOrDash(Model.VehicleBrand)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section class="section">
+                    <div class="section-title">المعلومات المالية</div>
+                    <table class="finance-table">
+                        <tbody>
+                            <tr>
+                                <th>سعر المركبة</th>
+                                <td>@Money(Model.VehiclePrice)</td>
+                                <th>استلم البائع مبلغ وقدره</th>
+                                <td>@Money(Model.PaidAmount)</td>
+                                <th>المبلغ المتبقي</th>
+                                <td class="remaining">@Money(Model.RemainingAmount)</td>
+                            </tr>
+                            <tr>
+                                <th>طريقة الدفع</th>
+                                <td class="payment-method" colspan="2">نقداً</td>
+                                <th>حالة العقد</th>
+                                <td colspan="2">@contractStatus</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section class="section">
+                    <div class="section-title">الشروط القانونية</div>
+                    <ol class="clauses">
+                        <li>يقر الطرفان بصحة المعلومات الواردة في العقد.</li>
+                        <li>يلتزم البائع بتحمل الغرامات والمخالفات السابقة لتاريخ العقد.</li>
+                        <li>يلتزم المشتري بإكمال إجراءات نقل الملكية حسب التعليمات النافذة.</li>
+                        <li>استلم المشتري المركبة بالحالة المبينة أعلاه وبعد المعاينة.</li>
+                        <li>لا يجوز الحك أو الشطب أو التعديل على هذا العقد.</li>
+                        <li>يعتبر هذا العقد ملزماً للطرفين بعد التوقيع عليه.</li>
+                        <li>يتحمل الطرفان المسؤولية القانونية الكاملة عن صحة المستمسكات والبيانات المقدمة.</li>
+                    </ol>
+                </section>
+
+                <section class="section">
+                    <div class="section-title">الملاحظات</div>
+                    <div class="notes">@ValueOrDash(Model.Notes)</div>
+                </section>
+
+                <section class="signatures">
+                    <div class="signature-box">
+                        <div class="signature-label">توقيع البائع</div>
+                        <div class="signature-name">@ValueOrDash(Model.SellerName)</div>
                     </div>
-                </div>
+                    <div class="signature-box">
+                        <div class="signature-label">توقيع المشتري</div>
+                        <div class="signature-name">@ValueOrDash(Model.BuyerName)</div>
+                    </div>
+                    <div class="signature-box">
+                        <div class="signature-label">منظم العقد</div>
+                        <div class="signature-name">@officeName</div>
+                    </div>
+                    <div class="signature-box">
+                        <div class="signature-label">الشاهد</div>
+                        <div class="signature-name">-</div>
+                    </div>
+                    <div class="signature-box">
+                        <div class="signature-label">البصمة / الختم</div>
+                        <div class="signature-name">@officeLicense</div>
+                    </div>
+                </section>
 
-                <div class="legal-note">
-                    تم تحرير هذا العقد إلكترونياً، ويعد توقيع الأطراف وختم المكتب إقراراً بصحة البيانات والمبالغ المذكورة أعلاه.
+                <div class="footer-note">
+                    حرر هذا العقد إلكترونياً، ويعد توقيع الأطراف وختم المكتب إقراراً بصحة البيانات والمبالغ والشروط المذكورة أعلاه.
                 </div>
-            </footer>
+                <div class="page-number">صفحة 1 / 1</div>
+            </div>
         </section>
     </main>
 </body>

@@ -6,19 +6,18 @@ namespace VehicleContractSystem_Final.Models
     {
         public int Id { get; set; }
 
-        [Display(Name = "نوع المركبة")]
+        [Display(Name = "صنف المركبة")]
         public int VehicleTypeId { get; set; }
 
-        [Required(ErrorMessage = "يرجى اختيار نوع المركبة")]
-        [Display(Name = "نوع المركبة")]
+        [Required(ErrorMessage = "يرجى اختيار صنف المركبة")]
+        [Display(Name = "صنف المركبة")]
         public VehicleType VehicleType { get; set; } = null!;
 
-        [Required(ErrorMessage = "يرجى اختيار موديل المركبة")]
         [Display(Name = "موديل المركبة")]
-        public int VehicleModelId { get; set; }
+        public int? VehicleModelId { get; set; }
 
         [Display(Name = "موديل المركبة")]
-        public VehicleModel VehicleModel { get; set; } = null!;
+        public VehicleModel? VehicleModel { get; set; }
 
         [Required(ErrorMessage = "يرجى اختيار لون المركبة")]
         [Display(Name = "لون المركبة")]
@@ -35,6 +34,7 @@ namespace VehicleContractSystem_Final.Models
         public int ManufactureYear { get; set; }
 
         [Required(ErrorMessage = "رقم الشاصي مطلوب")]
+        [MaxLength(450)]
         [Display(Name = "رقم الشاصي")]
         public string ChassisNumber { get; set; } = string.Empty;
 
@@ -69,8 +69,8 @@ namespace VehicleContractSystem_Final.Models
         //public string Color { get; set; } = string.Empty;
         //public int NumberOfWheels { get; set; }
 
-        public string OwnerId { get; set; } = string.Empty;
-        public ApplicationUser Owner { get; set; } = null!;
+        public string? OwnerId { get; set; }
+        public ApplicationUser? Owner { get; set; }
     
     }
 }

@@ -1,7 +1,50 @@
 ﻿@model VehicleContractSystem_Final.Models.Contract
 @{
     ViewData["Title"] = "التفاصيل";
+    var vehicleTypeName = string.IsNullOrWhiteSpace(Model.VehicleTypeNameSnapshot) ? Model.VehicleCategory : Model.VehicleTypeNameSnapshot;
+    var vehicleModelName = string.IsNullOrWhiteSpace(Model.VehicleModelNameSnapshot) ? Model.VehicleModel : Model.VehicleModelNameSnapshot;
+    var vehicleColorName = string.IsNullOrWhiteSpace(Model.VehicleColorNameSnapshot) ? Model.VehicleColor : Model.VehicleColorNameSnapshot;
+    var licenseNumber = string.IsNullOrWhiteSpace(Model.LicenseNumberSnapshot) ? Model.LicenseNumber : Model.LicenseNumberSnapshot;
+    var chassisNumber = string.IsNullOrWhiteSpace(Model.ChassisNumberSnapshot) ? Model.ChassisNumber : Model.ChassisNumberSnapshot;
+    var manufactureYear = Model.ManufactureYearSnapshot ?? Model.ManufactureYear;
+    var isOpen = Model.Status == VehicleContractSystem_Final.Enums.ContractStatus.Open;
+    var canAddPayment = isOpen && Model.RemainingAmount > 0;
+    var canCloseContract = isOpen
+        && Model.RemainingAmount <= 0
+        && (ViewBag.CanCloseContract as bool? == true);
+    var canShowCloseBlockedMessage = isOpen
+        && Model.RemainingAmount > 0
+        && (ViewBag.CanCloseContract as bool? == true);
 }
+
+<style>
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+
+        .payment-receipts,
+        .payment-receipts * {
+            visibility: visible;
+        }
+
+        .payment-receipts {
+            position: absolute;
+            inset: 0;
+            padding: 20mm;
+            direction: rtl;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+
+        .payment-receipt {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+    }
+</style>
 
 <div class="container-fluid" dir="rtl">
     <div class="row mb-4">
@@ -23,6 +66,25 @@
                 <a asp-action="Print" asp-route-id="@Model.Id" class="btn btn-primary" target="_blank">
                     <i class="bi bi-printer"></i> طباعة
                 </a>
+                @if (canAddPayment)
+                {
+                    <a asp-controller="Payment" asp-action="Add" asp-route-contractId="@Model.Id" class="btn btn-success">
+                        <i class="bi bi-cash-coin"></i> إضافة دفعة
+                    </a>
+                }
+                @if (canCloseContract)
+                {
+                    <form asp-action="Close"
+                          asp-route-id="@Model.Id"
+                          method="post"
+                          class="d-inline"
+                          onsubmit="return confirm('هل أنت متأكد من إغلاق هذا العقد؟ بعد الإغلاق لن يمكن تعديل البيانات القانونية أو إضافة دفعات جديدة.');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="bi bi-lock"></i> إغلاق العقد
+                        </button>
+                    </form>
+                }
                 <a asp-action="Index" class="btn btn-secondary">
                     <i class="bi bi-arrow-left"></i> العودة للقائمة
                 </a>
@@ -41,8 +103,8 @@
                             <small>@Model.ContractDate.ToString("yyyy-MM-dd")</small>
                         </div>
                         <div class="col-auto">
-                            <span class="badge @(Model.Status == VehicleContractSystem_Final.Enums.ContractStatus.Open ? "bg-success" : "bg-secondary") fs-6">
-                                @(Model.Status == VehicleContractSystem_Final.Enums.ContractStatus.Open ? "مفتوح" : "مغلق")
+                            <span class="badge @(isOpen ? "bg-success" : "bg-secondary") fs-6">
+                                @(isOpen ? "مفتوح" : "مغلق")
                             </span>
                         </div>
                     </div>
@@ -126,26 +188,30 @@
                         </div>
                         <div class="col-md-3">
                             <strong>موديل المركبة:</strong><br />
-                            @Model.VehicleModel
+                            @vehicleModelName
                         </div>
                         <div class="col-md-3">
                             <strong>اللون:</strong><br />
-                            @Model.VehicleColor
+                            @vehicleColorName
                         </div>
                         <div class="col-md-3">
                             <strong>سنة الصنع:</strong><br />
-                            @Model.ManufactureYear
+                            @manufactureYear
                         </div>
                     </div>
                     <hr />
                     <div class="row">
-                        <div class="col-md-6">
-                            <strong>رقم اللوحة:</strong><br />
-                            <span class="fs-5 text-primary">@Model.LicenseNumber</span>
+                        <div class="col-md-4">
+                            <strong>صنف المركبة:</strong><br />
+                            @vehicleTypeName
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <strong>رقم اللوحة:</strong><br />
+                            <span class="fs-5 text-primary">@licenseNumber</span>
+                        </div>
+                        <div class="col-md-4">
                             <strong>رقم الشاصي:</strong><br />
-                            <span class="fs-6">@Model.ChassisNumber</span>
+                            <span class="fs-6">@chassisNumber</span>
                         </div>
                     </div>
                 </div>
@@ -174,6 +240,12 @@
                         <span>المبلغ المتبقي:</span>
                         <strong class="fs-4 text-danger">@Model.RemainingAmount.ToString("N0")</strong>
                     </div>
+                    @if (canShowCloseBlockedMessage)
+                    {
+                        <div class="alert alert-warning mt-3 mb-0">
+                            لا يمكن إغلاق العقد قبل تسديد كامل المبلغ المتبقي.
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -230,25 +302,25 @@
     }
 
     <!-- Payments -->
-    @if (Model.Payments.Any())
-    {
-        <div class="row">
-            <div class="col-12 mb-4">
-                <div class="card">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="bi bi-wallet2"></i> الدفعات</h5>
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>التاريخ</th>
-                                    <th>المبلغ</th>
-                                    <th>طريقة الدفع</th>
-                                    <th>الملاحظات</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-wallet2"></i> جدول الدفعات</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>التاريخ</th>
+                                <th>المبلغ</th>
+                                <th>طريقة الدفع</th>
+                                <th>الملاحظات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Payments.Any())
+                            {
                                 @foreach (var payment in Model.Payments.OrderByDescending(p => p.PaymentDate))
                                 {
                                     <tr>
@@ -258,14 +330,67 @@
                                         <td>@payment.Notes</td>
                                     </tr>
                                 }
-                            </tbody>
-                            <tfoot>
-                                <tr class="table-info">
-                                    <th>الإجمالي</th>
-                                    <th colspan="3"><strong>@Model.PaidAmount.ToString("N0")</strong></th>
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">لا توجد دفعات مسجلة لهذا العقد</td>
                                 </tr>
-                            </tfoot>
-                        </table>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-info">
+                                <th>إجمالي المدفوع</th>
+                                <th colspan="3"><strong>@Model.PaidAmount.ToString("N0")</strong></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Payments.Any())
+    {
+        <div class="row payment-receipts">
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-receipt"></i> إيصالات الدفعات</h5>
+                        <button type="button" class="btn btn-outline-primary btn-sm no-print" onclick="window.print()">
+                            <i class="bi bi-printer"></i> طباعة الإيصالات
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var payment in Model.Payments.OrderByDescending(p => p.PaymentDate))
+                        {
+                            <div class="payment-receipt border rounded p-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h5 class="mb-1">إيصال دفعة</h5>
+                                        <div class="text-muted">رقم العقد: @Model.ContractNumber</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div>تاريخ الدفعة</div>
+                                        <strong>@payment.PaymentDate.ToString("yyyy-MM-dd")</strong>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 mb-2">
+                                        <span class="text-muted">المبلغ</span><br />
+                                        <strong class="fs-5">@payment.Amount.ToString("N0") دينار</strong>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <span class="text-muted">طريقة الدفع</span><br />
+                                        <strong>@payment.PaymentMethod</strong>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <span class="text-muted">الملاحظات</span><br />
+                                        <strong>@payment.Notes</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -285,5 +410,5 @@
             </div>
         </div>
     </div>
-</div>
 
+</div>

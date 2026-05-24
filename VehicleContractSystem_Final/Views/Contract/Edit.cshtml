@@ -1,6 +1,13 @@
 ﻿@model VehicleContractSystem_Final.Models.ViewModel.ContractViewModel
 @{
     ViewData["Title"] = "تعديل العقد";
+    var isClosed = Model.Contract.Status == VehicleContractSystem_Final.Enums.ContractStatus.Closed;
+    var vehicleTypeName = string.IsNullOrWhiteSpace(Model.Contract.VehicleTypeNameSnapshot) ? Model.Contract.VehicleCategory : Model.Contract.VehicleTypeNameSnapshot;
+    var vehicleModelName = string.IsNullOrWhiteSpace(Model.Contract.VehicleModelNameSnapshot) ? Model.Contract.VehicleModel : Model.Contract.VehicleModelNameSnapshot;
+    var vehicleColorName = string.IsNullOrWhiteSpace(Model.Contract.VehicleColorNameSnapshot) ? Model.Contract.VehicleColor : Model.Contract.VehicleColorNameSnapshot;
+    var licenseNumber = string.IsNullOrWhiteSpace(Model.Contract.LicenseNumberSnapshot) ? Model.Contract.LicenseNumber : Model.Contract.LicenseNumberSnapshot;
+    var chassisNumber = string.IsNullOrWhiteSpace(Model.Contract.ChassisNumberSnapshot) ? Model.Contract.ChassisNumber : Model.Contract.ChassisNumberSnapshot;
+    var manufactureYear = Model.Contract.ManufactureYearSnapshot ?? Model.Contract.ManufactureYear;
 }
 
 <div class="container-fluid" dir="rtl">
@@ -24,6 +31,12 @@
         <div class="alert alert-info">
             <i class="bi bi-info-circle"></i> رقم العقد: <strong>@Model.Contract.ContractNumber</strong>
         </div>
+        @if (isClosed)
+        {
+            <div class="alert alert-warning">
+                <i class="bi bi-lock"></i> هذا العقد مغلق، لذلك تظهر البيانات للقراءة فقط ولا يمكن تعديل بياناته القانونية.
+            </div>
+        }
 
         <!-- Copy the same structure as Create.cshtml but with edit-specific elements -->
         <div class="row">
@@ -35,25 +48,25 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label asp-for="Contract.SellerName" class="form-label"></label>
-                            <input asp-for="Contract.SellerName" class="form-control" />
+                            <input asp-for="Contract.SellerName" class="form-control" readonly="@isClosed" />
                             <span asp-validation-for="Contract.SellerName" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
                             <label asp-for="Contract.SellerPhone" class="form-label"></label>
-                            <input asp-for="Contract.SellerPhone" class="form-control" />
+                            <input asp-for="Contract.SellerPhone" class="form-control" readonly="@isClosed" />
                             <span asp-validation-for="Contract.SellerPhone" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
                             <label asp-for="Contract.SellerIdNumber" class="form-label"></label>
-                            <input asp-for="Contract.SellerIdNumber" class="form-control" />
+                            <input asp-for="Contract.SellerIdNumber" class="form-control" readonly="@isClosed" />
                             <span asp-validation-for="Contract.SellerIdNumber" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
                             <label asp-for="Contract.SellerAddress" class="form-label"></label>
-                            <textarea asp-for="Contract.SellerAddress" class="form-control" rows="2"></textarea>
+                            <textarea asp-for="Contract.SellerAddress" class="form-control" rows="2" readonly="@isClosed"></textarea>
                             <span asp-validation-for="Contract.SellerAddress" class="text-danger"></span>
                         </div>
                     </div>
@@ -68,25 +81,25 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label asp-for="Contract.BuyerName" class="form-label"></label>
-                            <input asp-for="Contract.BuyerName" class="form-control" />
+                            <input asp-for="Contract.BuyerName" class="form-control" readonly="@isClosed" />
                             <span asp-validation-for="Contract.BuyerName" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
                             <label asp-for="Contract.BuyerPhone" class="form-label"></label>
-                            <input asp-for="Contract.BuyerPhone" class="form-control" />
+                            <input asp-for="Contract.BuyerPhone" class="form-control" readonly="@isClosed" />
                             <span asp-validation-for="Contract.BuyerPhone" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
                             <label asp-for="Contract.BuyerIdNumber" class="form-label"></label>
-                            <input asp-for="Contract.BuyerIdNumber" class="form-control" />
+                            <input asp-for="Contract.BuyerIdNumber" class="form-control" readonly="@isClosed" />
                             <span asp-validation-for="Contract.BuyerIdNumber" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
                             <label asp-for="Contract.BuyerAddress" class="form-label"></label>
-                            <textarea asp-for="Contract.BuyerAddress" class="form-control" rows="2"></textarea>
+                            <textarea asp-for="Contract.BuyerAddress" class="form-control" rows="2" readonly="@isClosed"></textarea>
                             <span asp-validation-for="Contract.BuyerAddress" class="text-danger"></span>
                         </div>
                     </div>
@@ -101,59 +114,69 @@
                         <h5 class="mb-0"><i class="bi bi-car-front"></i> بيانات المركبة</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.CurrentOwnerName" class="form-label"></label>
-                                <input asp-for="Contract.CurrentOwnerName" class="form-control" />
-                                <span asp-validation-for="Contract.CurrentOwnerName" class="text-danger"></span>
+                        <div class="alert alert-light border mb-3">
+                            <i class="bi bi-shield-lock"></i> بيانات المركبة القانونية محفوظة من وقت إنشاء العقد وتظهر هنا للقراءة فقط.
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">اسم المالك</div>
+                                    <strong>@Model.Contract.CurrentOwnerName</strong>
+                                </div>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.VehicleTypeId" class="form-label"></label>
-                                <select asp-for="Contract.VehicleTypeId" asp-items="Model.VehicleTypes" class="form-select" id="vehicleTypeSelect">
-                                    <option value="">اختر نوع المركبة</option>
-                                </select>
-                                <span asp-validation-for="Contract.VehicleTypeId" class="text-danger"></span>
+                            <div class="col-md-6">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">عنوان المالك</div>
+                                    <strong>@Model.Contract.CurrentOwnerAddress</strong>
+                                </div>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.VehicleBrand" class="form-label"></label>
-                                <input asp-for="Contract.VehicleBrand" class="form-control" />
-                                <span asp-validation-for="Contract.VehicleBrand" class="text-danger"></span>
+                            <div class="col-md-4">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">الماركة</div>
+                                    <strong>@Model.Contract.VehicleBrand</strong>
+                                </div>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.VehicleModelId" class="form-label"></label>
-                                <select asp-for="Contract.VehicleModelId" asp-items="Model.VehicleModels" class="form-select" id="vehicleModelSelect">
-                                    <option value="">اختر موديل المركبة</option>
-                                </select>
-                                <span asp-validation-for="Contract.VehicleModelId" class="text-danger"></span>
+                            <div class="col-md-4">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">صنف المركبة</div>
+                                    <strong>@vehicleTypeName</strong>
+                                </div>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.ColorId" class="form-label"></label>
-                                <select asp-for="Contract.ColorId" asp-items="Model.ColorList" class="form-select">
-                                    <option value="">اختر لون المركبة</option>
-                                </select>
-                                <span asp-validation-for="Contract.ColorId" class="text-danger"></span>
+                            <div class="col-md-4">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">موديل المركبة</div>
+                                    <strong>@vehicleModelName</strong>
+                                </div>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.ManufactureYear" class="form-label"></label>
-                                <input asp-for="Contract.ManufactureYear" class="form-control" type="number" />
-                                <span asp-validation-for="Contract.ManufactureYear" class="text-danger"></span>
+                            <div class="col-md-4">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">اللون</div>
+                                    <strong>@vehicleColorName</strong>
+                                </div>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.LicenseNumber" class="form-label"></label>
-                                <input asp-for="Contract.LicenseNumber" class="form-control" />
-                                <span asp-validation-for="Contract.LicenseNumber" class="text-danger"></span>
+                            <div class="col-md-4">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">سنة الصنع</div>
+                                    <strong>@manufactureYear</strong>
+                                </div>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.ChassisNumber" class="form-label"></label>
-                                <input asp-for="Contract.ChassisNumber" class="form-control" />
-                                <span asp-validation-for="Contract.ChassisNumber" class="text-danger"></span>
+                            <div class="col-md-4">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">رقم السنوية</div>
+                                    <strong>@Model.Contract.AnnualRegistrationNumber</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">رقم المركبة</div>
+                                    <strong>@licenseNumber</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">رقم الشاصي</div>
+                                    <strong>@chassisNumber</strong>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -168,7 +191,7 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label asp-for="Contract.VehiclePrice" class="form-label"></label>
-                            <input asp-for="Contract.VehiclePrice" class="form-control" type="number" step="0.01" id="vehiclePrice" />
+                            <input asp-for="Contract.VehiclePrice" class="form-control" type="number" step="0.01" id="vehiclePrice" readonly="@isClosed" />
                             <span asp-validation-for="Contract.VehiclePrice" class="text-danger"></span>
                         </div>
 
@@ -179,7 +202,7 @@
 
                         <div class="mb-3">
                             <label asp-for="Contract.Status" class="form-label"></label>
-                            <select asp-for="Contract.Status" class="form-select" asp-items="Html.GetEnumSelectList<VehicleContractSystem_Final.Enums.ContractStatus>()"></select>
+                            <input class="form-control bg-light" value="@(isClosed ? "مغلق" : "مفتوح")" readonly />
                         </div>
                     </div>
                 </div>
@@ -196,35 +219,43 @@
                         <div class="row">
                             <div class="col-md-3 mb-3">
                                 <label asp-for="Contract.ProvinceId" class="form-label"></label>
-                                <select asp-for="Contract.ProvinceId" asp-items="Model.ProvinceList" class="form-select" id="provinceSelect">
+                                <select asp-for="Contract.ProvinceId" asp-items="Model.ProvinceList" class="form-select" id="provinceSelect" disabled="@isClosed">
                                     <option value="">اختر المحافظة</option>
                                 </select>
+                                @if (isClosed)
+                                {
+                                    <input type="hidden" asp-for="Contract.ProvinceId" />
+                                }
                                 <span asp-validation-for="Contract.ProvinceId" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-3 mb-3">
                                 <label asp-for="Contract.CityId" class="form-label"></label>
-                                <select asp-for="Contract.CityId" asp-items="Model.CityList" class="form-select" id="citySelect">
+                                <select asp-for="Contract.CityId" asp-items="Model.CityList" class="form-select" id="citySelect" disabled="@isClosed">
                                     <option value="">اختر المدينة</option>
                                 </select>
+                                @if (isClosed)
+                                {
+                                    <input type="hidden" asp-for="Contract.CityId" />
+                                }
                                 <span asp-validation-for="Contract.CityId" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-2 mb-3">
                                 <label asp-for="Contract.Neighborhood" class="form-label"></label>
-                                <input asp-for="Contract.Neighborhood" class="form-control" />
+                                <input asp-for="Contract.Neighborhood" class="form-control" readonly="@isClosed" />
                                 <span asp-validation-for="Contract.Neighborhood" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-2 mb-3">
                                 <label asp-for="Contract.AlleyNumber" class="form-label"></label>
-                                <input asp-for="Contract.AlleyNumber" class="form-control" />
+                                <input asp-for="Contract.AlleyNumber" class="form-control" readonly="@isClosed" />
                                 <span asp-validation-for="Contract.AlleyNumber" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-2 mb-3">
                                 <label asp-for="Contract.HouseNumber" class="form-label"></label>
-                                <input asp-for="Contract.HouseNumber" class="form-control" />
+                                <input asp-for="Contract.HouseNumber" class="form-control" readonly="@isClosed" />
                                 <span asp-validation-for="Contract.HouseNumber" class="text-danger"></span>
                             </div>
                         </div>
@@ -238,7 +269,7 @@
                 <div class="card">
                     <div class="card-body">
                         <label asp-for="Contract.Notes" class="form-label"></label>
-                        <textarea asp-for="Contract.Notes" class="form-control" rows="3"></textarea>
+                        <textarea asp-for="Contract.Notes" class="form-control" rows="3" readonly="@isClosed"></textarea>
                     </div>
                 </div>
             </div>
@@ -247,11 +278,14 @@
         <div class="row">
             <div class="col-12">
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="bi bi-save"></i> حفظ التغييرات
-                    </button>
+                    @if (!isClosed)
+                    {
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-save"></i> حفظ التغييرات
+                        </button>
+                    }
                     <a asp-action="Details" asp-route-id="@Model.Contract.Id" class="btn btn-secondary btn-lg">
-                        <i class="bi bi-x-circle"></i> إلغاء
+                        <i class="bi bi-x-circle"></i> @(isClosed ? "العودة للتفاصيل" : "إلغاء")
                     </a>
                 </div>
             </div>
@@ -272,30 +306,6 @@
 
             $('#vehiclePrice').on('input', calculateRemaining);
             calculateRemaining();
-
-            $('#vehicleTypeSelect').change(function() {
-                var vehicleTypeId = $(this).val();
-                $('#vehicleModelSelect').html('<option value="">جاري التحميل...</option>');
-
-                if (vehicleTypeId) {
-                    $.ajax({
-                        url: '@Url.Action("GetVehicleModelsByType", "Contract")',
-                        type: 'GET',
-                        data: { vehicleTypeId: vehicleTypeId },
-                        success: function(data) {
-                            $('#vehicleModelSelect').html('<option value="">اختر موديل المركبة</option>');
-                            $.each(data, function(i, model) {
-                                $('#vehicleModelSelect').append($('<option></option>').val(model.value).html(model.text));
-                            });
-                        },
-                        error: function() {
-                            $('#vehicleModelSelect').html('<option value="">حدث خطأ</option>');
-                        }
-                    });
-                } else {
-                    $('#vehicleModelSelect').html('<option value="">اختر موديل المركبة</option>');
-                }
-            });
 
             $('#provinceSelect').change(function() {
                 var provinceId = $(this).val();

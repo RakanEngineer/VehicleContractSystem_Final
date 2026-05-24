@@ -106,7 +106,7 @@
                             <div class="col-md-6 mb-3">
                                 <label asp-for="Contract.VehicleTypeId" class="form-label"></label>
                                 <select asp-for="Contract.VehicleTypeId" asp-items="Model.VehicleTypes" class="form-select" id="vehicleTypeSelect">
-                                    <option value="">اختر نوع المركبة</option>
+                                    <option value="">اختر صنف المركبة</option>
                                 </select>
                                 <span asp-validation-for="Contract.VehicleTypeId" class="text-danger"></span>
                             </div>
@@ -118,11 +118,9 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.VehicleModelId" class="form-label"></label>
-                                <select asp-for="Contract.VehicleModelId" asp-items="Model.VehicleModels" class="form-select" id="vehicleModelSelect">
-                                    <option value="">اختر موديل المركبة</option>
-                                </select>
-                                <span asp-validation-for="Contract.VehicleModelId" class="text-danger"></span>
+                                <label asp-for="Contract.VehicleModel" class="form-label">موديل المركبة</label>
+                                <input asp-for="Contract.VehicleModel" class="form-control" />
+                                <span asp-validation-for="Contract.VehicleModel" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6 mb-3">
@@ -272,30 +270,6 @@
             }
 
             $('#vehiclePrice').on('input', calculateRemaining);
-
-            $('#vehicleTypeSelect').change(function() {
-                var vehicleTypeId = $(this).val();
-                $('#vehicleModelSelect').html('<option value="">جاري التحميل...</option>');
-
-                if (vehicleTypeId) {
-                    $.ajax({
-                        url: '@Url.Action("GetVehicleModelsByType", "Contract")',
-                        type: 'GET',
-                        data: { vehicleTypeId: vehicleTypeId },
-                        success: function(data) {
-                            $('#vehicleModelSelect').html('<option value="">اختر موديل المركبة</option>');
-                            $.each(data, function(i, model) {
-                                $('#vehicleModelSelect').append($('<option></option>').val(model.value).html(model.text));
-                            });
-                        },
-                        error: function() {
-                            $('#vehicleModelSelect').html('<option value="">حدث خطأ</option>');
-                        }
-                    });
-                } else {
-                    $('#vehicleModelSelect').html('<option value="">اختر موديل المركبة</option>');
-                }
-            });
 
             // تحميل المدن عند اختيار المحافظة
             $('#provinceSelect').change(function() {

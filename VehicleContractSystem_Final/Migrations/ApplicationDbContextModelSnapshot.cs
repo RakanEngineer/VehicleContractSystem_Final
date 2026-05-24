@@ -492,7 +492,11 @@ namespace VehicleContractSystem_Final.Migrations
 
                     b.Property<string>("ChassisNumber")
                         .IsRequired()
+                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ChassisNumberSnapshot")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("CityId")
                         .HasColumnType("int");
@@ -536,7 +540,13 @@ namespace VehicleContractSystem_Final.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("LicenseNumberSnapshot")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("ManufactureYear")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ManufactureYearSnapshot")
                         .HasColumnType("int");
 
                     b.Property<string>("Neighborhood")
@@ -592,6 +602,12 @@ namespace VehicleContractSystem_Final.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("VehicleColorNameSnapshot")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("VehicleId")
+                        .HasColumnType("int");
+
                     b.Property<string>("VehicleModel")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -599,16 +615,19 @@ namespace VehicleContractSystem_Final.Migrations
                     b.Property<int?>("VehicleModelId")
                         .HasColumnType("int");
 
+                    b.Property<string>("VehicleModelNameSnapshot")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal>("VehiclePrice")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int?>("VehicleTypeId")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.Property<string>("VehicleTypeNameSnapshot")
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasIndex("ChassisNumber")
-                        .IsUnique();
+                    b.HasKey("Id");
 
                     b.HasIndex("CityId");
 
@@ -622,6 +641,8 @@ namespace VehicleContractSystem_Final.Migrations
                     b.HasIndex("OfficeId");
 
                     b.HasIndex("ProvinceId");
+
+                    b.HasIndex("VehicleId");
 
                     b.HasIndex("VehicleModelId");
 
@@ -925,7 +946,8 @@ namespace VehicleContractSystem_Final.Migrations
 
                     b.Property<string>("ChassisNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("ColorId")
                         .HasColumnType("int");
@@ -941,7 +963,6 @@ namespace VehicleContractSystem_Final.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("OwnerId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("VehicleBrand")
@@ -956,7 +977,7 @@ namespace VehicleContractSystem_Final.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("VehicleModelId")
+                    b.Property<int?>("VehicleModelId")
                         .HasColumnType("int");
 
                     b.Property<string>("VehicleModelName")
@@ -967,6 +988,9 @@ namespace VehicleContractSystem_Final.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ChassisNumber")
+                        .IsUnique();
 
                     b.HasIndex("ColorId");
 
@@ -1179,6 +1203,11 @@ namespace VehicleContractSystem_Final.Migrations
                         .HasForeignKey("ProvinceId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("VehicleContractSystem_Final.Models.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("VehicleContractSystem_Final.Models.VehicleModel", null)
                         .WithMany()
                         .HasForeignKey("VehicleModelId")
@@ -1196,6 +1225,8 @@ namespace VehicleContractSystem_Final.Migrations
                     b.Navigation("Office");
 
                     b.Navigation("Province");
+
+                    b.Navigation("Vehicle");
                 });
 
             modelBuilder.Entity("VehicleContractSystem_Final.Models.Notification", b =>
@@ -1238,14 +1269,12 @@ namespace VehicleContractSystem_Final.Migrations
                     b.HasOne("VehicleContractSystem_Final.Models.ApplicationUser", "Owner")
                         .WithMany("Vehicles")
                         .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("VehicleContractSystem_Final.Models.VehicleModel", "VehicleModel")
                         .WithMany("Vehicles")
                         .HasForeignKey("VehicleModelId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("VehicleContractSystem_Final.Models.VehicleType", "VehicleType")
                         .WithMany()

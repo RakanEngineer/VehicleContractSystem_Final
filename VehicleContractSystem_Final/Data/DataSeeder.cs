@@ -29,6 +29,7 @@ namespace VehicleContractSystem_Final.Data
             if (env.IsDevelopment())
             {
                 await SeedDemoAsync();
+                await BackfillContractVehiclesAsync();
             }
         }
 
@@ -443,6 +444,213 @@ namespace VehicleContractSystem_Final.Data
                 CreatedAt = DateTime.Now
             });
             await _context.SaveChangesAsync();
+        }
+
+        private static async Task BackfillContractVehiclesAsync()
+        {
+            var contracts = await _context.Contracts
+                .Where(c => c.VehicleId == null ||
+                            c.VehicleTypeNameSnapshot == null ||
+                            c.VehicleModelNameSnapshot == null ||
+                            c.VehicleColorNameSnapshot == null ||
+                            c.LicenseNumberSnapshot == null ||
+                            c.ChassisNumberSnapshot == null ||
+                            c.ManufactureYearSnapshot == null)
+                .ToListAsync();
+
+            foreach (var contract in contracts)
+            {
+                var vehicle = contract.VehicleId.HasValue
+                    ? await _context.Vehicles.FindAsync(contract.VehicleId.Value)
+                    : await FindVehicleForContractAsync(contract);
+
+                if (vehicle == null)
+                {
+                    vehicle = await CreateVehicleFromContractAsync(contract);
+                }
+
+                contract.VehicleId ??= vehicle.Id;
+                await ApplyVehicleSnapshotsAsync(contract, vehicle);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        private static async Task<Vehicle?> FindVehicleForContractAsync(Contract contract)
+        {
+            if (!string.IsNullOrWhiteSpace(contract.ChassisNumber))
+            {
+                var vehicleByChassis = await _context.Vehicles
+                    .FirstOrDefaultAsync(v => v.ChassisNumber == contract.ChassisNumber);
+                if (vehicleByChassis != null)
+                    return vehicleByChassis;
+            }
+
+            if (!string.IsNullOrWhiteSpace(contract.LicenseNumber))
+            {
+                var vehicleByLicense = await _context.Vehicles
+                    .FirstOrDefaultAsync(v => v.LicenseNumber == contract.LicenseNumber);
+                if (vehicleByLicense != null)
+                    return vehicleByLicense;
+            }
+
+            return null;
+        }
+
+        private static async Task<Vehicle> CreateVehicleFromContractAsync(Contract contract)
+        {
+            var vehicleType = await ResolveVehicleTypeAsync(contract);
+            var vehicleModel = await ResolveVehicleModelAsync(contract, vehicleType.Id);
+            var color = await ResolveColorAsync(contract);
+
+            var vehicle = new Vehicle
+            {
+                OwnerId = null,
+                VehicleTypeId = vehicleType.Id,
+                VehicleModelId = vehicleModel.Id,
+                ColorId = color.Id,
+                LicenseNumber = string.IsNullOrWhiteSpace(contract.LicenseNumber)
+                    ? $"LEGACY-CONTRACT-{contract.Id}"
+                    : contract.LicenseNumber,
+                ChassisNumber = string.IsNullOrWhiteSpace(contract.ChassisNumber)
+                    ? $"LEGACY-CHASSIS-{contract.Id}"
+                    : contract.ChassisNumber,
+                VehicleBrand = contract.VehicleBrand,
+                VehicleModelName = string.IsNullOrWhiteSpace(contract.VehicleModel)
+                    ? vehicleModel.NameAr
+                    : contract.VehicleModel,
+                VehicleColorName = string.IsNullOrWhiteSpace(contract.VehicleColor)
+                    ? color.NameAr
+                    : contract.VehicleColor,
+                VehicleCategory = string.IsNullOrWhiteSpace(contract.VehicleCategory)
+                    ? vehicleType.NameAr
+                    : contract.VehicleCategory,
+                ManufactureYear = contract.ManufactureYear,
+                NumberOfWheels = 4
+            };
+
+            _context.Vehicles.Add(vehicle);
+            await _context.SaveChangesAsync();
+
+            return vehicle;
+        }
+
+        private static async Task ApplyVehicleSnapshotsAsync(Contract contract, Vehicle vehicle)
+        {
+            if (string.IsNullOrWhiteSpace(contract.VehicleTypeNameSnapshot))
+            {
+                contract.VehicleTypeNameSnapshot = !string.IsNullOrWhiteSpace(contract.VehicleCategory)
+                    ? contract.VehicleCategory
+                    : await _context.VehicleTypes
+                        .Where(v => v.Id == vehicle.VehicleTypeId)
+                        .Select(v => v.NameAr)
+                        .FirstOrDefaultAsync();
+            }
+
+            if (string.IsNullOrWhiteSpace(contract.VehicleModelNameSnapshot))
+            {
+                contract.VehicleModelNameSnapshot = !string.IsNullOrWhiteSpace(contract.VehicleModel)
+                    ? contract.VehicleModel
+                    : await _context.VehicleModels
+                        .Where(v => v.Id == vehicle.VehicleModelId)
+                        .Select(v => v.NameAr)
+                        .FirstOrDefaultAsync();
+            }
+
+            if (string.IsNullOrWhiteSpace(contract.VehicleColorNameSnapshot))
+            {
+                contract.VehicleColorNameSnapshot = !string.IsNullOrWhiteSpace(contract.VehicleColor)
+                    ? contract.VehicleColor
+                    : await _context.Colors
+                        .Where(c => c.Id == vehicle.ColorId)
+                        .Select(c => c.NameAr)
+                        .FirstOrDefaultAsync();
+            }
+
+            if (string.IsNullOrWhiteSpace(contract.LicenseNumberSnapshot))
+            {
+                contract.LicenseNumberSnapshot = !string.IsNullOrWhiteSpace(contract.LicenseNumber)
+                    ? contract.LicenseNumber
+                    : vehicle.LicenseNumber;
+            }
+
+            if (string.IsNullOrWhiteSpace(contract.ChassisNumberSnapshot))
+            {
+                contract.ChassisNumberSnapshot = !string.IsNullOrWhiteSpace(contract.ChassisNumber)
+                    ? contract.ChassisNumber
+                    : vehicle.ChassisNumber;
+            }
+
+            contract.ManufactureYearSnapshot ??= contract.ManufactureYear > 0
+                ? contract.ManufactureYear
+                : vehicle.ManufactureYear;
+        }
+
+        private static async Task<VehicleType> ResolveVehicleTypeAsync(Contract contract)
+        {
+            if (contract.VehicleTypeId.HasValue)
+            {
+                var vehicleTypeById = await _context.VehicleTypes.FindAsync(contract.VehicleTypeId.Value);
+                if (vehicleTypeById != null)
+                    return vehicleTypeById;
+            }
+
+            if (!string.IsNullOrWhiteSpace(contract.VehicleCategory))
+            {
+                var vehicleTypeByName = await _context.VehicleTypes
+                    .FirstOrDefaultAsync(v => v.NameAr == contract.VehicleCategory);
+                if (vehicleTypeByName != null)
+                    return vehicleTypeByName;
+            }
+
+            return await _context.VehicleTypes
+                .OrderBy(v => v.Id)
+                .FirstAsync();
+        }
+
+        private static async Task<VehicleModel> ResolveVehicleModelAsync(Contract contract, int vehicleTypeId)
+        {
+            if (contract.VehicleModelId.HasValue)
+            {
+                var vehicleModelById = await _context.VehicleModels.FindAsync(contract.VehicleModelId.Value);
+                if (vehicleModelById != null)
+                    return vehicleModelById;
+            }
+
+            if (!string.IsNullOrWhiteSpace(contract.VehicleModel))
+            {
+                var vehicleModelByName = await _context.VehicleModels
+                    .FirstOrDefaultAsync(v => v.NameAr == contract.VehicleModel);
+                if (vehicleModelByName != null)
+                    return vehicleModelByName;
+            }
+
+            return await _context.VehicleModels
+                .Where(v => v.VehicleTypeId == vehicleTypeId)
+                .OrderBy(v => v.Id)
+                .FirstAsync();
+        }
+
+        private static async Task<Color> ResolveColorAsync(Contract contract)
+        {
+            if (contract.ColorId.HasValue)
+            {
+                var colorById = await _context.Colors.FindAsync(contract.ColorId.Value);
+                if (colorById != null)
+                    return colorById;
+            }
+
+            if (!string.IsNullOrWhiteSpace(contract.VehicleColor))
+            {
+                var colorByName = await _context.Colors
+                    .FirstOrDefaultAsync(c => c.NameAr == contract.VehicleColor);
+                if (colorByName != null)
+                    return colorByName;
+            }
+
+            return await _context.Colors
+                .OrderBy(c => c.Id)
+                .FirstAsync();
         }
 
         private static async Task AddVehicleModelIfMissingAsync(string nameAr, string nameEn, int vehicleTypeId)

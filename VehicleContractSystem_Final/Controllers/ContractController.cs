@@ -99,6 +99,8 @@ namespace VehicleContractSystem_Final.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            ViewBag.CanCloseContract = await CanCloseContractAsync(contract);
+
             return View(contract);
         }
 
@@ -146,29 +148,49 @@ namespace VehicleContractSystem_Final.Controllers
             ModelState.Remove("Contract.Province");
             ModelState.Remove("Contract.City");
             ModelState.Remove("Contract.Payments");
+            ModelState.Remove("Contract.Vehicle");
+            ModelState.Remove("Contract.VehicleId");
+            ModelState.Remove("Contract.VehicleModelId");
             ModelState.Remove("Contract.VehicleCategory");
-            ModelState.Remove("Contract.VehicleModel");
             ModelState.Remove("Contract.VehicleColor");
             await ApplyVehicleLookupValuesAsync(contract);
             await ValidateVehicleLookupsAsync(contract);
+            NormalizeManualVehicleModel(contract);
+            NormalizeVehicleIdentityFields(contract);
+            var existingVehicle = await FindVehicleForNewContractAsync(contract);
+            await ValidateVehicleContractAvailabilityForCreateAsync(contract, existingVehicle);
+            await ValidateLicenseNumberForCreateAsync(contract, existingVehicle);
 
             if (ModelState.IsValid)
             {
-                contract.CreatedByUserId = currentUser.Id;
-                contract.OfficeId = currentUser.OfficeId.Value;
-                contract.CreatedAt = DateTime.Now;
-                contract.Status = ContractStatus.Open;
-
-                if (string.IsNullOrWhiteSpace(contract.ContractNumber))
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
                 {
-                    contract.ContractNumber = GenerateContractNumber();
+                    contract.CreatedByUserId = currentUser.Id;
+                    contract.OfficeId = currentUser.OfficeId.Value;
+                    contract.CreatedAt = DateTime.Now;
+                    contract.Status = ContractStatus.Open;
+
+                    if (string.IsNullOrWhiteSpace(contract.ContractNumber))
+                    {
+                        contract.ContractNumber = GenerateContractNumber();
+                    }
+
+                    var vehicle = await GetOrCreateVehicleForNewContractAsync(contract, existingVehicle);
+                    contract.VehicleId = vehicle.Id;
+                    ApplyVehicleSnapshotFields(contract, vehicle);
+
+                    _context.Add(contract);
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    TempData["SuccessMessage"] = "تم إنشاء العقد بنجاح";
+                    return RedirectToAction(nameof(Details), new { id = contract.Id });
                 }
-
-                _context.Add(contract);
-                await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = "تم إنشاء العقد بنجاح";
-                return RedirectToAction(nameof(Details), new { id = contract.Id });
+                catch (DbUpdateException ex) when (AddDuplicateVehicleIdentityModelError(ex))
+                {
+                    await transaction.RollbackAsync();
+                }
             }
 
             LogModelStateErrors();
@@ -184,6 +206,7 @@ namespace VehicleContractSystem_Final.Controllers
                 return NotFound();
 
             var contract = await _context.Contracts
+                .Include(c => c.Vehicle)
                 .Include(c => c.Payments)
                 .FirstOrDefaultAsync(c => c.Id == id);
             if (contract == null)
@@ -198,8 +221,7 @@ namespace VehicleContractSystem_Final.Controllers
 
             if (contract.Status == ContractStatus.Closed)
             {
-                TempData["ErrorMessage"] = "لا يمكن تعديل عقد مغلق";
-                return RedirectToAction(nameof(Details), new { id = contract.Id });
+                TempData["ErrorMessage"] = "العقد مغلق ولا يمكن تعديل بياناته القانونية";
             }
 
             await EnsureContractLookupIdsAsync(contract);
@@ -217,7 +239,9 @@ namespace VehicleContractSystem_Final.Controllers
             if (id != contract.Id)
                 return NotFound();
 
-            var existingContract = await _context.Contracts.FindAsync(id);
+            var existingContract = await _context.Contracts
+                .Include(c => c.Vehicle)
+                .FirstOrDefaultAsync(c => c.Id == id);
             if (existingContract == null)
                 return NotFound();
 
@@ -230,14 +254,15 @@ namespace VehicleContractSystem_Final.Controllers
 
             if (existingContract.Status == ContractStatus.Closed)
             {
-                TempData["ErrorMessage"] = "لا يمكن تعديل عقد مغلق";
-                return RedirectToAction(nameof(Details), new { id = contract.Id });
+                TempData["ErrorMessage"] = "العقد مغلق ولا يمكن تعديل بياناته القانونية";
+                return RedirectToAction(nameof(Details), new { id = existingContract.Id });
             }
 
             contract.ContractNumber = existingContract.ContractNumber;
 
-            // Remove validation for navigation properties
+            // Remove validation for fields that are immutable or supplied by the persisted contract.
             ModelState.Remove("Contract.ContractNumber");
+            ModelState.Remove("Contract.ContractDate");
             ModelState.Remove("Contract.CreatedByUser");
             ModelState.Remove("Contract.CreatedByUserId");
             ModelState.Remove("Contract.Office");
@@ -245,42 +270,42 @@ namespace VehicleContractSystem_Final.Controllers
             ModelState.Remove("Contract.Province");
             ModelState.Remove("Contract.City");
             ModelState.Remove("Contract.Payments");
+            ModelState.Remove("Contract.Vehicle");
+            ModelState.Remove("Contract.VehicleId");
+            ModelState.Remove("Contract.Status");
+            ModelState.Remove("Contract.CurrentOwnerName");
+            ModelState.Remove("Contract.CurrentOwnerAddress");
+            ModelState.Remove("Contract.AnnualRegistrationNumber");
+            ModelState.Remove("Contract.VehicleBrand");
+            ModelState.Remove("Contract.VehicleTypeId");
+            ModelState.Remove("Contract.VehicleModelId");
+            ModelState.Remove("Contract.ColorId");
             ModelState.Remove("Contract.VehicleCategory");
             ModelState.Remove("Contract.VehicleModel");
             ModelState.Remove("Contract.VehicleColor");
-            await ApplyVehicleLookupValuesAsync(contract);
-            await ValidateVehicleLookupsAsync(contract);
+            ModelState.Remove("Contract.ManufactureYear");
+            ModelState.Remove("Contract.ChassisNumber");
+            ModelState.Remove("Contract.LicenseNumber");
+            ModelState.Remove("Contract.VehicleTypeNameSnapshot");
+            ModelState.Remove("Contract.VehicleModelNameSnapshot");
+            ModelState.Remove("Contract.VehicleColorNameSnapshot");
+            ModelState.Remove("Contract.LicenseNumberSnapshot");
+            ModelState.Remove("Contract.ChassisNumberSnapshot");
+            ModelState.Remove("Contract.ManufactureYearSnapshot");
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Update only allowed fields
+                    // Update only non-vehicle fields. VehicleId and snapshot values are immutable after creation.
                     existingContract.SellerName = contract.SellerName;
                     existingContract.SellerAddress = contract.SellerAddress;
-                    existingContract.SellerOccupation = contract.SellerOccupation;
                     existingContract.SellerPhone = contract.SellerPhone;
                     existingContract.SellerIdNumber = contract.SellerIdNumber;
-                    existingContract.SellerIdIssuer = contract.SellerIdIssuer;
                     existingContract.BuyerName = contract.BuyerName;
                     existingContract.BuyerAddress = contract.BuyerAddress;
-                    existingContract.BuyerOccupation = contract.BuyerOccupation;
                     existingContract.BuyerPhone = contract.BuyerPhone;
                     existingContract.BuyerIdNumber = contract.BuyerIdNumber;
-                    existingContract.BuyerIdIssuer = contract.BuyerIdIssuer;
-                    existingContract.CurrentOwnerName = contract.CurrentOwnerName;
-                    existingContract.CurrentOwnerAddress = contract.CurrentOwnerAddress;
-                    existingContract.AnnualRegistrationNumber = contract.AnnualRegistrationNumber;
-                    existingContract.VehicleBrand = contract.VehicleBrand;
-                    existingContract.VehicleTypeId = contract.VehicleTypeId;
-                    existingContract.VehicleModelId = contract.VehicleModelId;
-                    existingContract.ColorId = contract.ColorId;
-                    existingContract.VehicleModel = contract.VehicleModel;
-                    existingContract.ManufactureYear = contract.ManufactureYear;
-                    existingContract.VehicleCategory = contract.VehicleCategory;
-                    existingContract.VehicleColor = contract.VehicleColor;
-                    existingContract.ChassisNumber = contract.ChassisNumber;
-                    existingContract.LicenseNumber = contract.LicenseNumber;
                     existingContract.VehiclePrice = contract.VehiclePrice;
                     existingContract.Notes = contract.Notes;
                     existingContract.ProvinceId = contract.ProvinceId;
@@ -291,15 +316,14 @@ namespace VehicleContractSystem_Final.Controllers
                     existingContract.LastModifiedAt = DateTime.Now;
                     existingContract.LastModifiedByUserId = (await _currentUserService.GetCurrentUserAsync())?.Id;
 
-                    _context.Update(existingContract);
                     await _context.SaveChangesAsync();
 
                     TempData["SuccessMessage"] = "تم تحديث العقد بنجاح";
-                    return RedirectToAction(nameof(Details), new { id = contract.Id });
+                    return RedirectToAction(nameof(Details), new { id = existingContract.Id });
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ContractExists(contract.Id))
+                    if (!ContractExists(existingContract.Id))
                         return NotFound();
                     else
                         throw;
@@ -307,6 +331,7 @@ namespace VehicleContractSystem_Final.Controllers
             }
 
             LogModelStateErrors();
+            CopyImmutableContractFields(existingContract, contract);
             viewModel = await BuildContractViewModelAsync(contract);
 
             return View(viewModel);
@@ -330,11 +355,28 @@ namespace VehicleContractSystem_Final.Controllers
                 return RedirectToAction(nameof(Details), new { id = contract.Id });
             }
 
+            if (!await CanCloseContractAsync(contract))
+            {
+                TempData["ErrorMessage"] = await GetCloseContractDeniedMessageAsync(contract);
+                return RedirectToAction(nameof(Details), new { id = contract.Id });
+            }
+
+            if (contract.Status != ContractStatus.Open)
+            {
+                TempData["ErrorMessage"] = "لا يمكن إغلاق عقد مغلق مسبقاً";
+                return RedirectToAction(nameof(Details), new { id = contract.Id });
+            }
+
+            if (contract.RemainingAmount > 0)
+            {
+                TempData["ErrorMessage"] = "لا يمكن إغلاق العقد قبل تسديد كامل المبلغ";
+                return RedirectToAction(nameof(Details), new { id = contract.Id });
+            }
+
             contract.Status = ContractStatus.Closed;
             contract.LastModifiedAt = DateTime.Now;
             contract.LastModifiedByUserId = (await _currentUserService.GetCurrentUserAsync())?.Id;
 
-            _context.Update(contract);
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = "تم إغلاق العقد بنجاح";
@@ -499,6 +541,13 @@ namespace VehicleContractSystem_Final.Controllers
 
         private byte[] GeneratePDF(Contract contract)
         {
+            var vehicleTypeName = SnapshotOrLegacy(contract.VehicleTypeNameSnapshot, contract.VehicleCategory);
+            var vehicleModelName = SnapshotOrLegacy(contract.VehicleModelNameSnapshot, contract.VehicleModel);
+            var vehicleColorName = SnapshotOrLegacy(contract.VehicleColorNameSnapshot, contract.VehicleColor);
+            var licenseNumber = SnapshotOrLegacy(contract.LicenseNumberSnapshot, contract.LicenseNumber);
+            var chassisNumber = SnapshotOrLegacy(contract.ChassisNumberSnapshot, contract.ChassisNumber);
+            var manufactureYear = contract.ManufactureYearSnapshot ?? contract.ManufactureYear;
+
             using var ms = new MemoryStream();
             var document = new Document(PageSize.A4, 50, 50, 50, 50);
             var writer = PdfWriter.GetInstance(document, ms);
@@ -533,9 +582,12 @@ namespace VehicleContractSystem_Final.Controllers
 
             document.Add(new Paragraph("بيانات السيارة:", titleFont));
             document.Add(new Paragraph($"الماركة: {contract.VehicleBrand}", arabicFont));
-            document.Add(new Paragraph($"الموديل: {contract.VehicleModel}", arabicFont));
-            document.Add(new Paragraph($"سنة الصنع: {contract.ManufactureYear}", arabicFont));
-            document.Add(new Paragraph($"رقم الشاصي: {contract.ChassisNumber}", arabicFont));
+            document.Add(new Paragraph($"صنف المركبة: {vehicleTypeName}", arabicFont));
+            document.Add(new Paragraph($"الموديل: {vehicleModelName}", arabicFont));
+            document.Add(new Paragraph($"اللون: {vehicleColorName}", arabicFont));
+            document.Add(new Paragraph($"سنة الصنع: {manufactureYear}", arabicFont));
+            document.Add(new Paragraph($"رقم المركبة: {licenseNumber}", arabicFont));
+            document.Add(new Paragraph($"رقم الشاصي: {chassisNumber}", arabicFont));
 
             var qrCodeBase64 = QRCodeHelper.GenerateQRCodeForContract(
                 contract.ContractNumber,
@@ -553,6 +605,68 @@ namespace VehicleContractSystem_Final.Controllers
             document.Close();
 
             return ms.ToArray();
+        }
+
+        private static string SnapshotOrLegacy(string? snapshotValue, string legacyValue)
+        {
+            return string.IsNullOrWhiteSpace(snapshotValue) ? legacyValue : snapshotValue;
+        }
+
+        private static void CopyImmutableContractFields(Contract source, Contract target)
+        {
+            target.ContractNumber = source.ContractNumber;
+            target.ContractDate = source.ContractDate;
+            target.CreatedAt = source.CreatedAt;
+            target.CreatedByUserId = source.CreatedByUserId;
+            target.OfficeId = source.OfficeId;
+            target.Status = source.Status;
+            target.VehicleId = source.VehicleId;
+            target.Vehicle = source.Vehicle;
+            target.CurrentOwnerName = source.CurrentOwnerName;
+            target.CurrentOwnerAddress = source.CurrentOwnerAddress;
+            target.AnnualRegistrationNumber = source.AnnualRegistrationNumber;
+            target.VehicleBrand = source.VehicleBrand;
+            target.VehicleTypeId = source.VehicleTypeId;
+            target.VehicleModelId = source.VehicleModelId;
+            target.ColorId = source.ColorId;
+            target.VehicleCategory = source.VehicleCategory;
+            target.VehicleModel = source.VehicleModel;
+            target.VehicleColor = source.VehicleColor;
+            target.LicenseNumber = source.LicenseNumber;
+            target.ChassisNumber = source.ChassisNumber;
+            target.ManufactureYear = source.ManufactureYear;
+            target.VehicleTypeNameSnapshot = source.VehicleTypeNameSnapshot;
+            target.VehicleModelNameSnapshot = source.VehicleModelNameSnapshot;
+            target.VehicleColorNameSnapshot = source.VehicleColorNameSnapshot;
+            target.LicenseNumberSnapshot = source.LicenseNumberSnapshot;
+            target.ChassisNumberSnapshot = source.ChassisNumberSnapshot;
+            target.ManufactureYearSnapshot = source.ManufactureYearSnapshot;
+        }
+
+        private async Task<bool> CanCloseContractAsync(Contract contract)
+        {
+            var currentUser = await _currentUserService.GetCurrentUserAsync();
+            if (currentUser == null)
+                return false;
+
+            if (await _currentUserService.IsSuperAdminAsync())
+                return true;
+
+            return await _currentUserService.IsOfficeAdminAsync()
+                && currentUser.OfficeId == contract.OfficeId;
+        }
+
+        private async Task<string> GetCloseContractDeniedMessageAsync(Contract contract)
+        {
+            var currentUser = await _currentUserService.GetCurrentUserAsync();
+            if (currentUser != null &&
+                await _currentUserService.IsOfficeAdminAsync() &&
+                currentUser.OfficeId != contract.OfficeId)
+            {
+                return "لا يمكن إغلاق عقد غير تابع لمكتبك";
+            }
+
+            return "ليس لديك صلاحية إغلاق هذا العقد";
         }
 
         private string GenerateContractNumber()
@@ -618,15 +732,11 @@ namespace VehicleContractSystem_Final.Controllers
             var vehicleType = contract.VehicleTypeId.HasValue
                 ? await _context.VehicleTypes.FindAsync(contract.VehicleTypeId.Value)
                 : null;
-            var vehicleModel = contract.VehicleModelId.HasValue
-                ? await _context.VehicleModels.FindAsync(contract.VehicleModelId.Value)
-                : null;
             var color = contract.ColorId.HasValue
                 ? await _context.Colors.FindAsync(contract.ColorId.Value)
                 : null;
 
             contract.VehicleCategory = vehicleType?.NameAr ?? string.Empty;
-            contract.VehicleModel = vehicleModel?.NameAr ?? string.Empty;
             contract.VehicleColor = color?.NameAr ?? string.Empty;
         }
 
@@ -636,19 +746,130 @@ namespace VehicleContractSystem_Final.Controllers
                 ModelState.AddModelError("Contract.ColorId", "يرجى اختيار لون مركبة صحيح");
 
             if (!contract.VehicleTypeId.HasValue || !await _context.VehicleTypes.AnyAsync(t => t.Id == contract.VehicleTypeId.Value))
-                ModelState.AddModelError("Contract.VehicleTypeId", "يرجى اختيار نوع مركبة صحيح");
+                ModelState.AddModelError("Contract.VehicleTypeId", "يرجى اختيار صنف مركبة صحيح");
 
-            if (!contract.VehicleModelId.HasValue || !await _context.VehicleModels.AnyAsync(m => m.Id == contract.VehicleModelId.Value))
-            {
-                ModelState.AddModelError("Contract.VehicleModelId", "يرجى اختيار موديل مركبة صحيح");
+            if (string.IsNullOrWhiteSpace(contract.VehicleModel))
+                ModelState.AddModelError("Contract.VehicleModel", "يرجى إدخال موديل المركبة");
+        }
+
+        private static void NormalizeManualVehicleModel(Contract contract)
+        {
+            contract.VehicleModel = (contract.VehicleModel ?? string.Empty).Trim();
+        }
+
+        private static void NormalizeVehicleIdentityFields(Contract contract)
+        {
+            contract.ChassisNumber = (contract.ChassisNumber ?? string.Empty).Trim();
+            contract.LicenseNumber = (contract.LicenseNumber ?? string.Empty).Trim();
+        }
+
+        private async Task ValidateVehicleContractAvailabilityForCreateAsync(Contract contract, Vehicle? existingVehicle)
+        {
+            if (string.IsNullOrWhiteSpace(contract.ChassisNumber) && existingVehicle == null)
                 return;
+
+            var hasOpenContract = await _context.Contracts.AnyAsync(c =>
+                c.Status == ContractStatus.Open &&
+                ((existingVehicle != null && c.VehicleId == existingVehicle.Id) ||
+                 (!string.IsNullOrWhiteSpace(contract.ChassisNumber) && c.ChassisNumber == contract.ChassisNumber)));
+
+            if (hasOpenContract)
+            {
+                ModelState.AddModelError("Contract.ChassisNumber", "توجد معاملة مفتوحة لهذه المركبة ولا يمكن إنشاء عقد جديد قبل إغلاق العقد السابق");
+            }
+        }
+
+        private async Task ValidateLicenseNumberForCreateAsync(Contract contract, Vehicle? existingVehicle)
+        {
+            if (string.IsNullOrWhiteSpace(contract.LicenseNumber))
+                return;
+
+            var vehicleWithLicense = await _context.Vehicles
+                .FirstOrDefaultAsync(v => v.LicenseNumber == contract.LicenseNumber);
+
+            if (vehicleWithLicense == null)
+                return;
+
+            if (existingVehicle != null && vehicleWithLicense.Id == existingVehicle.Id)
+                return;
+
+            ModelState.AddModelError("Contract.LicenseNumber", "رقم المركبة مستخدم مسبقاً");
+        }
+
+        private bool AddDuplicateVehicleIdentityModelError(DbUpdateException exception)
+        {
+            var message = exception.InnerException?.Message ?? exception.Message;
+
+            if (message.Contains("IX_Vehicles_ChassisNumber", StringComparison.OrdinalIgnoreCase) ||
+                message.Contains("ChassisNumber", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("Contract.ChassisNumber", "توجد معاملة مفتوحة لهذه المركبة ولا يمكن إنشاء عقد جديد قبل إغلاق العقد السابق");
+                return true;
             }
 
-            if (contract.VehicleTypeId.HasValue &&
-                !await _context.VehicleModels.AnyAsync(m => m.Id == contract.VehicleModelId.Value && m.VehicleTypeId == contract.VehicleTypeId.Value))
+            if (message.Contains("IX_Vehicles_LicenseNumber", StringComparison.OrdinalIgnoreCase) ||
+                message.Contains("LicenseNumber", StringComparison.OrdinalIgnoreCase))
             {
-                ModelState.AddModelError("Contract.VehicleModelId", "موديل المركبة لا يتبع نوع المركبة المحدد");
+                ModelState.AddModelError("Contract.LicenseNumber", "رقم المركبة مستخدم مسبقاً");
+                return true;
             }
+
+            return false;
+        }
+
+        private async Task<Vehicle> GetOrCreateVehicleForNewContractAsync(Contract contract, Vehicle? existingVehicle = null)
+        {
+            existingVehicle ??= await FindVehicleForNewContractAsync(contract);
+            if (existingVehicle != null)
+                return existingVehicle;
+
+            var vehicle = new Vehicle
+            {
+                OwnerId = null,
+                VehicleTypeId = contract.VehicleTypeId!.Value,
+                VehicleModelId = null,
+                ColorId = contract.ColorId!.Value,
+                LicenseNumber = contract.LicenseNumber,
+                ChassisNumber = contract.ChassisNumber,
+                ManufactureYear = contract.ManufactureYear,
+                VehicleBrand = contract.VehicleBrand,
+                VehicleModelName = contract.VehicleModel,
+                VehicleColorName = contract.VehicleColor,
+                VehicleCategory = contract.VehicleCategory,
+                NumberOfWheels = 4
+            };
+
+            _context.Vehicles.Add(vehicle);
+            await _context.SaveChangesAsync();
+
+            return vehicle;
+        }
+
+        private async Task<Vehicle?> FindVehicleForNewContractAsync(Contract contract)
+        {
+            if (!string.IsNullOrWhiteSpace(contract.ChassisNumber))
+            {
+                return await _context.Vehicles
+                    .FirstOrDefaultAsync(v => v.ChassisNumber == contract.ChassisNumber);
+            }
+
+            return null;
+        }
+
+        private static void ApplyVehicleSnapshotFields(Contract contract, Vehicle vehicle)
+        {
+            contract.VehicleTypeNameSnapshot = contract.VehicleCategory;
+            contract.VehicleModelNameSnapshot = contract.VehicleModel;
+            contract.VehicleColorNameSnapshot = contract.VehicleColor;
+            contract.LicenseNumberSnapshot = !string.IsNullOrWhiteSpace(contract.LicenseNumber)
+                ? contract.LicenseNumber
+                : vehicle.LicenseNumber;
+            contract.ChassisNumberSnapshot = !string.IsNullOrWhiteSpace(contract.ChassisNumber)
+                ? contract.ChassisNumber
+                : vehicle.ChassisNumber;
+            contract.ManufactureYearSnapshot = contract.ManufactureYear > 0
+                ? contract.ManufactureYear
+                : vehicle.ManufactureYear;
         }
 
         private void LogModelStateErrors()
