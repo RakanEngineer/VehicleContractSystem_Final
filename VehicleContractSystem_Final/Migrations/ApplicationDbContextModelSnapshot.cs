@@ -773,6 +773,76 @@ namespace VehicleContractSystem_Final.Migrations
                     b.ToTable("Contracts");
                 });
 
+            modelBuilder.Entity("VehicleContractSystem_Final.Models.ContractDocument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ContractId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DocumentType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("StoredFileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UploadedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int?>("VehicleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContractId");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("UploadedAt");
+
+                    b.HasIndex("UploadedByUserId");
+
+                    b.HasIndex("VehicleId");
+
+                    b.ToTable("ContractDocuments");
+                });
+
             modelBuilder.Entity("VehicleContractSystem_Final.Models.Notification", b =>
                 {
                     b.Property<int>("Id")
@@ -1376,6 +1446,31 @@ namespace VehicleContractSystem_Final.Migrations
                     b.Navigation("Vehicle");
                 });
 
+            modelBuilder.Entity("VehicleContractSystem_Final.Models.ContractDocument", b =>
+                {
+                    b.HasOne("VehicleContractSystem_Final.Models.Contract", "Contract")
+                        .WithMany("Documents")
+                        .HasForeignKey("ContractId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VehicleContractSystem_Final.Models.ApplicationUser", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VehicleContractSystem_Final.Models.Vehicle", "Vehicle")
+                        .WithMany("Documents")
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Contract");
+
+                    b.Navigation("UploadedByUser");
+
+                    b.Navigation("Vehicle");
+                });
+
             modelBuilder.Entity("VehicleContractSystem_Final.Models.Notification", b =>
                 {
                     b.HasOne("VehicleContractSystem_Final.Models.ApplicationUser", "User")
@@ -1465,6 +1560,8 @@ namespace VehicleContractSystem_Final.Migrations
 
             modelBuilder.Entity("VehicleContractSystem_Final.Models.Contract", b =>
                 {
+                    b.Navigation("Documents");
+
                     b.Navigation("Payments");
                 });
 
@@ -1483,6 +1580,8 @@ namespace VehicleContractSystem_Final.Migrations
             modelBuilder.Entity("VehicleContractSystem_Final.Models.Vehicle", b =>
                 {
                     b.Navigation("Contracts");
+
+                    b.Navigation("Documents");
                 });
 
             modelBuilder.Entity("VehicleContractSystem_Final.Models.VehicleModel", b =>

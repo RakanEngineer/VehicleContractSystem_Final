@@ -5,6 +5,10 @@
     ViewData["Title"] = "الصفحة الرئيسية";
 }
 
+@functions {
+    private static string Money(decimal value) => $"${value:N0}";
+}
+
 <div class="row mb-4">
     <div class="col">
         <h2 class="mb-0">
@@ -44,7 +48,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="card-title mb-1">عقود مفتوحة</h6>
+                        <h6 class="card-title mb-1">العقود المفتوحة</h6>
                         <h2 class="mb-0">@Model.OpenContracts</h2>
                     </div>
                     <i class="bi bi-folder2-open fs-1 opacity-50"></i>
@@ -58,7 +62,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="card-title mb-1">عقود مغلقة</h6>
+                        <h6 class="card-title mb-1">العقود المغلقة</h6>
                         <h2 class="mb-0">@Model.ClosedContracts</h2>
                     </div>
                     <i class="bi bi-check-circle fs-1 opacity-50"></i>
@@ -76,6 +80,50 @@
                         <h2 class="mb-0">@Model.TodayContracts</h2>
                     </div>
                     <i class="bi bi-calendar-check fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card stats-card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">إجمالي المبيعات</h6>
+                        <h2 class="mb-0">@Money(Model.TotalSalesAmount)</h2>
+                    </div>
+                    <i class="bi bi-cash-stack fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card stats-card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">المبلغ المدفوع</h6>
+                        <h2 class="mb-0">@Money(Model.TotalPaidAmount)</h2>
+                    </div>
+                    <i class="bi bi-wallet2 fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card stats-card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1">المبلغ المتبقي</h6>
+                        <h2 class="mb-0">@Money(Model.TotalRemainingAmount)</h2>
+                    </div>
+                    <i class="bi bi-exclamation-circle fs-1 opacity-50"></i>
                 </div>
             </div>
         </div>
@@ -143,7 +191,7 @@
 @if (User.IsInRole("SuperAdmin"))
 {
     <div class="row g-3 mb-4">
-        <div class="col-md-6">
+        <div class="col-md-3">
             <div class="card stats-card bg-warning text-dark">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -157,7 +205,7 @@
             </div>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-3">
             <div class="card stats-card bg-dark text-white">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -166,6 +214,52 @@
                             <h2 class="mb-0">@Model.TotalOffices</h2>
                         </div>
                         <i class="bi bi-building fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stats-card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-1">المكاتب النشطة</h6>
+                            <h2 class="mb-0">@Model.ActiveOffices</h2>
+                        </div>
+                        <i class="bi bi-building-check fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stats-card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-1">المستخدمون المعلقون</h6>
+                            <h2 class="mb-0">@Model.PendingUsers</h2>
+                        </div>
+                        <i class="bi bi-person-exclamation fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else if (User.IsInRole("OfficeAdmin"))
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card stats-card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-1">مستخدمو المكتب</h6>
+                            <h2 class="mb-0">@Model.TotalUsers</h2>
+                        </div>
+                        <i class="bi bi-people fs-1 opacity-50"></i>
                     </div>
                 </div>
             </div>
@@ -192,6 +286,8 @@
                                     <th>المشتري</th>
                                     <th>التاريخ</th>
                                     <th>الحالة</th>
+                                    <th>إجمالي المبيعات</th>
+                                    <th>المبلغ المتبقي</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -213,6 +309,8 @@
                                                 <span class="badge bg-secondary">مغلق</span>
                                             }
                                         </td>
+                                        <td>@Money(contract.VehiclePrice)</td>
+                                        <td>@Money(contract.RemainingAmount)</td>
                                         <td>
                                             <a asp-controller="Contract" asp-action="Details" asp-route-id="@contract.Id"
                                                class="btn btn-sm btn-primary">
@@ -244,52 +342,55 @@
         </div>
     </div>
 
-    <!-- أفضل الموظفين -->
-    <div class="col-md-4 mb-4">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="mb-0"><i class="bi bi-trophy"></i> أفضل الموظفين</h5>
-            </div>
-            <div class="card-body">
-                @if (Model.TopPerformers.Any())
-                {
-                    <ul class="list-group list-group-flush">
-                        @for (int i = 0; i < Model.TopPerformers.Count; i++)
-                        {
-                            var performer = Model.TopPerformers[i];
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    @if (i == 0)
-                                    {
-                                        <i class="bi bi-trophy-fill text-warning"></i>
-                                    }
-                                    else if (i == 1)
-                                    {
-                                        <i class="bi bi-trophy-fill text-secondary"></i>
-                                    }
-                                    else if (i == 2)
-                                    {
-                                        <i class="bi bi-trophy-fill" style="color: #cd7f32;"></i>
-                                    }
-                                    else
-                                    {
-                                        <i class="bi bi-person-fill text-muted"></i>
-                                    }
-                                    @performer.FullName
-                                </div>
-                                <span class="badge bg-primary rounded-pill">@performer.ContractCount</span>
-                            </li>
-                        }
-                    </ul>
-                }
-                else
-                {
-                    <div class="text-center text-muted py-3">
-                        <i class="bi bi-people fs-1"></i>
-                        <p>لا توجد بيانات بعد</p>
-                    </div>
-                }
+    @if (User.IsInRole("SuperAdmin") || User.IsInRole("OfficeAdmin"))
+    {
+        <!-- أفضل الموظفين -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-trophy"></i> أفضل الموظفين</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.TopPerformers.Any())
+                    {
+                        <ul class="list-group list-group-flush">
+                            @for (int i = 0; i < Model.TopPerformers.Count; i++)
+                            {
+                                var performer = Model.TopPerformers[i];
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        @if (i == 0)
+                                        {
+                                            <i class="bi bi-trophy-fill text-warning"></i>
+                                        }
+                                        else if (i == 1)
+                                        {
+                                            <i class="bi bi-trophy-fill text-secondary"></i>
+                                        }
+                                        else if (i == 2)
+                                        {
+                                            <i class="bi bi-trophy-fill" style="color: #cd7f32;"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-person-fill text-muted"></i>
+                                        }
+                                        @performer.FullName
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">@performer.ContractCount</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-3">
+                            <i class="bi bi-people fs-1"></i>
+                            <p>لا توجد بيانات بعد</p>
+                        </div>
+                    }
+                </div>
             </div>
         </div>
-    </div>
+    }
 </div>

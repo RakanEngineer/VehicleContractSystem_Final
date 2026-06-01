@@ -1,4 +1,5 @@
-﻿@model VehicleContractSystem_Final.Models.Contract
+﻿@using VehicleContractSystem_Final.Enums
+@model VehicleContractSystem_Final.Models.Contract
 @{
     ViewData["Title"] = "التفاصيل";
     var vehicleTypeName = string.IsNullOrWhiteSpace(Model.VehicleTypeNameSnapshot) ? Model.VehicleCategory : Model.VehicleTypeNameSnapshot;
@@ -397,6 +398,115 @@
         </div>
     }
 
+    <!-- Document Center -->
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="bi bi-folder2-open"></i> مركز المستندات</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-controller="Document" asp-action="Upload" method="post" enctype="multipart/form-data" class="row g-3 mb-4">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="contractId" value="@Model.Id" />
+
+                        <div class="col-md-3">
+                            <label class="form-label">نوع المستند</label>
+                            <select name="documentType" class="form-select" required>
+                                <option value="SellerIdentity">هوية البائع</option>
+                                <option value="BuyerIdentity">هوية المشتري</option>
+                                <option value="VehicleRegistration">سنوية المركبة</option>
+                                <option value="DrivingLicense">إجازة السوق</option>
+                                <option value="LegalPowerOfAttorney">وكالة قانونية</option>
+                                <option value="VehicleImage">صورة المركبة</option>
+                                <option value="Other">مستند آخر</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">الملف</label>
+                            <input type="file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" required />
+                            <small class="text-muted">PDF أو JPG أو PNG، الحد الأقصى 5MB</small>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">ملاحظات</label>
+                            <input type="text" name="notes" class="form-control" maxlength="1000" placeholder="ملاحظات اختيارية" />
+                        </div>
+
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-upload"></i> رفع
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>نوع المستند</th>
+                                    <th>اسم الملف</th>
+                                    <th>الحجم</th>
+                                    <th>رفع بواسطة</th>
+                                    <th>تاريخ الرفع</th>
+                                    <th>ملاحظات</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (!Model.Documents.Any())
+                                {
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">لا توجد مستندات مرفوعة لهذا العقد</td>
+                                    </tr>
+                                }
+                                else
+                                {
+                                    foreach (var document in Model.Documents.OrderByDescending(d => d.UploadedAt))
+                                    {
+                                        var documentTypeLabel = document.DocumentType switch
+                                        {
+                                            ContractDocumentType.SellerIdentity => "هوية البائع",
+                                            ContractDocumentType.BuyerIdentity => "هوية المشتري",
+                                            ContractDocumentType.VehicleRegistration => "سنوية المركبة",
+                                            ContractDocumentType.DrivingLicense => "إجازة السوق",
+                                            ContractDocumentType.LegalPowerOfAttorney => "وكالة قانونية",
+                                            ContractDocumentType.VehicleImage => "صورة المركبة",
+                                            _ => "مستند آخر"
+                                        };
+                                        var fileSize = document.FileSize >= 1024 * 1024
+                                            ? $"{document.FileSize / 1024m / 1024m:N1} MB"
+                                            : $"{document.FileSize / 1024m:N0} KB";
+
+                                        <tr>
+                                            <td><span class="badge bg-secondary">@documentTypeLabel</span></td>
+                                            <td>@document.OriginalFileName</td>
+                                            <td>@fileSize</td>
+                                            <td>@(document.UploadedByUser?.FullName ?? "النظام")</td>
+                                            <td>@document.UploadedAt.ToString("yyyy/MM/dd HH:mm")</td>
+                                            <td>@document.Notes</td>
+                                            <td class="text-nowrap">
+                                                <a asp-controller="Document" asp-action="Download" asp-route-id="@document.Id" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-download"></i> تنزيل
+                                                </a>
+                                                <form asp-controller="Document" asp-action="Delete" asp-route-id="@document.Id" method="post" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا المستند؟');">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-trash"></i> حذف
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Audit Info -->
     <div class="row">
         <div class="col-12">
@@ -412,3 +522,5 @@
     </div>
 
 </div>
+
+

@@ -61,5 +61,6 @@ namespace VehicleContractSystem_Final.Models
         public ApplicationUser? Owner { get; set; }
 
         public ICollection<Contract> Contracts { get; set; } = new List<Contract>();
+        public ICollection<ContractDocument> Documents { get; set; } = new List<ContractDocument>();
     }
 }

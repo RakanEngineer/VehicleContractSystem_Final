@@ -224,6 +224,8 @@ namespace VehicleContractSystem_Final.Models
         // المدفوعات
         public List<Payment> Payments { get; set; } = new();
 
+        public ICollection<ContractDocument> Documents { get; set; } = new List<ContractDocument>();
+
         [Display(Name = "المبلغ المدفوع")]
         public decimal PaidAmount => Payments.Sum(p => p.Amount);
 

@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
@@ -15,16 +14,13 @@ namespace VehicleContractSystem_Final.Controllers
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ICurrentUserService _currentUserService;
 
         public HomeController(
             ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager,
             ICurrentUserService currentUserService)
         {
             _context = context;
-            _userManager = userManager;
             _currentUserService = currentUserService;
         }
 
@@ -39,118 +35,93 @@ namespace VehicleContractSystem_Final.Controllers
                 UserName = currentUser.FullName
             };
 
-            // Super Admin Dashboard
+            IQueryable<Contract> contractsQuery;
+            IQueryable<Vehicle> vehiclesQuery;
+
             if (await _currentUserService.IsSuperAdminAsync())
             {
                 viewModel.UserRole = "مدير النظام";
-                viewModel.TotalContracts = await _context.Contracts.CountAsync();
-                viewModel.OpenContracts = await _context.Contracts.CountAsync(c => c.Status == ContractStatus.Open);
-                viewModel.ClosedContracts = await _context.Contracts.CountAsync(c => c.Status == ContractStatus.Closed);
-                viewModel.TodayContracts = await _context.Contracts
-                    .CountAsync(c => c.CreatedAt.Date == DateTime.Today);
+                contractsQuery = _context.Contracts.AsNoTracking();
+                vehiclesQuery = _context.Vehicles.AsNoTracking();
+
                 viewModel.TotalUsers = await _context.Users.CountAsync();
+                viewModel.PendingUsers = await _context.Users.CountAsync(u => !u.IsApproved);
                 viewModel.TotalOffices = await _context.Offices.CountAsync();
-                await PopulateVehicleStatsAsync(viewModel, _context.Vehicles);
-
-                viewModel.RecentContracts = await _context.Contracts
-                    .Include(c => c.Office)
-                    .Include(c => c.CreatedByUser)
-                    .OrderByDescending(c => c.CreatedAt)
-                    .Take(5)
-                    .ToListAsync();
-
-                // Top performers across all offices
-                viewModel.TopPerformers = await _context.Contracts
-                    .GroupBy(c => new { c.CreatedByUserId, c.CreatedByUser!.FirstName, c.CreatedByUser.LastName })
-                    .Select(g => new TopPerformer
-                    {
-                        UserName = g.Key.CreatedByUserId,
-                        FullName = g.Key.FirstName + " " + g.Key.LastName,
-                        ContractCount = g.Count()
-                    })
-                    .OrderByDescending(t => t.ContractCount)
-                    .Take(5)
-                    .ToListAsync();
+                viewModel.ActiveOffices = await _context.Offices.CountAsync(o => o.IsActive);
             }
-            // Office Admin Dashboard
             else if (await _currentUserService.IsOfficeAdminAsync())
             {
                 viewModel.UserRole = "مدير المكتب";
+                var office = await _context.Offices
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(o => o.Id == currentUser.OfficeId);
+                viewModel.OfficeName = office?.Name ?? string.Empty;
 
-                var office = await _context.Offices.FindAsync(currentUser.OfficeId);
-                viewModel.OfficeName = office?.Name ?? "";
+                contractsQuery = _context.Contracts
+                    .AsNoTracking()
+                    .Where(c => c.OfficeId == currentUser.OfficeId);
 
-                viewModel.TotalContracts = await _context.Contracts
-                    .CountAsync(c => c.OfficeId == currentUser.OfficeId);
-                viewModel.OpenContracts = await _context.Contracts
-                    .CountAsync(c => c.OfficeId == currentUser.OfficeId && c.Status == ContractStatus.Open);
-                viewModel.ClosedContracts = await _context.Contracts
-                    .CountAsync(c => c.OfficeId == currentUser.OfficeId && c.Status == ContractStatus.Closed);
-                viewModel.TodayContracts = await _context.Contracts
-                    .CountAsync(c => c.OfficeId == currentUser.OfficeId && c.CreatedAt.Date == DateTime.Today);
-                viewModel.TotalUsers = await _context.Users
-                    .CountAsync(u => u.OfficeId == currentUser.OfficeId);
-                var officeVehicleIds = _context.Contracts
-                    .Where(c => c.OfficeId == currentUser.OfficeId && c.VehicleId != null)
+                var officeVehicleIds = contractsQuery
+                    .Where(c => c.VehicleId != null)
                     .Select(c => c.VehicleId!.Value)
                     .Distinct();
-                await PopulateVehicleStatsAsync(
-                    viewModel,
-                    _context.Vehicles.Where(v => officeVehicleIds.Contains(v.Id)));
 
-                viewModel.RecentContracts = await _context.Contracts
-                    .Include(c => c.CreatedByUser)
-                    .Where(c => c.OfficeId == currentUser.OfficeId)
-                    .OrderByDescending(c => c.CreatedAt)
-                    .Take(5)
-                    .ToListAsync();
+                vehiclesQuery = _context.Vehicles
+                    .AsNoTracking()
+                    .Where(v => officeVehicleIds.Contains(v.Id));
 
-                // Top performers in this office
-                viewModel.TopPerformers = await _context.Contracts
-                    .Where(c => c.OfficeId == currentUser.OfficeId)
-                    .GroupBy(c => new { c.CreatedByUserId, c.CreatedByUser!.FirstName, c.CreatedByUser.LastName })
-                    .Select(g => new TopPerformer
-                    {
-                        UserName = g.Key.CreatedByUserId,
-                        FullName = g.Key.FirstName + " " + g.Key.LastName,
-                        ContractCount = g.Count()
-                    })
-                    .OrderByDescending(t => t.ContractCount)
-                    .Take(5)
-                    .ToListAsync();
+                viewModel.TotalUsers = await _context.Users.CountAsync(u => u.OfficeId == currentUser.OfficeId);
             }
-            // User Dashboard
             else
             {
                 viewModel.UserRole = "موظف";
+                var office = await _context.Offices
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(o => o.Id == currentUser.OfficeId);
+                viewModel.OfficeName = office?.Name ?? string.Empty;
 
-                var office = await _context.Offices.FindAsync(currentUser.OfficeId);
-                viewModel.OfficeName = office?.Name ?? "";
+                contractsQuery = _context.Contracts
+                    .AsNoTracking()
+                    .Where(c => c.CreatedByUserId == currentUser.Id);
 
-                viewModel.TotalContracts = await _context.Contracts
-                    .CountAsync(c => c.CreatedByUserId == currentUser.Id);
-                viewModel.OpenContracts = await _context.Contracts
-                    .CountAsync(c => c.CreatedByUserId == currentUser.Id && c.Status == ContractStatus.Open);
-                viewModel.ClosedContracts = await _context.Contracts
-                    .CountAsync(c => c.CreatedByUserId == currentUser.Id && c.Status == ContractStatus.Closed);
-                viewModel.TodayContracts = await _context.Contracts
-                    .CountAsync(c => c.CreatedByUserId == currentUser.Id && c.CreatedAt.Date == DateTime.Today);
-                var userVehicleIds = _context.Contracts
-                    .Where(c => c.CreatedByUserId == currentUser.Id && c.VehicleId != null)
+                var userVehicleIds = contractsQuery
+                    .Where(c => c.VehicleId != null)
                     .Select(c => c.VehicleId!.Value)
                     .Distinct();
-                await PopulateVehicleStatsAsync(
-                    viewModel,
-                    _context.Vehicles.Where(v => userVehicleIds.Contains(v.Id)));
 
-                viewModel.RecentContracts = await _context.Contracts
-                    .Where(c => c.CreatedByUserId == currentUser.Id)
-                    .OrderByDescending(c => c.CreatedAt)
-                    .Take(5)
-                    .ToListAsync();
+                vehiclesQuery = _context.Vehicles
+                    .AsNoTracking()
+                    .Where(v => userVehicleIds.Contains(v.Id));
+            }
+
+            await PopulateContractStatsAsync(viewModel, contractsQuery);
+            await PopulateVehicleStatsAsync(viewModel, vehiclesQuery);
+            viewModel.RecentContracts = await BuildRecentContractsAsync(contractsQuery);
+
+            if (await _currentUserService.IsSuperAdminAsync() || await _currentUserService.IsOfficeAdminAsync())
+            {
+                viewModel.TopPerformers = await BuildTopPerformersAsync(contractsQuery);
             }
 
             return View(viewModel);
+        }
+
+        private static async Task PopulateContractStatsAsync(
+            DashboardViewModel viewModel,
+            IQueryable<Contract> contracts)
+        {
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+
+            viewModel.TotalContracts = await contracts.CountAsync();
+            viewModel.OpenContracts = await contracts.CountAsync(c => c.Status == ContractStatus.Open);
+            viewModel.ClosedContracts = await contracts.CountAsync(c => c.Status == ContractStatus.Closed);
+            viewModel.TodayContracts = await contracts.CountAsync(c => c.CreatedAt >= today && c.CreatedAt < tomorrow);
+            viewModel.TotalSalesAmount = await contracts.SumAsync(c => (decimal?)c.VehiclePrice) ?? 0;
+            viewModel.TotalPaidAmount = await contracts
+                .SelectMany(c => c.Payments)
+                .SumAsync(p => (decimal?)p.Amount) ?? 0;
+            viewModel.TotalRemainingAmount = viewModel.TotalSalesAmount - viewModel.TotalPaidAmount;
         }
 
         private static async Task PopulateVehicleStatsAsync(DashboardViewModel viewModel, IQueryable<Vehicle> vehicles)
@@ -159,6 +130,41 @@ namespace VehicleContractSystem_Final.Controllers
             viewModel.AvailableVehicles = await vehicles.CountAsync(v => v.Status == VehicleStatus.Available);
             viewModel.VehiclesUnderContract = await vehicles.CountAsync(v => v.Status == VehicleStatus.UnderContract);
             viewModel.SoldVehicles = await vehicles.CountAsync(v => v.Status == VehicleStatus.Sold);
+        }
+
+        private static async Task<List<DashboardContractSummary>> BuildRecentContractsAsync(IQueryable<Contract> contracts)
+        {
+            return await contracts
+                .OrderByDescending(c => c.CreatedAt)
+                .Select(c => new DashboardContractSummary
+                {
+                    Id = c.Id,
+                    ContractNumber = c.ContractNumber,
+                    SellerName = c.SellerName,
+                    BuyerName = c.BuyerName,
+                    CreatedAt = c.CreatedAt,
+                    Status = c.Status,
+                    VehiclePrice = c.VehiclePrice,
+                    PaidAmount = c.Payments.Select(p => (decimal?)p.Amount).Sum() ?? 0,
+                    RemainingAmount = c.VehiclePrice - (c.Payments.Select(p => (decimal?)p.Amount).Sum() ?? 0)
+                })
+                .Take(5)
+                .ToListAsync();
+        }
+
+        private static async Task<List<TopPerformer>> BuildTopPerformersAsync(IQueryable<Contract> contracts)
+        {
+            return await contracts
+                .GroupBy(c => new { c.CreatedByUserId, c.CreatedByUser!.FirstName, c.CreatedByUser.LastName })
+                .Select(g => new TopPerformer
+                {
+                    UserName = g.Key.CreatedByUserId,
+                    FullName = g.Key.FirstName + " " + g.Key.LastName,
+                    ContractCount = g.Count()
+                })
+                .OrderByDescending(t => t.ContractCount)
+                .Take(5)
+                .ToListAsync();
         }
 
         [AllowAnonymous]

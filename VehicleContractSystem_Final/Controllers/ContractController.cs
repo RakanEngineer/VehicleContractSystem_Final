@@ -90,6 +90,8 @@ namespace VehicleContractSystem_Final.Controllers
                 .Include(c => c.Province)
                 .Include(c => c.City)
                 .Include(c => c.Payments)
+                .Include(c => c.Documents.Where(d => !d.IsDeleted))
+                    .ThenInclude(d => d.UploadedByUser)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (contract == null)

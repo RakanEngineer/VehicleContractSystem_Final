@@ -24,6 +24,7 @@ namespace VehicleContractSystem_Final.Data
         public DbSet<Color> Colors { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<BlockedVehicle> BlockedVehicles { get; set; }
+        public DbSet<ContractDocument> ContractDocuments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -136,6 +137,38 @@ namespace VehicleContractSystem_Final.Data
                 .WithMany()
                 .HasForeignKey(p => p.RecordedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ContractDocument>()
+                .HasOne(d => d.Contract)
+                .WithMany(c => c.Documents)
+                .HasForeignKey(d => d.ContractId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ContractDocument>()
+                .HasOne(d => d.Vehicle)
+                .WithMany(v => v.Documents)
+                .HasForeignKey(d => d.VehicleId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ContractDocument>()
+                .HasOne(d => d.UploadedByUser)
+                .WithMany()
+                .HasForeignKey(d => d.UploadedByUserId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ContractDocument>()
+                .HasIndex(d => d.ContractId);
+
+            builder.Entity<ContractDocument>()
+                .HasIndex(d => d.VehicleId);
+
+            builder.Entity<ContractDocument>()
+                .HasIndex(d => d.UploadedAt);
+
+            builder.Entity<ContractDocument>()
+                .HasIndex(d => d.IsDeleted);
 
             builder.Entity<Notification>()
                 .HasOne(n => n.User)
