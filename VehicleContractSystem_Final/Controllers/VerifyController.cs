@@ -32,6 +32,14 @@ namespace VehicleContractSystem_Final.Controllers
             if (contract == null)
                 return View(BuildInvalidVerificationResult());
 
+            var chassisNumber = SnapshotOrLegacy(contract.ChassisNumberSnapshot, contract.ChassisNumber).Trim();
+            var licenseNumber = SnapshotOrLegacy(contract.LicenseNumberSnapshot, contract.LicenseNumber).Trim();
+            var hasComplianceWarning = await _context.BlockedVehicles
+                .AsNoTracking()
+                .AnyAsync(b => b.IsActive &&
+                    ((!string.IsNullOrWhiteSpace(chassisNumber) && b.ChassisNumber == chassisNumber) ||
+                     (!string.IsNullOrWhiteSpace(licenseNumber) && b.LicenseNumber == licenseNumber)));
+
             var viewModel = new ContractVerificationViewModel
             {
                 IsValid = true,
@@ -40,9 +48,10 @@ namespace VehicleContractSystem_Final.Controllers
                 ContractDate = contract.ContractDate,
                 ContractStatus = GetContractStatusLabel(contract.Status),
                 VerificationStatus = GetVerificationStatusLabel(contract.Status),
-                ChassisNumber = SnapshotOrLegacy(contract.ChassisNumberSnapshot, contract.ChassisNumber),
-                LicenseNumber = SnapshotOrLegacy(contract.LicenseNumberSnapshot, contract.LicenseNumber),
-                VehicleModel = SnapshotOrLegacy(contract.VehicleModelNameSnapshot, contract.VehicleModel)
+                ChassisNumber = chassisNumber,
+                LicenseNumber = licenseNumber,
+                VehicleModel = SnapshotOrLegacy(contract.VehicleModelNameSnapshot, contract.VehicleModel),
+                HasComplianceWarning = hasComplianceWarning
             };
 
             return View(viewModel);

@@ -12,5 +12,6 @@ namespace VehicleContractSystem_Final.Models.ViewModel
         public string ChassisNumber { get; set; } = string.Empty;
         public string LicenseNumber { get; set; } = string.Empty;
         public string VehicleModel { get; set; } = string.Empty;
+        public bool HasComplianceWarning { get; set; }
     }
 }

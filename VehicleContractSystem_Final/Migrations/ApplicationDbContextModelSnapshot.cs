@@ -325,7 +325,6 @@ namespace VehicleContractSystem_Final.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ChassisNumber")
-                        .IsRequired()
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
@@ -336,16 +335,25 @@ namespace VehicleContractSystem_Final.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<DateTime?>("DeactivatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeactivatedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("DeactivationReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<string>("LicenseNumber")
-                        .IsRequired()
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("PlateCode")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -364,6 +372,8 @@ namespace VehicleContractSystem_Final.Migrations
                     b.HasIndex("ChassisNumber");
 
                     b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("DeactivatedByUserId");
 
                     b.HasIndex("IsActive");
 
@@ -1377,7 +1387,14 @@ namespace VehicleContractSystem_Final.Migrations
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("VehicleContractSystem_Final.Models.ApplicationUser", "DeactivatedByUser")
+                        .WithMany()
+                        .HasForeignKey("DeactivatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("DeactivatedByUser");
                 });
 
             modelBuilder.Entity("VehicleContractSystem_Final.Models.City", b =>

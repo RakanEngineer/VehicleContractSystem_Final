@@ -200,6 +200,13 @@ namespace VehicleContractSystem_Final.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<BlockedVehicle>()
+                .HasOne(b => b.DeactivatedByUser)
+                .WithMany()
+                .HasForeignKey(b => b.DeactivatedByUserId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<BlockedVehicle>()
                 .HasIndex(b => b.ChassisNumber);
 
             builder.Entity<BlockedVehicle>()

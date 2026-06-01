@@ -8,7 +8,7 @@ using VehicleContractSystem_Final.Services;
 
 namespace VehicleContractSystem_Final.Controllers
 {
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "SuperAdmin,OfficeAdmin")]
     public class BlockedVehicleController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -34,9 +34,9 @@ namespace VehicleContractSystem_Final.Controllers
             {
                 var normalizedSearch = search.Trim();
                 query = query.Where(b =>
-                    b.ChassisNumber.Contains(normalizedSearch) ||
-                    b.LicenseNumber.Contains(normalizedSearch) ||
-                    b.PlateCode.Contains(normalizedSearch) ||
+                    (b.ChassisNumber != null && b.ChassisNumber.Contains(normalizedSearch)) ||
+                    (b.LicenseNumber != null && b.LicenseNumber.Contains(normalizedSearch)) ||
+                    (b.PlateCode != null && b.PlateCode.Contains(normalizedSearch)) ||
                     b.Reason.Contains(normalizedSearch) ||
                     b.Source.Contains(normalizedSearch));
             }
@@ -48,12 +48,14 @@ namespace VehicleContractSystem_Final.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "SuperAdmin")]
         public IActionResult Create()
         {
             return View(new BlockedVehicle());
         }
 
         [HttpPost]
+        [Authorize(Roles = "SuperAdmin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(BlockedVehicle blockedVehicle)
         {
@@ -63,6 +65,11 @@ namespace VehicleContractSystem_Final.Controllers
                 string.IsNullOrWhiteSpace(blockedVehicle.LicenseNumber))
             {
                 ModelState.AddModelError(string.Empty, "يرجى إدخال رقم الشاصي أو رقم المركبة");
+            }
+
+            if (await HasDuplicateActiveBlockedVehicleAsync(blockedVehicle))
+            {
+                ModelState.AddModelError(string.Empty, "يوجد سجل منع نشط مسبقاً لنفس رقم الشاصي أو رقم المركبة");
             }
 
             if (!ModelState.IsValid)
@@ -86,8 +93,9 @@ namespace VehicleContractSystem_Final.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "SuperAdmin")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Deactivate(int id)
+        public async Task<IActionResult> Deactivate(int id, string? deactivationReason)
         {
             var blockedVehicle = await _context.BlockedVehicles.FindAsync(id);
             if (blockedVehicle == null)
@@ -100,13 +108,18 @@ namespace VehicleContractSystem_Final.Controllers
             }
 
             blockedVehicle.IsActive = false;
+            blockedVehicle.DeactivatedAt = DateTime.Now;
+            blockedVehicle.DeactivatedByUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            blockedVehicle.DeactivationReason = string.IsNullOrWhiteSpace(deactivationReason)
+                ? "تعطيل يدوي"
+                : deactivationReason.Trim();
             await _context.SaveChangesAsync();
 
             await _auditService.LogAsync(
                 "تعطيل منع مركبة",
                 "BlockedVehicle",
                 blockedVehicle.Id.ToString(),
-                $"تم تعطيل منع المركبة. الشاصي: {ValueOrDash(blockedVehicle.ChassisNumber)}، الرقم: {ValueOrDash(blockedVehicle.LicenseNumber)}");
+                $"تم تعطيل منع المركبة. الشاصي: {ValueOrDash(blockedVehicle.ChassisNumber)}، الرقم: {ValueOrDash(blockedVehicle.LicenseNumber)}، سبب التعطيل: {blockedVehicle.DeactivationReason}");
 
             TempData["SuccessMessage"] = "تم تعطيل سجل المنع";
             return RedirectToAction(nameof(Index));
@@ -114,16 +127,29 @@ namespace VehicleContractSystem_Final.Controllers
 
         private static void NormalizeBlockedVehicle(BlockedVehicle blockedVehicle)
         {
-            blockedVehicle.ChassisNumber = (blockedVehicle.ChassisNumber ?? string.Empty).Trim();
-            blockedVehicle.LicenseNumber = (blockedVehicle.LicenseNumber ?? string.Empty).Trim();
-            blockedVehicle.PlateCode = (blockedVehicle.PlateCode ?? string.Empty).Trim();
+            blockedVehicle.ChassisNumber = NormalizeOptional(blockedVehicle.ChassisNumber);
+            blockedVehicle.LicenseNumber = NormalizeOptional(blockedVehicle.LicenseNumber);
+            blockedVehicle.PlateCode = NormalizeOptional(blockedVehicle.PlateCode);
             blockedVehicle.Reason = (blockedVehicle.Reason ?? string.Empty).Trim();
             blockedVehicle.Source = string.IsNullOrWhiteSpace(blockedVehicle.Source)
                 ? "إدخال يدوي"
                 : blockedVehicle.Source.Trim();
         }
 
-        private static string ValueOrDash(string value)
+        private async Task<bool> HasDuplicateActiveBlockedVehicleAsync(BlockedVehicle blockedVehicle)
+        {
+            return await _context.BlockedVehicles.AnyAsync(b =>
+                b.IsActive &&
+                ((!string.IsNullOrWhiteSpace(blockedVehicle.ChassisNumber) && b.ChassisNumber == blockedVehicle.ChassisNumber) ||
+                 (!string.IsNullOrWhiteSpace(blockedVehicle.LicenseNumber) && b.LicenseNumber == blockedVehicle.LicenseNumber)));
+        }
+
+        private static string? NormalizeOptional(string? value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        }
+
+        private static string ValueOrDash(string? value)
         {
             return string.IsNullOrWhiteSpace(value) ? "-" : value;
         }

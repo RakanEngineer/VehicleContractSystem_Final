@@ -8,15 +8,15 @@ namespace VehicleContractSystem_Final.Models
 
         [MaxLength(450)]
         [Display(Name = "رقم الشاصي")]
-        public string ChassisNumber { get; set; } = string.Empty;
+        public string? ChassisNumber { get; set; }
 
         [MaxLength(450)]
         [Display(Name = "رقم المركبة")]
-        public string LicenseNumber { get; set; } = string.Empty;
+        public string? LicenseNumber { get; set; }
 
         [MaxLength(50)]
         [Display(Name = "رمز اللوحة")]
-        public string PlateCode { get; set; } = string.Empty;
+        public string? PlateCode { get; set; }
 
         [Required(ErrorMessage = "يرجى إدخال سبب المنع")]
         [MaxLength(1000)]
@@ -38,5 +38,18 @@ namespace VehicleContractSystem_Final.Models
         public string? CreatedByUserId { get; set; }
 
         public ApplicationUser? CreatedByUser { get; set; }
+
+        [Display(Name = "تاريخ التعطيل")]
+        public DateTime? DeactivatedAt { get; set; }
+
+        [MaxLength(450)]
+        [Display(Name = "تم التعطيل بواسطة")]
+        public string? DeactivatedByUserId { get; set; }
+
+        public ApplicationUser? DeactivatedByUser { get; set; }
+
+        [MaxLength(1000)]
+        [Display(Name = "سبب التعطيل")]
+        public string? DeactivationReason { get; set; }
     }
 }

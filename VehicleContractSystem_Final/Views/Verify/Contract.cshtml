@@ -165,6 +165,13 @@
                 <div class="verify-warning">
                     إذا كانت البيانات المطبوعة لا تطابق هذه الصفحة، فيجب مراجعة المكتب المنظم للعقد قبل اعتماد الوثيقة.
                 </div>
+
+                @if (Model.HasComplianceWarning)
+                {
+                    <div class="verify-warning">
+                        تنبيه: توجد ملاحظة أو منع مسجل على هذه المركبة
+                    </div>
+                }
             }
         </div>
     </div>
