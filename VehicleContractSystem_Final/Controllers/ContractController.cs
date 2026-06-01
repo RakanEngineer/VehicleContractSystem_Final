@@ -186,6 +186,11 @@ namespace VehicleContractSystem_Final.Controllers
                     var vehicle = await GetOrCreateVehicleForNewContractAsync(contract, existingVehicle);
                     contract.VehicleId = vehicle.Id;
                     ApplyVehicleSnapshotFields(contract, vehicle);
+                    await ApplyVehicleStatusChangeAsync(
+                        vehicle,
+                        VehicleStatus.UnderContract,
+                        "تحويل المركبة إلى عليها عقد",
+                        $"تم تحويل المركبة رقم {vehicle.LicenseNumber} إلى حالة عليها عقد عند إنشاء العقد رقم {contract.ContractNumber}");
 
                     _context.Add(contract);
                     await _context.SaveChangesAsync();
@@ -387,6 +392,7 @@ namespace VehicleContractSystem_Final.Controllers
         {
             var contract = await _context.Contracts
                 .Include(c => c.Payments)
+                .Include(c => c.Vehicle)
                 .FirstOrDefaultAsync(c => c.Id == id);
             if (contract == null)
                 return NotFound();
@@ -394,24 +400,28 @@ namespace VehicleContractSystem_Final.Controllers
             // Check access permission
             if (!await _currentUserService.CanAccessContract(contract))
             {
+                await LogFailedCloseAttemptAsync(contract, "محاولة إغلاق عقد بدون صلاحية وصول");
                 TempData["ErrorMessage"] = "ليس لديك صلاحية إغلاق هذا العقد";
                 return RedirectToAction(nameof(Details), new { id = contract.Id });
             }
 
             if (!await CanCloseContractAsync(contract))
             {
+                await LogFailedCloseAttemptAsync(contract, "محاولة إغلاق عقد بدون صلاحية إغلاق");
                 TempData["ErrorMessage"] = await GetCloseContractDeniedMessageAsync(contract);
                 return RedirectToAction(nameof(Details), new { id = contract.Id });
             }
 
             if (contract.Status != ContractStatus.Open)
             {
+                await LogFailedCloseAttemptAsync(contract, "محاولة إغلاق عقد مغلق مسبقاً");
                 TempData["ErrorMessage"] = "لا يمكن إغلاق عقد مغلق مسبقاً";
                 return RedirectToAction(nameof(Details), new { id = contract.Id });
             }
 
             if (contract.RemainingAmount > 0)
             {
+                await LogFailedCloseAttemptAsync(contract, "محاولة إغلاق عقد قبل تسديد كامل المبلغ");
                 TempData["ErrorMessage"] = "لا يمكن إغلاق العقد قبل تسديد كامل المبلغ";
                 return RedirectToAction(nameof(Details), new { id = contract.Id });
             }
@@ -419,6 +429,14 @@ namespace VehicleContractSystem_Final.Controllers
             contract.Status = ContractStatus.Closed;
             contract.LastModifiedAt = DateTime.Now;
             contract.LastModifiedByUserId = (await _currentUserService.GetCurrentUserAsync())?.Id;
+            if (contract.Vehicle != null)
+            {
+                await ApplyVehicleStatusChangeAsync(
+                    contract.Vehicle,
+                    VehicleStatus.Sold,
+                    "تحويل المركبة إلى مباعة",
+                    $"تم تحويل المركبة رقم {contract.Vehicle.LicenseNumber} إلى حالة مباعة بعد إغلاق العقد رقم {contract.ContractNumber}");
+            }
 
             await _context.SaveChangesAsync();
             await _auditService.LogAsync(
@@ -721,6 +739,15 @@ namespace VehicleContractSystem_Final.Controllers
             return "ليس لديك صلاحية إغلاق هذا العقد";
         }
 
+        private async Task LogFailedCloseAttemptAsync(Contract contract, string reason)
+        {
+            await _auditService.LogAsync(
+                "محاولة إغلاق مرفوضة",
+                "Contract",
+                contract.Id.ToString(),
+                $"{reason} للعقد رقم {contract.ContractNumber}");
+        }
+
         private string GenerateContractNumber()
         {
             var year = DateTime.Now.Year;
@@ -862,6 +889,15 @@ namespace VehicleContractSystem_Final.Controllers
             if (string.IsNullOrWhiteSpace(contract.ChassisNumber) && existingVehicle == null)
                 return;
 
+            if (existingVehicle != null &&
+                (existingVehicle.Status == VehicleStatus.UnderContract ||
+                 existingVehicle.Status == VehicleStatus.Reserved ||
+                 existingVehicle.Status == VehicleStatus.Suspended))
+            {
+                ModelState.AddModelError("Contract.ChassisNumber", GetVehicleStatusBlockMessage(existingVehicle.Status));
+                return;
+            }
+
             var hasOpenContract = await _context.Contracts.AnyAsync(c =>
                 c.Status == ContractStatus.Open &&
                 ((existingVehicle != null && c.VehicleId == existingVehicle.Id) ||
@@ -871,6 +907,17 @@ namespace VehicleContractSystem_Final.Controllers
             {
                 ModelState.AddModelError("Contract.ChassisNumber", "توجد معاملة مفتوحة لهذه المركبة ولا يمكن إنشاء عقد جديد قبل إغلاق العقد السابق");
             }
+        }
+
+        private static string GetVehicleStatusBlockMessage(VehicleStatus status)
+        {
+            return status switch
+            {
+                VehicleStatus.UnderContract => "توجد معاملة مفتوحة لهذه المركبة ولا يمكن إنشاء عقد جديد قبل إغلاق العقد السابق",
+                VehicleStatus.Reserved => "لا يمكن إنشاء عقد جديد لأن المركبة محجوزة حالياً",
+                VehicleStatus.Suspended => "لا يمكن إنشاء عقد جديد لأن المركبة موقوفة حالياً",
+                _ => "لا يمكن إنشاء عقد جديد لهذه المركبة في حالتها الحالية"
+            };
         }
 
         private async Task ValidateVehicleIsNotBlockedForCreateAsync(Contract contract)
@@ -957,13 +1004,46 @@ namespace VehicleContractSystem_Final.Controllers
                 VehicleModelName = contract.VehicleModel,
                 VehicleColorName = contract.VehicleColor,
                 VehicleCategory = contract.VehicleCategory,
-                NumberOfWheels = 4
+                NumberOfWheels = 4,
+                Status = VehicleStatus.Available
             };
 
             _context.Vehicles.Add(vehicle);
             await _context.SaveChangesAsync();
 
             return vehicle;
+        }
+
+        private async Task ApplyVehicleStatusChangeAsync(
+            Vehicle vehicle,
+            VehicleStatus newStatus,
+            string action,
+            string description)
+        {
+            if (vehicle.Status == newStatus)
+                return;
+
+            var oldStatus = vehicle.Status;
+            vehicle.Status = newStatus;
+
+            await _auditService.LogAsync(
+                action,
+                "Vehicle",
+                vehicle.Id.ToString(),
+                $"{description}. الحالة السابقة: {GetVehicleStatusLabel(oldStatus)}");
+        }
+
+        private static string GetVehicleStatusLabel(VehicleStatus status)
+        {
+            return status switch
+            {
+                VehicleStatus.Available => "متاحة",
+                VehicleStatus.UnderContract => "عليها عقد",
+                VehicleStatus.Sold => "مباعة",
+                VehicleStatus.Reserved => "محجوزة",
+                VehicleStatus.Suspended => "موقوفة",
+                _ => status.ToString()
+            };
         }
 
         private async Task<Vehicle?> FindVehicleForNewContractAsync(Contract contract)

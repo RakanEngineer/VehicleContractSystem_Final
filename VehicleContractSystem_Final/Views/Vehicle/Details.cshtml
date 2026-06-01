@@ -1,0 +1,163 @@
+@using VehicleContractSystem_Final.Enums
+@model VehicleContractSystem_Final.Models.Vehicle
+@{
+    ViewData["Title"] = "تفاصيل المركبة";
+    var modelName = !string.IsNullOrWhiteSpace(Model.VehicleModelName)
+        ? Model.VehicleModelName
+        : Model.VehicleModel?.NameAr;
+    var colorName = !string.IsNullOrWhiteSpace(Model.VehicleColorName)
+        ? Model.VehicleColorName
+        : Model.Color?.NameAr;
+    var typeName = !string.IsNullOrWhiteSpace(Model.VehicleCategory)
+        ? Model.VehicleCategory
+        : Model.VehicleType?.NameAr;
+}
+
+@functions {
+    private static string VehicleStatusLabel(VehicleStatus status) => status switch
+    {
+        VehicleStatus.Available => "متاحة",
+        VehicleStatus.UnderContract => "عليها عقد",
+        VehicleStatus.Sold => "مباعة",
+        VehicleStatus.Reserved => "محجوزة",
+        VehicleStatus.Suspended => "موقوفة",
+        _ => status.ToString()
+    };
+
+    private static string VehicleStatusBadge(VehicleStatus status) => status switch
+    {
+        VehicleStatus.Available => "bg-success",
+        VehicleStatus.UnderContract => "bg-warning text-dark",
+        VehicleStatus.Sold => "bg-secondary",
+        VehicleStatus.Reserved => "bg-info text-dark",
+        VehicleStatus.Suspended => "bg-danger",
+        _ => "bg-dark"
+    };
+
+    private static string ContractStatusLabel(ContractStatus status) => status switch
+    {
+        ContractStatus.Open => "مفتوح",
+        ContractStatus.Closed => "مغلق",
+        _ => status.ToString()
+    };
+
+    private static string ValueOrDash(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "-" : value;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-car-front"></i> ملف المركبة</h2>
+        <p class="text-muted mb-0">بيانات المركبة وتاريخ العقود المرتبطة بها.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-right"></i> رجوع
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header bg-dark text-white">
+                <i class="bi bi-info-circle"></i> الحالة الحالية
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="badge fs-6 @VehicleStatusBadge(Model.Status)">@VehicleStatusLabel(Model.Status)</span>
+                </div>
+                <dl class="row mb-0">
+                    <dt class="col-5">رقم المركبة</dt>
+                    <dd class="col-7 fw-bold">@Model.LicenseNumber</dd>
+
+                    <dt class="col-5">رقم الشاصي</dt>
+                    <dd class="col-7 fw-bold">@Model.ChassisNumber</dd>
+
+                    <dt class="col-5">المالك الحالي</dt>
+                    <dd class="col-7">@ValueOrDash(Model.Owner?.FullName)</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header bg-white">
+                <strong>بيانات المركبة</strong>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="text-muted small">صنف المركبة</div>
+                        <div class="fw-bold">@ValueOrDash(typeName)</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-muted small">موديل المركبة</div>
+                        <div class="fw-bold">@ValueOrDash(modelName)</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-muted small">اللون</div>
+                        <div class="fw-bold">@ValueOrDash(colorName)</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-muted small">سنة الصنع</div>
+                        <div class="fw-bold">@Model.ManufactureYear</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-muted small">الماركة</div>
+                        <div class="fw-bold">@ValueOrDash(Model.VehicleBrand)</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-muted small">عدد العجلات</div>
+                        <div class="fw-bold">@Model.NumberOfWheels</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header bg-white">
+        <strong><i class="bi bi-clock-history"></i> تاريخ العقود</strong>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>رقم العقد</th>
+                        <th>التاريخ</th>
+                        <th>الحالة</th>
+                        <th>المكتب</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Contracts.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">لا توجد عقود مرتبطة بهذه المركبة</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var contract in Model.Contracts.OrderByDescending(c => c.ContractDate))
+                        {
+                            <tr>
+                                <td class="fw-bold">@contract.ContractNumber</td>
+                                <td>@contract.ContractDate.ToString("yyyy/MM/dd")</td>
+                                <td>@ContractStatusLabel(contract.Status)</td>
+                                <td>@ValueOrDash(contract.Office?.Name)</td>
+                                <td class="text-nowrap">
+                                    <a asp-controller="Contract" asp-action="Details" asp-route-id="@contract.Id" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-file-text"></i> العقد
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

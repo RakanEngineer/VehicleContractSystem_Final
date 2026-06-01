@@ -107,6 +107,11 @@
                                     <i class="bi bi-file-text"></i> العقود
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Vehicle" asp-action="Index">
+                                    <i class="bi bi-car-front"></i> المركبات
+                                </a>
+                            </li>
                             @if (User.IsInRole("SuperAdmin") || User.IsInRole("OfficeAdmin"))
                             {
                                 <li class="nav-item">

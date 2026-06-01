@@ -30,6 +30,7 @@ namespace VehicleContractSystem_Final.Data
             {
                 await SeedDemoAsync();
                 await BackfillContractVehiclesAsync();
+                await SyncVehicleStatusesAsync();
             }
         }
 
@@ -697,6 +698,31 @@ namespace VehicleContractSystem_Final.Data
                 if (!existing.Contains(keySelector(entity)))
                     dbSet.Add(entity);
             }
+        }
+
+        private static async Task SyncVehicleStatusesAsync()
+        {
+            var vehicles = await _context.Vehicles
+                .Include(v => v.Contracts)
+                .ToListAsync();
+
+            foreach (var vehicle in vehicles)
+            {
+                if (vehicle.Contracts.Any(c => c.Status == ContractStatus.Open))
+                {
+                    vehicle.Status = VehicleStatus.UnderContract;
+                }
+                else if (vehicle.Contracts.Any(c => c.Status == ContractStatus.Closed))
+                {
+                    vehicle.Status = VehicleStatus.Sold;
+                }
+                else if (vehicle.Status == default)
+                {
+                    vehicle.Status = VehicleStatus.Available;
+                }
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

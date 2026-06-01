@@ -1087,6 +1087,9 @@ namespace VehicleContractSystem_Final.Migrations
                     b.Property<string>("OwnerId")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
                     b.Property<string>("VehicleBrand")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -1120,6 +1123,8 @@ namespace VehicleContractSystem_Final.Migrations
                         .IsUnique();
 
                     b.HasIndex("OwnerId");
+
+                    b.HasIndex("Status");
 
                     b.HasIndex("VehicleModelId");
 
@@ -1346,7 +1351,7 @@ namespace VehicleContractSystem_Final.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("VehicleContractSystem_Final.Models.Vehicle", "Vehicle")
-                        .WithMany()
+                        .WithMany("Contracts")
                         .HasForeignKey("VehicleId")
                         .OnDelete(DeleteBehavior.Restrict);
 
@@ -1473,6 +1478,11 @@ namespace VehicleContractSystem_Final.Migrations
             modelBuilder.Entity("VehicleContractSystem_Final.Models.Province", b =>
                 {
                     b.Navigation("Cities");
+                });
+
+            modelBuilder.Entity("VehicleContractSystem_Final.Models.Vehicle", b =>
+                {
+                    b.Navigation("Contracts");
                 });
 
             modelBuilder.Entity("VehicleContractSystem_Final.Models.VehicleModel", b =>

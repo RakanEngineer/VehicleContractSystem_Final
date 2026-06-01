@@ -42,6 +42,9 @@ namespace VehicleContractSystem_Final.Data
                 .HasIndex(v => v.ChassisNumber)
                 .IsUnique();
 
+            builder.Entity<Vehicle>()
+                .HasIndex(v => v.Status);
+
             builder.Entity<Contract>()
                 .HasIndex(c => c.ContractNumber)
                 .IsUnique();
@@ -76,7 +79,7 @@ namespace VehicleContractSystem_Final.Data
 
             builder.Entity<Contract>()
                 .HasOne(c => c.Vehicle)
-                .WithMany()
+                .WithMany(v => v.Contracts)
                 .HasForeignKey(c => c.VehicleId)
                 .OnDelete(DeleteBehavior.Restrict);
 

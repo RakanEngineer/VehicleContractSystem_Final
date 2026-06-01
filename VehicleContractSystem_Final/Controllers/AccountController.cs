@@ -654,6 +654,12 @@ namespace VehicleContractSystem_Final.Controllers
             await _notificationService.NotifyUserAboutApprovalAsync(user, false);
             await _emailService.SendApprovalNotificationAsync(user.Email!, user.FullName, false);
 
+            await _auditService.LogAsync(
+                "رفض مستخدم",
+                "ApplicationUser",
+                user.Id,
+                $"تم رفض طلب المستخدم {user.FullName} وحذف الحساب");
+
             // حذف الحساب
             await _userManager.DeleteAsync(user);
 

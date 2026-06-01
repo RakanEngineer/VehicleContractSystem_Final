@@ -14,6 +14,11 @@
         public int TotalUsers { get; set; }
         public int TotalOffices { get; set; }
 
+        public int TotalVehicles { get; set; }
+        public int AvailableVehicles { get; set; }
+        public int VehiclesUnderContract { get; set; }
+        public int SoldVehicles { get; set; }
+
         public List<Contract> RecentContracts { get; set; } = new();
         public List<TopPerformer> TopPerformers { get; set; } = new();
     }

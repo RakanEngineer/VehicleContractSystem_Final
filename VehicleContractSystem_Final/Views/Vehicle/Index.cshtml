@@ -1,0 +1,99 @@
+@using VehicleContractSystem_Final.Enums
+@model IEnumerable<VehicleContractSystem_Final.Models.Vehicle>
+@{
+    ViewData["Title"] = "المركبات";
+}
+
+@functions {
+    private static string StatusLabel(VehicleStatus status) => status switch
+    {
+        VehicleStatus.Available => "متاحة",
+        VehicleStatus.UnderContract => "عليها عقد",
+        VehicleStatus.Sold => "مباعة",
+        VehicleStatus.Reserved => "محجوزة",
+        VehicleStatus.Suspended => "موقوفة",
+        _ => status.ToString()
+    };
+
+    private static string StatusBadge(VehicleStatus status) => status switch
+    {
+        VehicleStatus.Available => "bg-success",
+        VehicleStatus.UnderContract => "bg-warning text-dark",
+        VehicleStatus.Sold => "bg-secondary",
+        VehicleStatus.Reserved => "bg-info text-dark",
+        VehicleStatus.Suspended => "bg-danger",
+        _ => "bg-dark"
+    };
+
+    private static string ValueOrDash(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "-" : value;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-car-front"></i> المركبات</h2>
+        <p class="text-muted mb-0">ملف المركبات وحالاتها التشغيلية وتاريخ عقودها.</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white">
+        <strong>قائمة المركبات</strong>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>رقم المركبة</th>
+                        <th>رقم الشاصي</th>
+                        <th>صنف المركبة</th>
+                        <th>موديل المركبة</th>
+                        <th>اللون</th>
+                        <th>سنة الصنع</th>
+                        <th>الحالة</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">لا توجد مركبات</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var vehicle in Model)
+                        {
+                            var modelName = !string.IsNullOrWhiteSpace(vehicle.VehicleModelName)
+                                ? vehicle.VehicleModelName
+                                : vehicle.VehicleModel?.NameAr;
+                            var colorName = !string.IsNullOrWhiteSpace(vehicle.VehicleColorName)
+                                ? vehicle.VehicleColorName
+                                : vehicle.Color?.NameAr;
+                            var typeName = !string.IsNullOrWhiteSpace(vehicle.VehicleCategory)
+                                ? vehicle.VehicleCategory
+                                : vehicle.VehicleType?.NameAr;
+
+                            <tr>
+                                <td class="fw-bold">@vehicle.LicenseNumber</td>
+                                <td>@vehicle.ChassisNumber</td>
+                                <td>@ValueOrDash(typeName)</td>
+                                <td>@ValueOrDash(modelName)</td>
+                                <td>@ValueOrDash(colorName)</td>
+                                <td>@vehicle.ManufactureYear</td>
+                                <td><span class="badge @StatusBadge(vehicle.Status)">@StatusLabel(vehicle.Status)</span></td>
+                                <td class="text-nowrap">
+                                    <a asp-action="Details" asp-route-id="@vehicle.Id" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> التفاصيل
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

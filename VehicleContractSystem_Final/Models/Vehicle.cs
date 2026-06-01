@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
+using VehicleContractSystem_Final.Enums;
 
 namespace VehicleContractSystem_Final.Models
 {
@@ -52,25 +53,13 @@ namespace VehicleContractSystem_Final.Models
 
         [Display(Name = "عدد العجلات")]
         public int NumberOfWheels { get; set; }
-                      
-       
-        //[Required]
-        //public string LicenseNumber { get; set; } = string.Empty;
-        //public int ManufactureYear { get; set; } // جديد
-        //public string ChassisNumber { get; set; } = string.Empty; // جديد
 
-        //[Required]
-        //public string VehicleModelName { get; set; } = string.Empty;
-
-        //public string VehicleBrand { get; set; } = string.Empty;
-        //public string VehicleColorName { get; set; } = string.Empty; // نسخة نصية من اللون
-        //public string VehicleCategory { get; set; } = string.Empty;
-        //[Required]
-        //public string Color { get; set; } = string.Empty;
-        //public int NumberOfWheels { get; set; }
+        [Display(Name = "حالة المركبة")]
+        public VehicleStatus Status { get; set; } = VehicleStatus.Available;
 
         public string? OwnerId { get; set; }
         public ApplicationUser? Owner { get; set; }
-    
+
+        public ICollection<Contract> Contracts { get; set; } = new List<Contract>();
     }
 }

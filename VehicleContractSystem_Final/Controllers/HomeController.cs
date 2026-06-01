@@ -50,6 +50,7 @@ namespace VehicleContractSystem_Final.Controllers
                     .CountAsync(c => c.CreatedAt.Date == DateTime.Today);
                 viewModel.TotalUsers = await _context.Users.CountAsync();
                 viewModel.TotalOffices = await _context.Offices.CountAsync();
+                await PopulateVehicleStatsAsync(viewModel, _context.Vehicles);
 
                 viewModel.RecentContracts = await _context.Contracts
                     .Include(c => c.Office)
@@ -89,6 +90,13 @@ namespace VehicleContractSystem_Final.Controllers
                     .CountAsync(c => c.OfficeId == currentUser.OfficeId && c.CreatedAt.Date == DateTime.Today);
                 viewModel.TotalUsers = await _context.Users
                     .CountAsync(u => u.OfficeId == currentUser.OfficeId);
+                var officeVehicleIds = _context.Contracts
+                    .Where(c => c.OfficeId == currentUser.OfficeId && c.VehicleId != null)
+                    .Select(c => c.VehicleId!.Value)
+                    .Distinct();
+                await PopulateVehicleStatsAsync(
+                    viewModel,
+                    _context.Vehicles.Where(v => officeVehicleIds.Contains(v.Id)));
 
                 viewModel.RecentContracts = await _context.Contracts
                     .Include(c => c.CreatedByUser)
@@ -127,6 +135,13 @@ namespace VehicleContractSystem_Final.Controllers
                     .CountAsync(c => c.CreatedByUserId == currentUser.Id && c.Status == ContractStatus.Closed);
                 viewModel.TodayContracts = await _context.Contracts
                     .CountAsync(c => c.CreatedByUserId == currentUser.Id && c.CreatedAt.Date == DateTime.Today);
+                var userVehicleIds = _context.Contracts
+                    .Where(c => c.CreatedByUserId == currentUser.Id && c.VehicleId != null)
+                    .Select(c => c.VehicleId!.Value)
+                    .Distinct();
+                await PopulateVehicleStatsAsync(
+                    viewModel,
+                    _context.Vehicles.Where(v => userVehicleIds.Contains(v.Id)));
 
                 viewModel.RecentContracts = await _context.Contracts
                     .Where(c => c.CreatedByUserId == currentUser.Id)
@@ -136,6 +151,14 @@ namespace VehicleContractSystem_Final.Controllers
             }
 
             return View(viewModel);
+        }
+
+        private static async Task PopulateVehicleStatsAsync(DashboardViewModel viewModel, IQueryable<Vehicle> vehicles)
+        {
+            viewModel.TotalVehicles = await vehicles.CountAsync();
+            viewModel.AvailableVehicles = await vehicles.CountAsync(v => v.Status == VehicleStatus.Available);
+            viewModel.VehiclesUnderContract = await vehicles.CountAsync(v => v.Status == VehicleStatus.UnderContract);
+            viewModel.SoldVehicles = await vehicles.CountAsync(v => v.Status == VehicleStatus.Sold);
         }
 
         [AllowAnonymous]
