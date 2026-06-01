@@ -176,6 +176,8 @@ namespace VehicleContractSystem_Final.Controllers
                         contract.ContractNumber = GenerateContractNumber();
                     }
 
+                    EnsureVerificationToken(contract);
+
                     var vehicle = await GetOrCreateVehicleForNewContractAsync(contract, existingVehicle);
                     contract.VehicleId = vehicle.Id;
                     ApplyVehicleSnapshotFields(contract, vehicle);
@@ -498,15 +500,12 @@ namespace VehicleContractSystem_Final.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Generate QR Code
-            var qrCodeBase64 = QRCodeHelper.GenerateQRCodeForContract(
-                contract.ContractNumber,
-                contract.ContractDate,
-                contract.SellerName,
-                contract.BuyerName
-            );
+            await EnsureVerificationTokenAsync(contract);
+            var verificationUrl = BuildVerificationUrl(contract);
+            var qrCodeBase64 = QRCodeHelper.GenerateQRCode(verificationUrl);
 
             ViewBag.QRCodeBase64 = qrCodeBase64;
+            ViewBag.VerificationUrl = verificationUrl;
 
             return View(contract);
         }
@@ -535,11 +534,12 @@ namespace VehicleContractSystem_Final.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var pdfBytes = GeneratePDF(contract);
+            await EnsureVerificationTokenAsync(contract);
+            var pdfBytes = GeneratePDF(contract, BuildVerificationUrl(contract));
             return File(pdfBytes, "application/pdf", $"Contract_{contract.ContractNumber}.pdf");
         }
 
-        private byte[] GeneratePDF(Contract contract)
+        private byte[] GeneratePDF(Contract contract, string verificationUrl)
         {
             var vehicleTypeName = SnapshotOrLegacy(contract.VehicleTypeNameSnapshot, contract.VehicleCategory);
             var vehicleModelName = SnapshotOrLegacy(contract.VehicleModelNameSnapshot, contract.VehicleModel);
@@ -589,12 +589,7 @@ namespace VehicleContractSystem_Final.Controllers
             document.Add(new Paragraph($"رقم المركبة: {licenseNumber}", arabicFont));
             document.Add(new Paragraph($"رقم الشاصي: {chassisNumber}", arabicFont));
 
-            var qrCodeBase64 = QRCodeHelper.GenerateQRCodeForContract(
-                contract.ContractNumber,
-                contract.ContractDate,
-                contract.SellerName,
-                contract.BuyerName
-            );
+            var qrCodeBase64 = QRCodeHelper.GenerateQRCode(verificationUrl);
 
             var qrBytes = Convert.FromBase64String(qrCodeBase64);
             var qrImage = Image.GetInstance(qrBytes);
@@ -615,6 +610,7 @@ namespace VehicleContractSystem_Final.Controllers
         private static void CopyImmutableContractFields(Contract source, Contract target)
         {
             target.ContractNumber = source.ContractNumber;
+            target.VerificationToken = source.VerificationToken;
             target.ContractDate = source.ContractDate;
             target.CreatedAt = source.CreatedAt;
             target.CreatedByUserId = source.CreatedByUserId;
@@ -675,6 +671,34 @@ namespace VehicleContractSystem_Final.Controllers
             var random = new Random();
             var number = random.Next(1000, 9999);
             return $"CT-{year}-{number}";
+        }
+
+        private static void EnsureVerificationToken(Contract contract)
+        {
+            if (string.IsNullOrWhiteSpace(contract.VerificationToken))
+            {
+                contract.VerificationToken = Guid.NewGuid().ToString("N");
+            }
+        }
+
+        private async Task EnsureVerificationTokenAsync(Contract contract)
+        {
+            if (!string.IsNullOrWhiteSpace(contract.VerificationToken))
+                return;
+
+            contract.VerificationToken = Guid.NewGuid().ToString("N");
+            await _context.SaveChangesAsync();
+        }
+
+        private string BuildVerificationUrl(Contract contract)
+        {
+            EnsureVerificationToken(contract);
+
+            return Url.Action(
+                action: "Contract",
+                controller: "Verify",
+                values: new { token = contract.VerificationToken },
+                protocol: Request.Scheme) ?? $"/Verify/Contract/{contract.VerificationToken}";
         }
 
         private bool ContractExists(int id)

@@ -1,0 +1,171 @@
+@model VehicleContractSystem_Final.Models.ViewModel.ContractVerificationViewModel
+@{
+    ViewData["Title"] = "التحقق من العقد";
+    var statusClass = Model.VerificationStatus == "صالح"
+        ? "status-valid"
+        : Model.VerificationStatus == "مغلق" ? "status-closed" : "status-invalid";
+}
+
+<style>
+    .verify-page {
+        direction: rtl;
+        font-family: "Cairo", "Tajawal", Tahoma, sans-serif;
+    }
+
+    .verify-card {
+        max-width: 820px;
+        margin: 32px auto;
+        border: 1px solid #d7dde4;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 12px 32px rgba(16, 24, 40, .08);
+    }
+
+    .verify-header {
+        background: #1f2f3d;
+        color: #fff;
+        padding: 18px 22px;
+    }
+
+    .verify-header h1 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 900;
+    }
+
+    .verify-body {
+        padding: 22px;
+    }
+
+    .status-pill {
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-weight: 900;
+        font-size: 14px;
+    }
+
+    .status-valid {
+        background: #e7f6ed;
+        color: #146c36;
+    }
+
+    .status-closed {
+        background: #eef2f7;
+        color: #344054;
+    }
+
+    .status-invalid {
+        background: #fdecec;
+        color: #b42318;
+    }
+
+    .verify-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
+    }
+
+    .verify-item {
+        border: 1px solid #e1e6ec;
+        border-radius: 6px;
+        padding: 12px;
+        background: #fbfcfd;
+    }
+
+    .verify-label {
+        color: #667085;
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+
+    .verify-value {
+        color: #111827;
+        font-size: 16px;
+        font-weight: 800;
+        word-break: break-word;
+    }
+
+    .verify-warning {
+        margin-top: 18px;
+        border: 1px solid #f3cf95;
+        background: #fff8eb;
+        color: #8a4b00;
+        border-radius: 6px;
+        padding: 12px 14px;
+        font-weight: 700;
+    }
+
+    @@media (max-width: 640px) {
+        .verify-card {
+            margin: 16px;
+        }
+
+        .verify-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="verify-page">
+    <div class="verify-card">
+        <div class="verify-header">
+            <h1>التحقق من صحة العقد</h1>
+            <div>صفحة عامة للقراءة فقط للتحقق من بيانات العقد المطبوعة.</div>
+        </div>
+
+        <div class="verify-body">
+            <div>
+                <span class="status-pill @statusClass">@Model.VerificationStatus</span>
+            </div>
+
+            @if (!Model.IsValid)
+            {
+                <div class="verify-warning">@Model.Message</div>
+            }
+            else
+            {
+                <div class="verify-grid">
+                    <div class="verify-item">
+                        <div class="verify-label">رقم العقد</div>
+                        <div class="verify-value">@Model.ContractNumber</div>
+                    </div>
+                    <div class="verify-item">
+                        <div class="verify-label">المكتب</div>
+                        <div class="verify-value">@Model.OfficeName</div>
+                    </div>
+                    <div class="verify-item">
+                        <div class="verify-label">تاريخ العقد</div>
+                        <div class="verify-value">@Model.ContractDate?.ToString("yyyy/MM/dd")</div>
+                    </div>
+                    <div class="verify-item">
+                        <div class="verify-label">حالة العقد</div>
+                        <div class="verify-value">@Model.ContractStatus</div>
+                    </div>
+                    <div class="verify-item">
+                        <div class="verify-label">رقم الشاصي</div>
+                        <div class="verify-value">@Model.ChassisNumber</div>
+                    </div>
+                    <div class="verify-item">
+                        <div class="verify-label">موديل المركبة</div>
+                        <div class="verify-value">@Model.VehicleModel</div>
+                    </div>
+                    <div class="verify-item">
+                        <div class="verify-label">البائع</div>
+                        <div class="verify-value">@Model.SellerName</div>
+                    </div>
+                    <div class="verify-item">
+                        <div class="verify-label">المشتري</div>
+                        <div class="verify-value">@Model.BuyerName</div>
+                    </div>
+                </div>
+
+                <div class="verify-warning">
+                    إذا كانت البيانات المطبوعة لا تطابق هذه الصفحة، فيجب مراجعة المكتب المنظم للعقد قبل اعتماد الوثيقة.
+                </div>
+            }
+        </div>
+    </div>
+</div>

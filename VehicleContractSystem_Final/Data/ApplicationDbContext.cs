@@ -44,6 +44,11 @@ namespace VehicleContractSystem_Final.Data
                 .HasIndex(c => c.ContractNumber)
                 .IsUnique();
 
+            builder.Entity<Contract>()
+                .HasIndex(c => c.VerificationToken)
+                .IsUnique()
+                .HasFilter("[VerificationToken] IS NOT NULL");
+
             // Relationships
 
             // Office → ApplicationUser (One-to-Many)

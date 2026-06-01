@@ -627,6 +627,10 @@ namespace VehicleContractSystem_Final.Migrations
                     b.Property<string>("VehicleTypeNameSnapshot")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("VerificationToken")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CityId");
@@ -647,6 +651,10 @@ namespace VehicleContractSystem_Final.Migrations
                     b.HasIndex("VehicleModelId");
 
                     b.HasIndex("VehicleTypeId");
+
+                    b.HasIndex("VerificationToken")
+                        .IsUnique()
+                        .HasFilter("[VerificationToken] IS NOT NULL");
 
                     b.ToTable("Contracts");
                 });

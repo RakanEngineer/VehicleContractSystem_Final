@@ -4,6 +4,7 @@
     Layout = null;
 
     var qrCodeBase64 = ViewBag.QRCodeBase64 as string;
+    var verificationUrl = ViewBag.VerificationUrl as string;
     var officeName = string.IsNullOrWhiteSpace(Model.Office?.Name) ? "نظام إدارة عقود المركبات" : Model.Office.Name;
     var officeLicense = string.IsNullOrWhiteSpace(Model.Office?.LicenseNumber) ? "غير محدد" : Model.Office.LicenseNumber;
     var officeAddress = string.IsNullOrWhiteSpace(Model.Office?.Address) ? "غير محدد" : Model.Office.Address;
@@ -362,6 +363,21 @@
             margin-top: 2px;
         }
 
+        .verification-note {
+            border: 1px solid #c5ccd3;
+            background: #f8fafc;
+            padding: 3px 6px;
+            font-size: 8.8px;
+            color: #404a54;
+            text-align: center;
+        }
+
+        .verification-note span {
+            display: block;
+            direction: ltr;
+            word-break: break-all;
+        }
+
         @@media print {
             html,
             body {
@@ -434,6 +450,7 @@
                             <img src="data:image/png;base64,@qrCodeBase64" alt="رمز التحقق من العقد" />
                             <strong>@Model.ContractNumber</strong>
                             <span class="qr-chassis">@ValueOrDash(chassisNumber)</span>
+                            <span>رابط التحقق</span>
                         }
                         else
                         {
@@ -546,6 +563,14 @@
                     <div class="section-title">الملاحظات</div>
                     <div class="notes">@ValueOrDash(Model.Notes)</div>
                 </section>
+
+                <div class="verification-note">
+                    للتحقق من صحة العقد امسح رمز QR أو استخدم رابط التحقق المطبوع. أي اختلاف بين بيانات العقد ونتيجة التحقق يعد مؤشراً لمراجعة المكتب المنظم.
+                    @if (!string.IsNullOrWhiteSpace(verificationUrl))
+                    {
+                        <span>@verificationUrl</span>
+                    }
+                </div>
 
                 <section class="signatures">
                     <div class="signature-box">

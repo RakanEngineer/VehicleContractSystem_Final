@@ -16,6 +16,10 @@ namespace VehicleContractSystem_Final.Models
         [Display(Name = "رقم العقد")]
         public string ContractNumber { get; set; } = string.Empty;
 
+        [MaxLength(64)]
+        [Display(Name = "رمز التحقق")]
+        public string? VerificationToken { get; set; } = Guid.NewGuid().ToString("N");
+
         [Display(Name = "تاريخ العقد")]
         [DataType(DataType.Date)]
         public DateTime ContractDate { get; set; } = DateTime.Now;
