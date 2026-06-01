@@ -22,6 +22,8 @@ namespace VehicleContractSystem_Final.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<VehicleModel> VehicleModels { get; set; }
         public DbSet<Color> Colors { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<BlockedVehicle> BlockedVehicles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -137,6 +139,38 @@ namespace VehicleContractSystem_Final.Data
                 .WithMany(u => u.Notifications)
                 .HasForeignKey(n => n.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<AuditLog>()
+                .HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<AuditLog>()
+                .HasIndex(a => a.CreatedAt);
+
+            builder.Entity<AuditLog>()
+                .HasIndex(a => a.Action);
+
+            builder.Entity<AuditLog>()
+                .HasIndex(a => a.EntityType);
+
+            builder.Entity<BlockedVehicle>()
+                .HasOne(b => b.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(b => b.CreatedByUserId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<BlockedVehicle>()
+                .HasIndex(b => b.ChassisNumber);
+
+            builder.Entity<BlockedVehicle>()
+                .HasIndex(b => b.LicenseNumber);
+
+            builder.Entity<BlockedVehicle>()
+                .HasIndex(b => b.IsActive);
 
             builder.Entity<Vehicle>()
                 .HasOne(v => v.Owner)

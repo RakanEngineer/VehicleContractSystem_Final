@@ -17,16 +17,17 @@ namespace VehicleContractSystem_Final.Controllers
             _context = context;
         }
 
-        [HttpGet("Verify/Contract/{token}")]
-        public async Task<IActionResult> Contract(string token)
+        [HttpGet("Verify/Contract/{token:guid}")]
+        public async Task<IActionResult> Contract(Guid token)
         {
-            if (string.IsNullOrWhiteSpace(token))
+            if (token == Guid.Empty)
                 return View(BuildInvalidVerificationResult());
 
+            var normalizedToken = token.ToString("N");
             var contract = await _context.Contracts
                 .AsNoTracking()
                 .Include(c => c.Office)
-                .FirstOrDefaultAsync(c => c.VerificationToken == token);
+                .FirstOrDefaultAsync(c => c.VerificationToken == normalizedToken);
 
             if (contract == null)
                 return View(BuildInvalidVerificationResult());
@@ -40,9 +41,8 @@ namespace VehicleContractSystem_Final.Controllers
                 ContractStatus = GetContractStatusLabel(contract.Status),
                 VerificationStatus = GetVerificationStatusLabel(contract.Status),
                 ChassisNumber = SnapshotOrLegacy(contract.ChassisNumberSnapshot, contract.ChassisNumber),
-                VehicleModel = SnapshotOrLegacy(contract.VehicleModelNameSnapshot, contract.VehicleModel),
-                SellerName = MaskName(contract.SellerName),
-                BuyerName = MaskName(contract.BuyerName)
+                LicenseNumber = SnapshotOrLegacy(contract.LicenseNumberSnapshot, contract.LicenseNumber),
+                VehicleModel = SnapshotOrLegacy(contract.VehicleModelNameSnapshot, contract.VehicleModel)
             };
 
             return View(viewModel);
@@ -81,28 +81,6 @@ namespace VehicleContractSystem_Final.Controllers
                 ContractStatus.Closed => "مغلق",
                 _ => "ملغي مستقبلاً"
             };
-        }
-
-        private static string MaskName(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                return "-";
-
-            var parts = value.Trim()
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-            if (parts.Length == 1)
-                return MaskSingleWord(parts[0]);
-
-            return $"{parts[0]} *** {parts[^1]}";
-        }
-
-        private static string MaskSingleWord(string value)
-        {
-            if (value.Length <= 2)
-                return $"{value[0]}***";
-
-            return $"{value[0]}***{value[^1]}";
         }
     }
 }

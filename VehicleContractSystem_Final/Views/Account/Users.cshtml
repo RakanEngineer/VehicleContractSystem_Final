@@ -1,0 +1,147 @@
+@model VehicleContractSystem_Final.Models.ViewModel.UserManagementViewModel
+@{
+    ViewData["Title"] = "إدارة المستخدمين";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-1"><i class="bi bi-people"></i> إدارة المستخدمين</h2>
+        <p class="text-muted mb-0">إدارة المستخدمين والصلاحيات والمكاتب وفق صلاحياتك.</p>
+    </div>
+    <a asp-action="PendingUsers" class="btn btn-outline-primary">
+        <i class="bi bi-person-check"></i> الطلبات المعلقة
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">بحث</label>
+                <input name="search" value="@Model.Search" class="form-control" placeholder="اسم، بريد، أو رقم هوية" />
+            </div>
+            @if (Model.CanManageAllUsers)
+            {
+                <div class="col-md-3">
+                    <label class="form-label">المكتب</label>
+                    <select name="officeId" class="form-select">
+                        <option value="">كل المكاتب</option>
+                        @foreach (var office in Model.Offices)
+                        {
+                            <option value="@office.Value" selected="@(Model.OfficeId?.ToString() == office.Value)">@office.Text</option>
+                        }
+                    </select>
+                </div>
+            }
+            <div class="col-md-3">
+                <label class="form-label">الدور</label>
+                <select name="role" class="form-select">
+                    <option value="">كل الأدوار</option>
+                    @foreach (var role in Model.Roles)
+                    {
+                        <option value="@role.Value" selected="@(Model.Role == role.Value)">@role.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> بحث
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <i class="bi bi-list-ul"></i> المستخدمون
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>المستخدم</th>
+                        <th>الاتصال</th>
+                        <th>المكتب</th>
+                        <th>الدور</th>
+                        <th>الحالة</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Users.Any())
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">لا توجد نتائج</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var user in Model.Users)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">@user.FullName</div>
+                                    <small class="text-muted">@user.PersonalNumber</small>
+                                </td>
+                                <td>
+                                    <div>@user.Email</div>
+                                    <small class="text-muted">@user.PhoneNumber</small>
+                                </td>
+                                <td>@user.OfficeName</td>
+                                <td><span class="badge bg-info">@user.RolesText</span></td>
+                                <td>
+                                    <span class="badge @(user.IsApproved ? "bg-success" : "bg-warning text-dark")">
+                                        @(user.IsApproved ? "مفعل" : "معلق")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column gap-2">
+                                        @if (Model.CanChangeRoles)
+                                        {
+                                            <form asp-action="ChangeUserRole" method="post" class="d-flex gap-2">
+                                                <input type="hidden" name="userId" value="@user.Id" />
+                                                <select name="role" class="form-select form-select-sm">
+                                                    @foreach (var role in Model.Roles)
+                                                    {
+                                                        <option value="@role.Value" selected="@user.RolesText.Contains(role.Value)">@role.Text</option>
+                                                    }
+                                                </select>
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">حفظ الدور</button>
+                                            </form>
+                                        }
+
+                                        @if (Model.CanAssignOffices && !user.IsSuperAdmin)
+                                        {
+                                            <form asp-action="AssignUserOffice" method="post" class="d-flex gap-2">
+                                                <input type="hidden" name="userId" value="@user.Id" />
+                                                <select name="officeId" class="form-select form-select-sm">
+                                                    @foreach (var office in Model.Offices)
+                                                    {
+                                                        <option value="@office.Value" selected="@(user.OfficeId?.ToString() == office.Value)">@office.Text</option>
+                                                    }
+                                                </select>
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary">حفظ المكتب</button>
+                                            </form>
+                                        }
+
+                                        @if (!user.IsSuperAdmin || Model.CanManageAllUsers)
+                                        {
+                                            <form asp-action="ToggleUserActivation" method="post">
+                                                <input type="hidden" name="userId" value="@user.Id" />
+                                                <button type="submit" class="btn btn-sm @(user.IsApproved ? "btn-outline-danger" : "btn-outline-success")">
+                                                    @(user.IsApproved ? "تعطيل" : "تفعيل")
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

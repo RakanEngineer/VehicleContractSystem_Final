@@ -10,8 +10,7 @@ namespace VehicleContractSystem_Final.Models.ViewModel
         public string ContractStatus { get; set; } = string.Empty;
         public string VerificationStatus { get; set; } = string.Empty;
         public string ChassisNumber { get; set; } = string.Empty;
+        public string LicenseNumber { get; set; } = string.Empty;
         public string VehicleModel { get; set; } = string.Empty;
-        public string SellerName { get; set; } = string.Empty;
-        public string BuyerName { get; set; } = string.Empty;
     }
 }

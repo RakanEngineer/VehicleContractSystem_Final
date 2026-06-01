@@ -13,11 +13,16 @@ namespace VehicleContractSystem_Final.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IAuditService _auditService;
 
-        public PaymentController(ApplicationDbContext context, ICurrentUserService currentUserService)
+        public PaymentController(
+            ApplicationDbContext context,
+            ICurrentUserService currentUserService,
+            IAuditService auditService)
         {
             _context = context;
             _currentUserService = currentUserService;
+            _auditService = auditService;
         }
 
         public IActionResult Index()
@@ -103,6 +108,11 @@ namespace VehicleContractSystem_Final.Controllers
             await using var transaction = await _context.Database.BeginTransactionAsync();
             _context.Payments.Add(payment);
             await _context.SaveChangesAsync();
+            await _auditService.LogAsync(
+                "إضافة دفعة",
+                "Payment",
+                payment.Id.ToString(),
+                $"تمت إضافة دفعة بمبلغ {payment.Amount:N2} للعقد رقم {contract.ContractNumber}");
             await transaction.CommitAsync();
 
             TempData["SuccessMessage"] = "تمت إضافة الدفعة بنجاح";

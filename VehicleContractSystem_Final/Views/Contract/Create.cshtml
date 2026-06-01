@@ -1,6 +1,12 @@
 ﻿@model VehicleContractSystem_Final.Models.ViewModel.ContractViewModel
 @{
     ViewData["Title"] = "إنشاء عقد جديد";
+    var vehiclePriceValue = Model.Contract.VehiclePrice > 0
+        ? Model.Contract.VehiclePrice.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)
+        : string.Empty;
+    var initialPaidAmountValue = Model.InitialPaidAmount > 0
+        ? Model.InitialPaidAmount.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)
+        : string.Empty;
 }
 
 <div class="container-fluid" dir="rtl">
@@ -162,8 +168,28 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label asp-for="Contract.VehiclePrice" class="form-label"></label>
-                            <input asp-for="Contract.VehiclePrice" class="form-control" type="number" step="0.01" id="vehiclePrice" />
+                            <input asp-for="Contract.VehiclePrice"
+                                   value="@vehiclePriceValue"
+                                   class="form-control"
+                                   type="number"
+                                   step="100"
+                                   min="0"
+                                   placeholder="أدخل سعر المركبة بالدولار"
+                                   id="vehiclePrice" />
                             <span asp-validation-for="Contract.VehiclePrice" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="InitialPaidAmount" class="form-label">استلم البائع مبلغ وقدره</label>
+                            <input asp-for="InitialPaidAmount"
+                                   value="@initialPaidAmountValue"
+                                   class="form-control"
+                                   type="number"
+                                   step="100"
+                                   min="0"
+                                   placeholder="أدخل المبلغ المستلم بالدولار"
+                                   id="initialPaidAmount" />
+                            <span asp-validation-for="InitialPaidAmount" class="text-danger"></span>
                         </div>
 
                         <div class="mb-3">
@@ -265,11 +291,13 @@
             // حساب المبلغ المتبقي
             function calculateRemaining() {
                 var price = parseFloat($('#vehiclePrice').val()) || 0;
-                var remaining = price;
-                $('#remainingAmount').val(remaining.toFixed(2) + ' دينار');
+                var paid = parseFloat($('#initialPaidAmount').val()) || 0;
+                var remaining = Math.max(price - paid, 0);
+                $('#remainingAmount').val(remaining.toFixed(2));
             }
 
-            $('#vehiclePrice').on('input', calculateRemaining);
+            $('#vehiclePrice, #initialPaidAmount').on('input', calculateRemaining);
+            calculateRemaining();
 
             // تحميل المدن عند اختيار المحافظة
             $('#provinceSelect').change(function() {

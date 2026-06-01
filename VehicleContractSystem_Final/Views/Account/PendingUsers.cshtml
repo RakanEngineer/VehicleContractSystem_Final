@@ -6,7 +6,7 @@
 <div class="row mb-4">
     <div class="col">
         <h2><i class="bi bi-person-check"></i> المستخدمون في انتظار الموافقة</h2>
-        <p class="text-muted">راجع طلبات التسجيل الجديدة واختر المكتب قبل الموافقة</p>
+        <p class="text-muted">يبقى المستخدم بدون مكتب حتى تتم الموافقة عليه وتعيين المكتب والدور المناسب.</p>
     </div>
 </div>
 
@@ -45,35 +45,51 @@ else
                             <i class="bi bi-envelope text-muted"></i>
                             <small>@user.Email</small>
                         </div>
-
-                        @if (!string.IsNullOrEmpty(user.PhoneNumber))
-                        {
-                            <div class="mb-2">
-                                <i class="bi bi-telephone text-muted"></i>
-                                <small>@user.PhoneNumber</small>
-                            </div>
-                        }
-
+                        <div class="mb-2">
+                            <i class="bi bi-telephone text-muted"></i>
+                            <small>@(string.IsNullOrWhiteSpace(user.PhoneNumber) ? "-" : user.PhoneNumber)</small>
+                        </div>
                         <div class="mb-3">
                             <i class="bi bi-credit-card text-muted"></i>
                             <small>@user.PersonalNumber</small>
                         </div>
 
-                        <hr>
+                        <hr />
 
-                        <form asp-action="ApproveUser" method="post" class="d-inline">
+                        <form asp-action="ApproveUser" method="post">
                             <input type="hidden" name="userId" value="@user.Id" />
 
                             <div class="mb-3">
-                                <label class="form-label">تعيين إلى مكتب</label>
+                                <label class="form-label">المكتب</label>
                                 <select name="officeId" class="form-select form-select-sm" required>
                                     <option value="">اختر المكتب</option>
                                     @foreach (var office in Model.Offices)
                                     {
-                                        <option value="@office.Value">@office.Text</option>
+                                        <option value="@office.Value" selected="@(!Model.CanSelectOffice)">@office.Text</option>
                                     }
                                 </select>
+                                @if (!Model.CanSelectOffice)
+                                {
+                                    <small class="text-muted">سيتم تعيين المستخدم إلى مكتبك فقط.</small>
+                                }
                             </div>
+
+                            @if (Model.CanSelectRole)
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label">الدور</label>
+                                    <select name="role" class="form-select form-select-sm" required>
+                                        @foreach (var role in Model.Roles)
+                                        {
+                                            <option value="@role.Value" selected="@(role.Value == "User")">@role.Text</option>
+                                        }
+                                    </select>
+                                </div>
+                            }
+                            else
+                            {
+                                <input type="hidden" name="role" value="User" />
+                            }
 
                             <div class="d-grid gap-2">
                                 <button type="submit" class="btn btn-success btn-sm">
@@ -82,7 +98,7 @@ else
                             </div>
                         </form>
 
-                        <form asp-action="RejectUser" method="post" class="d-inline mt-2">
+                        <form asp-action="RejectUser" method="post" class="mt-2">
                             <input type="hidden" name="userId" value="@user.Id" />
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-danger btn-sm"

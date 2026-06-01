@@ -133,12 +133,12 @@
                         <div class="verify-value">@Model.ContractNumber</div>
                     </div>
                     <div class="verify-item">
-                        <div class="verify-label">المكتب</div>
-                        <div class="verify-value">@Model.OfficeName</div>
-                    </div>
-                    <div class="verify-item">
                         <div class="verify-label">تاريخ العقد</div>
                         <div class="verify-value">@Model.ContractDate?.ToString("yyyy/MM/dd")</div>
+                    </div>
+                    <div class="verify-item">
+                        <div class="verify-label">اسم المكتب</div>
+                        <div class="verify-value">@Model.OfficeName</div>
                     </div>
                     <div class="verify-item">
                         <div class="verify-label">حالة العقد</div>
@@ -149,16 +149,16 @@
                         <div class="verify-value">@Model.ChassisNumber</div>
                     </div>
                     <div class="verify-item">
+                        <div class="verify-label">رقم المركبة</div>
+                        <div class="verify-value">@Model.LicenseNumber</div>
+                    </div>
+                    <div class="verify-item">
                         <div class="verify-label">موديل المركبة</div>
                         <div class="verify-value">@Model.VehicleModel</div>
                     </div>
                     <div class="verify-item">
-                        <div class="verify-label">البائع</div>
-                        <div class="verify-value">@Model.SellerName</div>
-                    </div>
-                    <div class="verify-item">
-                        <div class="verify-label">المشتري</div>
-                        <div class="verify-value">@Model.BuyerName</div>
+                        <div class="verify-label">حالة التحقق</div>
+                        <div class="verify-value">@Model.VerificationStatus</div>
                     </div>
                 </div>
 

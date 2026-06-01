@@ -1,10 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 
 namespace VehicleContractSystem_Final.Models.ViewModel
 {
     public class ContractViewModel
     {
         public Contract Contract { get; set; } = new();
+
+        [Display(Name = "استلم البائع مبلغ وقدره")]
+        [Range(0, double.MaxValue, ErrorMessage = "المبلغ المستلم يجب أن يكون صفراً أو أكثر")]
+        public decimal InitialPaidAmount { get; set; }
+
         public List<Province> Provinces { get; set; } = new();
         public List<City> Cities { get; set; } = new();
 
@@ -24,8 +30,9 @@ namespace VehicleContractSystem_Final.Models.ViewModel
             Provinces.Select(p => new SelectListItem
             {
                 Value = p.Id.ToString(),
-                Text = p.NameAr // أو استخدم Name حسب الثقافة
+                Text = p.NameAr
             });
+
         public IEnumerable<SelectListItem> CityList =>
             Cities.Select(c => new SelectListItem
             {

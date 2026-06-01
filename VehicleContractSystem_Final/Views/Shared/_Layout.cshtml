@@ -107,6 +107,14 @@
                                     <i class="bi bi-file-text"></i> العقود
                                 </a>
                             </li>
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("OfficeAdmin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Account" asp-action="Users">
+                                        <i class="bi bi-people"></i> إدارة المستخدمين
+                                    </a>
+                                </li>
+                            }
                             @if (User.IsInRole("SuperAdmin"))
                             {
                                 <li class="nav-item">
@@ -117,6 +125,16 @@
                                 <li class="nav-item">
                                     <a class="nav-link" asp-controller="Account" asp-action="PendingUsers">
                                         <i class="bi bi-person-check"></i> المستخدمون المعلقون
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Audit" asp-action="Index">
+                                        <i class="bi bi-clipboard-data"></i> سجل التدقيق
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="BlockedVehicle" asp-action="Index">
+                                        <i class="bi bi-shield-exclamation"></i> المركبات الممنوعة
                                     </a>
                                 </li>
                             }

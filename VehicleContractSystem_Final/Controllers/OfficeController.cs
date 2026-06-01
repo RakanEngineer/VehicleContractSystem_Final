@@ -1,10 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VehicleContractSystem_Final.Data;
-using VehicleContractSystem_Final.Enums;
 using VehicleContractSystem_Final.Models;
-using VehicleContractSystem_Final.Models.ViewModel;
 
 namespace VehicleContractSystem_Final.Controllers
 {
@@ -12,12 +11,14 @@ namespace VehicleContractSystem_Final.Controllers
     public class OfficeController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public OfficeController(ApplicationDbContext context)
+        public OfficeController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
-        // GET: Office
+
         public async Task<IActionResult> Index()
         {
             var offices = await _context.Offices
@@ -25,10 +26,11 @@ namespace VehicleContractSystem_Final.Controllers
                 .Include(o => o.Contracts)
                 .ToListAsync();
 
+            await ExcludeSuperAdminsFromStaffAsync(offices);
+
             return View(offices);
         }
 
-        // GET: Office/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -42,16 +44,16 @@ namespace VehicleContractSystem_Final.Controllers
             if (office == null)
                 return NotFound();
 
+            await ExcludeSuperAdminsFromStaffAsync(new[] { office });
+
             return View(office);
         }
 
-        // GET: Office/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Office/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Office office)
@@ -68,20 +70,23 @@ namespace VehicleContractSystem_Final.Controllers
             return View(office);
         }
 
-        // GET: Office/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
                 return NotFound();
 
-            var office = await _context.Offices.FindAsync(id);
+            var office = await _context.Offices
+                .Include(o => o.Staff)
+                .Include(o => o.Contracts)
+                .FirstOrDefaultAsync(o => o.Id == id);
             if (office == null)
                 return NotFound();
+
+            await ExcludeSuperAdminsFromStaffAsync(new[] { office });
 
             return View(office);
         }
 
-        // POST: Office/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Office office)
@@ -103,15 +108,20 @@ namespace VehicleContractSystem_Final.Controllers
                 {
                     if (!OfficeExists(office.Id))
                         return NotFound();
-                    else
-                        throw;
+
+                    throw;
                 }
             }
 
-            return View(office);
+            var officeWithRelations = await _context.Offices
+                .Include(o => o.Staff)
+                .Include(o => o.Contracts)
+                .FirstOrDefaultAsync(o => o.Id == office.Id) ?? office;
+            await ExcludeSuperAdminsFromStaffAsync(new[] { officeWithRelations });
+
+            return View(officeWithRelations);
         }
 
-        // GET: Office/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -125,6 +135,8 @@ namespace VehicleContractSystem_Final.Controllers
             if (office == null)
                 return NotFound();
 
+            await ExcludeSuperAdminsFromStaffAsync(new[] { office });
+
             if (office.Staff.Any() || office.Contracts.Any())
             {
                 TempData["ErrorMessage"] = "لا يمكن حذف مكتب يحتوي على موظفين أو عقود";
@@ -134,7 +146,6 @@ namespace VehicleContractSystem_Final.Controllers
             return View(office);
         }
 
-        // POST: Office/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -146,6 +157,8 @@ namespace VehicleContractSystem_Final.Controllers
 
             if (office == null)
                 return NotFound();
+
+            await ExcludeSuperAdminsFromStaffAsync(new[] { office });
 
             if (office.Staff.Any() || office.Contracts.Any())
             {
@@ -163,6 +176,21 @@ namespace VehicleContractSystem_Final.Controllers
         private bool OfficeExists(int id)
         {
             return _context.Offices.Any(e => e.Id == id);
+        }
+
+        private async Task ExcludeSuperAdminsFromStaffAsync(IEnumerable<Office> offices)
+        {
+            foreach (var office in offices)
+            {
+                var visibleStaff = new List<ApplicationUser>();
+                foreach (var staff in office.Staff)
+                {
+                    if (!await _userManager.IsInRoleAsync(staff, "SuperAdmin"))
+                        visibleStaff.Add(staff);
+                }
+
+                office.Staff = visibleStaff;
+            }
         }
     }
 }

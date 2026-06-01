@@ -82,5 +82,8 @@ namespace VehicleContractSystem_Final.Models.ViewModel
     {
         public List<ApplicationUser> Users { get; set; } = new();
         public List<SelectListItem> Offices { get; set; } = new();
+        public List<SelectListItem> Roles { get; set; } = new();
+        public bool CanSelectOffice { get; set; }
+        public bool CanSelectRole { get; set; }
     }
 }

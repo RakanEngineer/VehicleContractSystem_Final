@@ -21,15 +21,18 @@ namespace VehicleContractSystem_Final.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IAuditService _auditService;
 
         public ContractController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            ICurrentUserService currentUserService)
+            ICurrentUserService currentUserService,
+            IAuditService auditService)
         {
             _context = context;
             _userManager = userManager;
             _currentUserService = currentUserService;
+            _auditService = auditService;
         }
 
         // GET: Contract
@@ -157,6 +160,8 @@ namespace VehicleContractSystem_Final.Controllers
             await ValidateVehicleLookupsAsync(contract);
             NormalizeManualVehicleModel(contract);
             NormalizeVehicleIdentityFields(contract);
+            ValidateCreateFinancialValues(viewModel);
+            await ValidateVehicleIsNotBlockedForCreateAsync(contract);
             var existingVehicle = await FindVehicleForNewContractAsync(contract);
             await ValidateVehicleContractAvailabilityForCreateAsync(contract, existingVehicle);
             await ValidateLicenseNumberForCreateAsync(contract, existingVehicle);
@@ -184,6 +189,36 @@ namespace VehicleContractSystem_Final.Controllers
 
                     _context.Add(contract);
                     await _context.SaveChangesAsync();
+
+                    if (viewModel.InitialPaidAmount > 0)
+                    {
+                        var initialPayment = new Payment
+                        {
+                            ContractId = contract.Id,
+                            Amount = viewModel.InitialPaidAmount,
+                            PaymentDate = DateTime.Now,
+                            Notes = "دفعة أولية عند إنشاء العقد",
+                            PaymentMethod = "نقداً",
+                            RecordedByUserId = currentUser.Id,
+                            CreatedAt = DateTime.Now
+                        };
+
+                        _context.Payments.Add(initialPayment);
+
+                        await _context.SaveChangesAsync();
+
+                        await _auditService.LogAsync(
+                            "إضافة دفعة",
+                            "Payment",
+                            initialPayment.Id.ToString(),
+                            $"تم تسجيل دفعة أولية بمبلغ {viewModel.InitialPaidAmount:N2} عند إنشاء العقد رقم {contract.ContractNumber}");
+                    }
+
+                    await _auditService.LogAsync(
+                        "إنشاء عقد",
+                        "Contract",
+                        contract.Id.ToString(),
+                        $"تم إنشاء العقد رقم {contract.ContractNumber}");
                     await transaction.CommitAsync();
 
                     TempData["SuccessMessage"] = "تم إنشاء العقد بنجاح";
@@ -196,9 +231,10 @@ namespace VehicleContractSystem_Final.Controllers
             }
 
             LogModelStateErrors();
-            viewModel = await BuildContractViewModelAsync(contract);
+            var rebuiltViewModel = await BuildContractViewModelAsync(contract);
+            rebuiltViewModel.InitialPaidAmount = viewModel.InitialPaidAmount;
 
-            return View(viewModel);
+            return View(rebuiltViewModel);
         }
 
         // GET: Contract/Edit/5
@@ -319,6 +355,11 @@ namespace VehicleContractSystem_Final.Controllers
                     existingContract.LastModifiedByUserId = (await _currentUserService.GetCurrentUserAsync())?.Id;
 
                     await _context.SaveChangesAsync();
+                    await _auditService.LogAsync(
+                        "تعديل عقد",
+                        "Contract",
+                        existingContract.Id.ToString(),
+                        $"تم تعديل العقد رقم {existingContract.ContractNumber}");
 
                     TempData["SuccessMessage"] = "تم تحديث العقد بنجاح";
                     return RedirectToAction(nameof(Details), new { id = existingContract.Id });
@@ -380,6 +421,11 @@ namespace VehicleContractSystem_Final.Controllers
             contract.LastModifiedByUserId = (await _currentUserService.GetCurrentUserAsync())?.Id;
 
             await _context.SaveChangesAsync();
+            await _auditService.LogAsync(
+                "إغلاق عقد",
+                "Contract",
+                contract.Id.ToString(),
+                $"تم إغلاق العقد رقم {contract.ContractNumber}");
 
             TempData["SuccessMessage"] = "تم إغلاق العقد بنجاح";
             return RedirectToAction(nameof(Details), new { id = contract.Id });
@@ -588,6 +634,11 @@ namespace VehicleContractSystem_Final.Controllers
             document.Add(new Paragraph($"سنة الصنع: {manufactureYear}", arabicFont));
             document.Add(new Paragraph($"رقم المركبة: {licenseNumber}", arabicFont));
             document.Add(new Paragraph($"رقم الشاصي: {chassisNumber}", arabicFont));
+            document.Add(new Paragraph(" "));
+            document.Add(new Paragraph("المعلومات المالية:", titleFont));
+            document.Add(new Paragraph($"سعر المركبة: {Money(contract.VehiclePrice)}", arabicFont));
+            document.Add(new Paragraph($"استلم البائع مبلغ وقدره: {Money(contract.PaidAmount)}", arabicFont));
+            document.Add(new Paragraph($"المبلغ المتبقي: {Money(contract.RemainingAmount)}", arabicFont));
 
             var qrCodeBase64 = QRCodeHelper.GenerateQRCode(verificationUrl);
 
@@ -605,6 +656,11 @@ namespace VehicleContractSystem_Final.Controllers
         private static string SnapshotOrLegacy(string? snapshotValue, string legacyValue)
         {
             return string.IsNullOrWhiteSpace(snapshotValue) ? legacyValue : snapshotValue;
+        }
+
+        private static string Money(decimal value)
+        {
+            return $"${value:N0}";
         }
 
         private static void CopyImmutableContractFields(Contract source, Contract target)
@@ -694,11 +750,7 @@ namespace VehicleContractSystem_Final.Controllers
         {
             EnsureVerificationToken(contract);
 
-            return Url.Action(
-                action: "Contract",
-                controller: "Verify",
-                values: new { token = contract.VerificationToken },
-                protocol: Request.Scheme) ?? $"/Verify/Contract/{contract.VerificationToken}";
+            return $"{Request.Scheme}://{Request.Host}/Verify/Contract/{contract.VerificationToken}";
         }
 
         private bool ContractExists(int id)
@@ -776,6 +828,24 @@ namespace VehicleContractSystem_Final.Controllers
                 ModelState.AddModelError("Contract.VehicleModel", "يرجى إدخال موديل المركبة");
         }
 
+        private void ValidateCreateFinancialValues(ContractViewModel viewModel)
+        {
+            if (viewModel.Contract.VehiclePrice <= 0)
+            {
+                ModelState.AddModelError("Contract.VehiclePrice", "يرجى إدخال سعر مركبة أكبر من صفر");
+            }
+
+            if (viewModel.InitialPaidAmount < 0)
+            {
+                ModelState.AddModelError(nameof(viewModel.InitialPaidAmount), "المبلغ المستلم يجب أن يكون صفراً أو أكثر");
+            }
+
+            if (viewModel.InitialPaidAmount > viewModel.Contract.VehiclePrice)
+            {
+                ModelState.AddModelError(nameof(viewModel.InitialPaidAmount), "المبلغ المستلم لا يمكن أن يكون أكبر من سعر المركبة");
+            }
+        }
+
         private static void NormalizeManualVehicleModel(Contract contract)
         {
             contract.VehicleModel = (contract.VehicleModel ?? string.Empty).Trim();
@@ -801,6 +871,33 @@ namespace VehicleContractSystem_Final.Controllers
             {
                 ModelState.AddModelError("Contract.ChassisNumber", "توجد معاملة مفتوحة لهذه المركبة ولا يمكن إنشاء عقد جديد قبل إغلاق العقد السابق");
             }
+        }
+
+        private async Task ValidateVehicleIsNotBlockedForCreateAsync(Contract contract)
+        {
+            if (string.IsNullOrWhiteSpace(contract.ChassisNumber) &&
+                string.IsNullOrWhiteSpace(contract.LicenseNumber))
+            {
+                return;
+            }
+
+            var blockedVehicle = await _context.BlockedVehicles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(b => b.IsActive &&
+                    ((!string.IsNullOrWhiteSpace(contract.ChassisNumber) && b.ChassisNumber == contract.ChassisNumber) ||
+                     (!string.IsNullOrWhiteSpace(contract.LicenseNumber) && b.LicenseNumber == contract.LicenseNumber)));
+
+            if (blockedVehicle == null)
+                return;
+
+            const string message = "لا يمكن إنشاء عقد لهذه المركبة لوجود منع أو بلاغ عليها";
+            ModelState.AddModelError("Contract.ChassisNumber", message);
+
+            await _auditService.LogAsync(
+                "رفض عقد لمركبة ممنوعة",
+                "BlockedVehicle",
+                blockedVehicle.Id.ToString(),
+                $"تم رفض إنشاء عقد لمركبة ممنوعة. الشاصي: {contract.ChassisNumber}، الرقم: {contract.LicenseNumber}، السبب: {blockedVehicle.Reason}");
         }
 
         private async Task ValidateLicenseNumberForCreateAsync(Contract contract, Vehicle? existingVehicle)
