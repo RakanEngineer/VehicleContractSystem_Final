@@ -108,14 +108,17 @@ namespace VehicleContractSystem_Final.Data
         {
             await AddIfMissingAsync(_context.VehicleTypes, v => v.NameAr,
             [
-                new VehicleType { NameAr = "سيارة", NameEn = "Car" },
-                new VehicleType { NameAr = "دراجة نارية", NameEn = "Motorcycle" },
-                new VehicleType { NameAr = "شاحنة", NameEn = "Truck" },
-                new VehicleType { NameAr = "حافلة", NameEn = "Bus" }
+                new VehicleType { NameAr = "خصوصي", NameEn = "Private" },
+                new VehicleType { NameAr = "حمل", NameEn = "Cargo" },
+                new VehicleType { NameAr = "أجرة", NameEn = "Taxi" },
+                new VehicleType { NameAr = "زراعية", NameEn = "Agricultural" },
+                new VehicleType { NameAr = "إنشائية", NameEn = "Construction" },
+                new VehicleType { NameAr = "فحص مؤقت", NameEn = "Temporary Inspection" },
+                new VehicleType { NameAr = "دراجة نارية", NameEn = "Motorcycle" }
             ]);
             await _context.SaveChangesAsync();
 
-            var carType = await _context.VehicleTypes.FirstAsync(v => v.NameAr == "سيارة");
+            var carType = await _context.VehicleTypes.FirstAsync(v => v.NameAr == "خصوصي");
             await AddVehicleModelIfMissingAsync("تويوتا كامري", "Toyota Camry", carType.Id);
             await AddVehicleModelIfMissingAsync("نيسان التيما", "Nissan Altima", carType.Id);
             await AddVehicleModelIfMissingAsync("كيا سيراتو", "Kia Cerato", carType.Id);
@@ -145,12 +148,13 @@ namespace VehicleContractSystem_Final.Data
                 new Province { NameAr = "صلاح الدين", NameEn = "Salah al-Din" },
                 new Province { NameAr = "واسط", NameEn = "Wasit" },
                 new Province { NameAr = "بابل", NameEn = "Babylon" },
-                new Province { NameAr = "كربلاء", NameEn = "Karbala" },
-                new Province { NameAr = "النجف", NameEn = "Najaf" },
+                new Province { NameAr = "كربلاء المقدسة", NameEn = "Karbala" },
+                new Province { NameAr = "النجف الأشرف", NameEn = "Najaf" },
                 new Province { NameAr = "القادسية", NameEn = "Al-Qadisiyyah" },
                 new Province { NameAr = "المثنى", NameEn = "Al Muthanna" },
                 new Province { NameAr = "ذي قار", NameEn = "Dhi Qar" },
-                new Province { NameAr = "ميسان", NameEn = "Maysan" }
+                new Province { NameAr = "ميسان", NameEn = "Maysan" },
+                new Province { NameAr = "حلبجة", NameEn = "Halabja" }
             ]);
             await _context.SaveChangesAsync();
 
@@ -268,14 +272,14 @@ namespace VehicleContractSystem_Final.Data
 
         private static async Task SeedDemoVehiclesAsync(ApplicationUser officeAdmin, ApplicationUser approvedUser)
         {
-            var carType = await _context.VehicleTypes.FirstAsync(v => v.NameAr == "سيارة");
+            var carType = await _context.VehicleTypes.FirstAsync(v => v.NameAr == "خصوصي");
             var camry = await _context.VehicleModels.FirstAsync(v => v.NameAr == "تويوتا كامري");
             var altima = await _context.VehicleModels.FirstAsync(v => v.NameAr == "نيسان التيما");
             var white = await _context.Colors.FirstAsync(c => c.NameAr == "أبيض");
             var black = await _context.Colors.FirstAsync(c => c.NameAr == "أسود");
 
-            await CreateVehicleAsync(officeAdmin.Id, carType.Id, camry.Id, white.Id, "DEMO-1001", "DEMOCHASSIS1001", "تويوتا", "تويوتا كامري", "أبيض", "سيارة", 2022);
-            await CreateVehicleAsync(approvedUser.Id, carType.Id, altima.Id, black.Id, "DEMO-1002", "DEMOCHASSIS1002", "نيسان", "نيسان التيما", "أسود", "سيارة", 2021);
+            await CreateVehicleAsync(officeAdmin.Id, carType.Id, camry.Id, white.Id, "DEMO-1001", "DEMOCHASSIS1001", "تويوتا", "تويوتا كامري", "أبيض", "خصوصي", 2022);
+            await CreateVehicleAsync(approvedUser.Id, carType.Id, altima.Id, black.Id, "DEMO-1002", "DEMOCHASSIS1002", "نيسان", "نيسان التيما", "أسود", "خصوصي", 2021);
         }
 
         private static async Task CreateVehicleAsync(
@@ -380,7 +384,7 @@ namespace VehicleContractSystem_Final.Data
             if (contract != null)
                 return contract;
 
-            var vehicleType = await _context.VehicleTypes.FirstAsync(v => v.NameAr == "سيارة");
+            var vehicleType = await _context.VehicleTypes.FirstAsync(v => v.NameAr == "خصوصي");
             var vehicleModelLookup = await _context.VehicleModels.FirstAsync(v => v.NameAr == vehicleModel);
             var colorLookup = await _context.Colors.FirstAsync(c => c.NameAr == vehicleColor);
 
@@ -405,7 +409,7 @@ namespace VehicleContractSystem_Final.Data
                 VehicleModelId = vehicleModelLookup.Id,
                 ColorId = colorLookup.Id,
                 VehicleModel = vehicleModel,
-                VehicleCategory = "سيارة",
+                VehicleCategory = "خصوصي",
                 VehicleColor = vehicleColor,
                 ManufactureYear = 2022,
                 ChassisNumber = chassisNumber,

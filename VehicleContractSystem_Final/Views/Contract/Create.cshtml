@@ -110,11 +110,25 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
+                                <label asp-for="Contract.AnnualRegistrationNumber" class="form-label"></label>
+                                <input asp-for="Contract.AnnualRegistrationNumber" class="form-control" />
+                                <span asp-validation-for="Contract.AnnualRegistrationNumber" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
                                 <label asp-for="Contract.VehicleTypeId" class="form-label"></label>
                                 <select asp-for="Contract.VehicleTypeId" asp-items="Model.VehicleTypes" class="form-select" id="vehicleTypeSelect">
                                     <option value="">اختر صنف المركبة</option>
                                 </select>
                                 <span asp-validation-for="Contract.VehicleTypeId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Contract.ProvinceId" class="form-label"></label>
+                                <select asp-for="Contract.ProvinceId" asp-items="Model.ProvinceList" class="form-select">
+                                    <option value="">اختر محافظة المركبة</option>
+                                </select>
+                                <span asp-validation-for="Contract.ProvinceId" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6 mb-3">
@@ -124,17 +138,31 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.VehicleModel" class="form-label">موديل المركبة</label>
+                                <label asp-for="Contract.VehicleModel" class="form-label">نوع المركبة</label>
                                 <input asp-for="Contract.VehicleModel" class="form-control" />
                                 <span asp-validation-for="Contract.VehicleModel" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label asp-for="Contract.ColorId" class="form-label"></label>
-                                <select asp-for="Contract.ColorId" asp-items="Model.ColorList" class="form-select">
+                                <select asp-for="Contract.ColorId" asp-items="Model.ColorList" class="form-select" id="colorSelect">
                                     <option value="">اختر لون المركبة</option>
+                                    @if (Model.Contract.ColorId == -1)
+                                    {
+                                        <option value="-1" selected>لون آخر</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="-1">لون آخر</option>
+                                    }
                                 </select>
                                 <span asp-validation-for="Contract.ColorId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3" id="customColorBox" style="display:none;">
+                                <label asp-for="CustomColorName" class="form-label">أدخل لون المركبة</label>
+                                <input asp-for="CustomColorName" class="form-control" placeholder="مثال: زيتي، ذهبي، عنابي" />
+                                <span asp-validation-for="CustomColorName" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6 mb-3">
@@ -207,54 +235,6 @@
             </div>
         </div>
 
-        <!-- العنوان -->
-        <div class="row">
-            <div class="col-12 mb-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-geo-alt"></i> تفاصيل العنوان</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-3 mb-3">
-                                <label asp-for="Contract.ProvinceId" class="form-label">المحافظة</label>
-                                <select asp-for="Contract.ProvinceId" class="form-select" id="provinceSelect">
-                                <option value="">اختر المحافظة</option>
-                                    @foreach (var province in Model.Provinces)
-                                    {
-                                        <option value="@province.Id">@province.NameAr</option>
-
-                                    }
-                                </select>
-                            </div>
-
-                            <div class="col-md-3 mb-3">
-                                <label asp-for="Contract.CityId" class="form-label"></label>
-                                <select asp-for="Contract.CityId" class="form-select" id="citySelect">
-                                    <option value="">اختر المدينة</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-2 mb-3">
-                                <label asp-for="Contract.Neighborhood" class="form-label"></label>
-                                <input asp-for="Contract.Neighborhood" class="form-control" />
-                            </div>
-
-                            <div class="col-md-2 mb-3">
-                                <label asp-for="Contract.AlleyNumber" class="form-label"></label>
-                                <input asp-for="Contract.AlleyNumber" class="form-control" />
-                            </div>
-
-                            <div class="col-md-2 mb-3">
-                                <label asp-for="Contract.HouseNumber" class="form-label"></label>
-                                <input asp-for="Contract.HouseNumber" class="form-control" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- الملاحظات -->
         <div class="row">
             <div class="col-12 mb-4">
@@ -299,43 +279,14 @@
             $('#vehiclePrice, #initialPaidAmount').on('input', calculateRemaining);
             calculateRemaining();
 
-            // تحميل المدن عند اختيار المحافظة
-            $('#provinceSelect').change(function() {
-                var provinceId = $(this).val();
-                if (provinceId) {
-                    calculateRemaining();
-                } else {
-                    $('#citySelect').empty().append('<option value="">اختر المدينة</option>');
-                }
-            });
-        });
-    </script>
+            function toggleCustomColor() {
+                var isCustomColor = $('#colorSelect').val() === '-1';
+                $('#customColorBox').toggle(isCustomColor);
+            }
 
-    <script>
-        $(document).ready(function() {
-            $('#provinceSelect').change(function() {
-                var provinceId = $(this).val();
-                $('#citySelect').html('<option value="">جاري التحميل...</option>');
+            $('#colorSelect').on('change', toggleCustomColor);
+            toggleCustomColor();
 
-                if (provinceId) {
-                    $.ajax({
-                        url: '@Url.Action("GetCities", "Contract")',
-                        type: 'GET',
-                        data: { provinceId: provinceId },
-                        success: function(data) {
-                            $('#citySelect').html('<option value="">اختر المدينة</option>');
-                            $.each(data, function(i, city) {
-                                $('#citySelect').append($('<option></option>').val(city.value).html(city.text));
-                            });
-                        },
-                        error: function() {
-                            $('#citySelect').html('<option value="">حدث خطأ</option>');
-                        }
-                    });
-                } else {
-                    $('#citySelect').html('<option value="">اختر المدينة</option>');
-                }
-            });
         });
     </script>
 }

@@ -275,10 +275,13 @@ namespace VehicleContractSystem_Final.Data
 
             // Seed Vehicle Types
             builder.Entity<VehicleType>().HasData(
-                new VehicleType { Id = 1, NameAr = "سيارة", NameEn = "Car" },
-                new VehicleType { Id = 2, NameAr = "دراجة نارية", NameEn = "Motorcycle" },
-                new VehicleType { Id = 3, NameAr = "شاحنة", NameEn = "Truck" },
-                new VehicleType { Id = 4, NameAr = "حافلة", NameEn = "Bus" }
+                new VehicleType { Id = 1, NameAr = "خصوصي", NameEn = "Private" },
+                new VehicleType { Id = 2, NameAr = "حمل", NameEn = "Cargo" },
+                new VehicleType { Id = 3, NameAr = "أجرة", NameEn = "Taxi" },
+                new VehicleType { Id = 4, NameAr = "زراعية", NameEn = "Agricultural" },
+                new VehicleType { Id = 5, NameAr = "إنشائية", NameEn = "Construction" },
+                new VehicleType { Id = 6, NameAr = "فحص مؤقت", NameEn = "Temporary Inspection" },
+                new VehicleType { Id = 7, NameAr = "دراجة نارية", NameEn = "Motorcycle" }
             );
 
             // =============================
@@ -340,12 +343,13 @@ namespace VehicleContractSystem_Final.Data
                 new Province { Id = 10, NameAr = "صلاح الدين", NameEn = "Salah al-Din" },
                 new Province { Id = 11, NameAr = "واسط", NameEn = "Wasit" },
                 new Province { Id = 12, NameAr = "بابل", NameEn = "Babylon" },
-                new Province { Id = 13, NameAr = "كربلاء", NameEn = "Karbala" },
-                new Province { Id = 14, NameAr = "النجف", NameEn = "Najaf" },
+                new Province { Id = 13, NameAr = "كربلاء المقدسة", NameEn = "Karbala" },
+                new Province { Id = 14, NameAr = "النجف الأشرف", NameEn = "Najaf" },
                 new Province { Id = 15, NameAr = "القادسية", NameEn = "Al-Qadisiyyah" },
                 new Province { Id = 16, NameAr = "المثنى", NameEn = "Al Muthanna" },
                 new Province { Id = 17, NameAr = "ذي قار", NameEn = "Dhi Qar" },
-                new Province { Id = 18, NameAr = "ميسان", NameEn = "Maysan" }
+                new Province { Id = 18, NameAr = "ميسان", NameEn = "Maysan" },
+                new Province { Id = 19, NameAr = "حلبجة", NameEn = "Halabja" }
             );
 
             // Seed Cities (اختصار - نموذج فقط)

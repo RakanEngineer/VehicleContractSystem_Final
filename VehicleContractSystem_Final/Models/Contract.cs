@@ -92,14 +92,14 @@ namespace VehicleContractSystem_Final.Models
         [Display(Name = "صنف المركبة")]
         public int? VehicleTypeId { get; set; }
 
-        [Display(Name = "موديل المركبة")]
+        [Display(Name = "نوع المركبة")]
         public int? VehicleModelId { get; set; }
 
         [Display(Name = "لون المركبة")]
         public int? ColorId { get; set; }
 
-        [Required(ErrorMessage = "يرجى إدخال موديل المركبة")]
-        [Display(Name = "موديل المركبة")]
+        [Required(ErrorMessage = "يرجى إدخال نوع المركبة")]
+        [Display(Name = "نوع المركبة")]
         public string VehicleModel { get; set; } = string.Empty;
 
         [Required]
@@ -128,7 +128,7 @@ namespace VehicleContractSystem_Final.Models
         [Display(Name = "صنف المركبة وقت التعاقد")]
         public string? VehicleTypeNameSnapshot { get; set; }
 
-        [Display(Name = "موديل المركبة وقت التعاقد")]
+        [Display(Name = "نوع المركبة وقت التعاقد")]
         public string? VehicleModelNameSnapshot { get; set; }
 
         [Display(Name = "لون المركبة وقت التعاقد")]
@@ -146,21 +146,17 @@ namespace VehicleContractSystem_Final.Models
         // معلومات العنوان - Address Information
         // ===================================================
 
-        [Display(Name = "المحافظة")]
+        [Display(Name = "محافظة المركبة")]
         public int? ProvinceId { get; set; }
         public Province? Province { get; set; }
 
-        [Display(Name = "المدينة")]
         public int? CityId { get; set; }
         public City? City { get; set; }
 
-        [Display(Name = "المحلة")]
         public string Neighborhood { get; set; } = string.Empty;
 
-        [Display(Name = "رقم الزقاق")]
         public string AlleyNumber { get; set; } = string.Empty;
 
-        [Display(Name = "رقم الدار")]
         public string HouseNumber { get; set; } = string.Empty;
 
         // معلومات إضافية - Additional Information

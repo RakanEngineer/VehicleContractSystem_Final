@@ -5,11 +5,37 @@ namespace VehicleContractSystem_Final.Models.ViewModel
 {
     public class ContractViewModel
     {
+        private static readonly string[] VehicleProvinceOrder =
+        [
+            "بغداد",
+            "نينوى",
+            "الأنبار",
+            "البصرة",
+            "صلاح الدين",
+            "النجف الأشرف",
+            "كربلاء المقدسة",
+            "كركوك",
+            "ديالى",
+            "واسط",
+            "بابل",
+            "القادسية",
+            "المثنى",
+            "ذي قار",
+            "ميسان",
+            "أربيل",
+            "السليمانية",
+            "دهوك",
+            "حلبجة"
+        ];
+
         public Contract Contract { get; set; } = new();
 
         [Display(Name = "استلم البائع مبلغ وقدره")]
         [Range(0, double.MaxValue, ErrorMessage = "المبلغ المستلم يجب أن يكون صفراً أو أكثر")]
         public decimal InitialPaidAmount { get; set; }
+
+        [Display(Name = "لون المركبة")]
+        public string? CustomColorName { get; set; }
 
         public List<Province> Provinces { get; set; } = new();
         public List<City> Cities { get; set; } = new();
@@ -27,11 +53,15 @@ namespace VehicleContractSystem_Final.Models.ViewModel
             });
 
         public IEnumerable<SelectListItem> ProvinceList =>
-            Provinces.Select(p => new SelectListItem
-            {
-                Value = p.Id.ToString(),
-                Text = p.NameAr
-            });
+            Provinces
+                .OrderBy(GetVehicleProvinceOrder)
+                .ThenBy(p => p.Id)
+                .Select(p => new SelectListItem
+                {
+                    Value = p.Id.ToString(),
+                    Text = GetVehicleProvinceDisplayName(p),
+                    Selected = Contract.ProvinceId == p.Id
+                });
 
         public IEnumerable<SelectListItem> CityList =>
             Cities.Select(c => new SelectListItem
@@ -39,5 +69,21 @@ namespace VehicleContractSystem_Final.Models.ViewModel
                 Value = c.Id.ToString(),
                 Text = c.NameAr
             });
+
+        private static string GetVehicleProvinceDisplayName(Province province)
+        {
+            return province.NameAr switch
+            {
+                "كربلاء" => "كربلاء المقدسة",
+                "النجف" => "النجف الأشرف",
+                _ => province.NameAr
+            };
+        }
+
+        private static int GetVehicleProvinceOrder(Province province)
+        {
+            var index = Array.IndexOf(VehicleProvinceOrder, GetVehicleProvinceDisplayName(province));
+            return index >= 0 ? index : int.MaxValue;
+        }
     }
 }

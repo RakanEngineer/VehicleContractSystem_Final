@@ -8,6 +8,9 @@
     var licenseNumber = string.IsNullOrWhiteSpace(Model.LicenseNumberSnapshot) ? Model.LicenseNumber : Model.LicenseNumberSnapshot;
     var chassisNumber = string.IsNullOrWhiteSpace(Model.ChassisNumberSnapshot) ? Model.ChassisNumber : Model.ChassisNumberSnapshot;
     var manufactureYear = Model.ManufactureYearSnapshot ?? Model.ManufactureYear;
+    var vehicleProvinceName = Model.Province?.NameAr;
+    vehicleProvinceName = vehicleProvinceName == "كربلاء" ? "كربلاء المقدسة" : vehicleProvinceName;
+    vehicleProvinceName = vehicleProvinceName == "النجف" ? "النجف الأشرف" : vehicleProvinceName;
     var isOpen = Model.Status == VehicleContractSystem_Final.Enums.ContractStatus.Open;
     var canAddPayment = isOpen && Model.RemainingAmount > 0;
     var canCloseContract = isOpen
@@ -188,7 +191,7 @@
                             @Model.VehicleBrand
                         </div>
                         <div class="col-md-3">
-                            <strong>موديل المركبة:</strong><br />
+                            <strong>نوع المركبة:</strong><br />
                             @vehicleModelName
                         </div>
                         <div class="col-md-3">
@@ -207,10 +210,21 @@
                             @vehicleTypeName
                         </div>
                         <div class="col-md-4">
+                            <strong>رقم السنوية:</strong><br />
+                            @Model.AnnualRegistrationNumber
+                        </div>
+                        <div class="col-md-4">
+                            <strong>محافظة المركبة:</strong><br />
+                            @vehicleProvinceName
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="row">
+                        <div class="col-md-6">
                             <strong>رقم اللوحة:</strong><br />
                             <span class="fs-5 text-primary">@licenseNumber</span>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <strong>رقم الشاصي:</strong><br />
                             <span class="fs-6">@chassisNumber</span>
                         </div>
@@ -222,7 +236,7 @@
 
     <!-- Financial Info -->
     <div class="row">
-        <div class="col-lg-4 mb-4">
+        <div class="col-12 mb-4">
             <div class="card border-warning">
                 <div class="card-header bg-warning">
                     <h5 class="mb-0"><i class="bi bi-cash-stack"></i> المعلومات المالية</h5>
@@ -251,38 +265,6 @@
             </div>
         </div>
 
-        <!-- Address -->
-        <div class="col-lg-8 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-geo-alt"></i> تفاصيل العنوان</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <strong>المحافظة:</strong><br />
-                            @Model.Province?.NameAr
-                        </div>
-                        <div class="col-md-3">
-                            <strong>المدينة:</strong><br />
-                            @Model.City?.NameAr
-                        </div>
-                        <div class="col-md-2">
-                            <strong>المحلة:</strong><br />
-                            @Model.Neighborhood
-                        </div>
-                        <div class="col-md-2">
-                            <strong>رقم الزقاق:</strong><br />
-                            @Model.AlleyNumber
-                        </div>
-                        <div class="col-md-2">
-                            <strong>رقم الدار:</strong><br />
-                            @Model.HouseNumber
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Notes -->

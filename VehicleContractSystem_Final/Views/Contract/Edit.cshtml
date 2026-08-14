@@ -8,6 +8,9 @@
     var licenseNumber = string.IsNullOrWhiteSpace(Model.Contract.LicenseNumberSnapshot) ? Model.Contract.LicenseNumber : Model.Contract.LicenseNumberSnapshot;
     var chassisNumber = string.IsNullOrWhiteSpace(Model.Contract.ChassisNumberSnapshot) ? Model.Contract.ChassisNumber : Model.Contract.ChassisNumberSnapshot;
     var manufactureYear = Model.Contract.ManufactureYearSnapshot ?? Model.Contract.ManufactureYear;
+    var vehicleProvinceName = Model.Provinces.FirstOrDefault(p => p.Id == Model.Contract.ProvinceId)?.NameAr;
+    vehicleProvinceName = vehicleProvinceName == "كربلاء" ? "كربلاء المقدسة" : vehicleProvinceName;
+    vehicleProvinceName = vehicleProvinceName == "النجف" ? "النجف الأشرف" : vehicleProvinceName;
 }
 
 <div class="container-fluid" dir="rtl">
@@ -144,7 +147,7 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="border rounded p-2 h-100">
-                                    <div class="text-muted small">موديل المركبة</div>
+                                    <div class="text-muted small">نوع المركبة</div>
                                     <strong>@vehicleModelName</strong>
                                 </div>
                             </div>
@@ -164,6 +167,12 @@
                                 <div class="border rounded p-2 h-100">
                                     <div class="text-muted small">رقم السنوية</div>
                                     <strong>@Model.Contract.AnnualRegistrationNumber</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">محافظة المركبة</div>
+                                    <strong>@vehicleProvinceName</strong>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -230,61 +239,6 @@
         <div class="row">
             <div class="col-12 mb-4">
                 <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="bi bi-geo-alt"></i> تفاصيل العنوان</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-3 mb-3">
-                                <label asp-for="Contract.ProvinceId" class="form-label"></label>
-                                <select asp-for="Contract.ProvinceId" asp-items="Model.ProvinceList" class="form-select" id="provinceSelect" disabled="@isClosed">
-                                    <option value="">اختر المحافظة</option>
-                                </select>
-                                @if (isClosed)
-                                {
-                                    <input type="hidden" asp-for="Contract.ProvinceId" />
-                                }
-                                <span asp-validation-for="Contract.ProvinceId" class="text-danger"></span>
-                            </div>
-
-                            <div class="col-md-3 mb-3">
-                                <label asp-for="Contract.CityId" class="form-label"></label>
-                                <select asp-for="Contract.CityId" asp-items="Model.CityList" class="form-select" id="citySelect" disabled="@isClosed">
-                                    <option value="">اختر المدينة</option>
-                                </select>
-                                @if (isClosed)
-                                {
-                                    <input type="hidden" asp-for="Contract.CityId" />
-                                }
-                                <span asp-validation-for="Contract.CityId" class="text-danger"></span>
-                            </div>
-
-                            <div class="col-md-2 mb-3">
-                                <label asp-for="Contract.Neighborhood" class="form-label"></label>
-                                <input asp-for="Contract.Neighborhood" class="form-control" readonly="@isClosed" />
-                                <span asp-validation-for="Contract.Neighborhood" class="text-danger"></span>
-                            </div>
-
-                            <div class="col-md-2 mb-3">
-                                <label asp-for="Contract.AlleyNumber" class="form-label"></label>
-                                <input asp-for="Contract.AlleyNumber" class="form-control" readonly="@isClosed" />
-                                <span asp-validation-for="Contract.AlleyNumber" class="text-danger"></span>
-                            </div>
-
-                            <div class="col-md-2 mb-3">
-                                <label asp-for="Contract.HouseNumber" class="form-label"></label>
-                                <input asp-for="Contract.HouseNumber" class="form-control" readonly="@isClosed" />
-                                <span asp-validation-for="Contract.HouseNumber" class="text-danger"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-12 mb-4">
-                <div class="card">
                     <div class="card-body">
                         <label asp-for="Contract.Notes" class="form-label"></label>
                         <textarea asp-for="Contract.Notes" class="form-control" rows="3" readonly="@isClosed"></textarea>
@@ -326,29 +280,6 @@
             $('#vehiclePrice').on('input', calculateRemaining);
             calculateRemaining();
 
-            $('#provinceSelect').change(function() {
-                var provinceId = $(this).val();
-                $('#citySelect').html('<option value="">جاري التحميل...</option>');
-
-                if (provinceId) {
-                    $.ajax({
-                        url: '@Url.Action("GetCities", "Contract")',
-                        type: 'GET',
-                        data: { provinceId: provinceId },
-                        success: function(data) {
-                            $('#citySelect').html('<option value="">اختر المدينة</option>');
-                            $.each(data, function(i, city) {
-                                $('#citySelect').append($('<option></option>').val(city.value).html(city.text));
-                            });
-                        },
-                        error: function() {
-                            $('#citySelect').html('<option value="">حدث خطأ</option>');
-                        }
-                    });
-                } else {
-                    $('#citySelect').html('<option value="">اختر المدينة</option>');
-                }
-            });
         });
     </script>
 }

@@ -16,6 +16,9 @@
     var licenseNumber = string.IsNullOrWhiteSpace(Model.LicenseNumberSnapshot) ? Model.LicenseNumber : Model.LicenseNumberSnapshot;
     var chassisNumber = string.IsNullOrWhiteSpace(Model.ChassisNumberSnapshot) ? Model.ChassisNumber : Model.ChassisNumberSnapshot;
     var manufactureYear = Model.ManufactureYearSnapshot ?? Model.ManufactureYear;
+    var vehicleProvinceName = Model.Province?.NameAr;
+    vehicleProvinceName = vehicleProvinceName == "كربلاء" ? "كربلاء المقدسة" : vehicleProvinceName;
+    vehicleProvinceName = vehicleProvinceName == "النجف" ? "النجف الأشرف" : vehicleProvinceName;
     var contractStatus = Model.Status == VehicleContractSystem_Final.Enums.ContractStatus.Open ? "مفتوح" : "مغلق";
 }
 
@@ -346,6 +349,25 @@
             text-overflow: ellipsis;
         }
 
+        .signature-stamp {
+            width: 100%;
+            margin-top: 4px;
+            padding-top: 3px;
+            border-top: 1px dashed #7b8794;
+            font-size: 8.4px;
+            color: #1f2933;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .signature-stamp strong {
+            display: block;
+            margin-bottom: 2px;
+            font-size: 8.8px;
+            color: #111827;
+        }
+
         .footer-note {
             margin-top: 4px;
             border-top: 1px solid #c5ccd3;
@@ -499,7 +521,7 @@
                             <tr>
                                 <th>صنف المركبة</th>
                                 <td>@ValueOrDash(vehicleTypeName)</td>
-                                <th>موديل المركبة</th>
+                                <th>نوع المركبة</th>
                                 <td>@ValueOrDash(vehicleModelName)</td>
                                 <th>اللون</th>
                                 <td>@ValueOrDash(vehicleColorName)</td>
@@ -515,7 +537,11 @@
                             <tr>
                                 <th>رقم السنوية</th>
                                 <td>@ValueOrDash(Model.AnnualRegistrationNumber)</td>
-                                <th>المالك الحالي</th>
+                                <th>محافظة المركبة</th>
+                                <td>@ValueOrDash(vehicleProvinceName)</td>
+                            </tr>
+                            <tr>
+                                <th>اسم المالك</th>
                                 <td>@ValueOrDash(Model.CurrentOwnerName)</td>
                                 <th>الماركة</th>
                                 <td>@ValueOrDash(Model.VehicleBrand)</td>
@@ -584,14 +610,18 @@
                     <div class="signature-box">
                         <div class="signature-label">منظم العقد</div>
                         <div class="signature-name">@officeName</div>
+                        <div class="signature-stamp">
+                            <strong>الختم</strong>
+                            @ValueOrDash(officeLicense)
+                        </div>
                     </div>
                     <div class="signature-box">
                         <div class="signature-label">الشاهد</div>
                         <div class="signature-name">-</div>
                     </div>
                     <div class="signature-box">
-                        <div class="signature-label">البصمة / الختم</div>
-                        <div class="signature-name">@officeLicense</div>
+                        <div class="signature-label">الشاهد</div>
+                        <div class="signature-name">-</div>
                     </div>
                 </section>
 

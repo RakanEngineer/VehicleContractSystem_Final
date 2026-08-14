@@ -10,8 +10,8 @@ namespace VehicleContractSystem_Final.Models.ViewModel
         [Display(Name = "صنف المركبة")]
         public int? VehicleTypeId { get; set; }
 
-        [Required(ErrorMessage = "يرجى اختيار موديل المركبة")]
-        [Display(Name = "موديل المركبة")]
+        [Required(ErrorMessage = "يرجى اختيار نوع المركبة")]
+        [Display(Name = "نوع المركبة")]
         public int? VehicleModelId { get; set; }
 
         [Required(ErrorMessage = "يرجى اختيار لون المركبة")]

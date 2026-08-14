@@ -1103,13 +1103,13 @@ namespace VehicleContractSystem_Final.Migrations
                         new
                         {
                             Id = 13,
-                            NameAr = "كربلاء",
+                            NameAr = "كربلاء المقدسة",
                             NameEn = "Karbala"
                         },
                         new
                         {
                             Id = 14,
-                            NameAr = "النجف",
+                            NameAr = "النجف الأشرف",
                             NameEn = "Najaf"
                         },
                         new
@@ -1135,6 +1135,12 @@ namespace VehicleContractSystem_Final.Migrations
                             Id = 18,
                             NameAr = "ميسان",
                             NameEn = "Maysan"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            NameAr = "حلبجة",
+                            NameEn = "Halabja"
                         });
                 });
 
@@ -1286,26 +1292,44 @@ namespace VehicleContractSystem_Final.Migrations
                         new
                         {
                             Id = 1,
-                            NameAr = "سيارة",
-                            NameEn = "Car"
+                            NameAr = "خصوصي",
+                            NameEn = "Private"
                         },
                         new
                         {
                             Id = 2,
-                            NameAr = "دراجة نارية",
-                            NameEn = "Motorcycle"
+                            NameAr = "حمل",
+                            NameEn = "Cargo"
                         },
                         new
                         {
                             Id = 3,
-                            NameAr = "شاحنة",
-                            NameEn = "Truck"
+                            NameAr = "أجرة",
+                            NameEn = "Taxi"
                         },
                         new
                         {
                             Id = 4,
-                            NameAr = "حافلة",
-                            NameEn = "Bus"
+                            NameAr = "زراعية",
+                            NameEn = "Agricultural"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            NameAr = "إنشائية",
+                            NameEn = "Construction"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            NameAr = "فحص مؤقت",
+                            NameEn = "Temporary Inspection"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            NameAr = "دراجة نارية",
+                            NameEn = "Motorcycle"
                         });
                 });
 

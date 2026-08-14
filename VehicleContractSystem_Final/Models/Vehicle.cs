@@ -14,10 +14,10 @@ namespace VehicleContractSystem_Final.Models
         [Display(Name = "صنف المركبة")]
         public VehicleType VehicleType { get; set; } = null!;
 
-        [Display(Name = "موديل المركبة")]
+        [Display(Name = "نوع المركبة")]
         public int? VehicleModelId { get; set; }
 
-        [Display(Name = "موديل المركبة")]
+        [Display(Name = "نوع المركبة")]
         public VehicleModel? VehicleModel { get; set; }
 
         [Required(ErrorMessage = "يرجى اختيار لون المركبة")]
@@ -39,7 +39,7 @@ namespace VehicleContractSystem_Final.Models
         [Display(Name = "رقم الشاصي")]
         public string ChassisNumber { get; set; } = string.Empty;
 
-        [Display(Name = "اسم الموديل")]
+        [Display(Name = "نوع المركبة")]
         public string VehicleModelName { get; set; } = string.Empty;
 
         [Display(Name = "الماركة")]

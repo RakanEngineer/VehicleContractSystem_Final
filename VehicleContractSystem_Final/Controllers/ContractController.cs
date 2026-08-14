@@ -159,6 +159,7 @@ namespace VehicleContractSystem_Final.Controllers
             ModelState.Remove("Contract.VehicleCategory");
             ModelState.Remove("Contract.VehicleColor");
             await ApplyVehicleLookupValuesAsync(contract);
+            ValidateCustomColorInput(viewModel);
             await ValidateVehicleLookupsAsync(contract);
             NormalizeManualVehicleModel(contract);
             NormalizeVehicleIdentityFields(contract);
@@ -184,6 +185,8 @@ namespace VehicleContractSystem_Final.Controllers
                     }
 
                     EnsureVerificationToken(contract);
+                    await EnsureCustomColorAsync(viewModel);
+                    await ApplyVehicleLookupValuesAsync(contract);
 
                     var vehicle = await GetOrCreateVehicleForNewContractAsync(contract, existingVehicle);
                     contract.VehicleId = vehicle.Id;
@@ -240,6 +243,7 @@ namespace VehicleContractSystem_Final.Controllers
             LogModelStateErrors();
             var rebuiltViewModel = await BuildContractViewModelAsync(contract);
             rebuiltViewModel.InitialPaidAmount = viewModel.InitialPaidAmount;
+            rebuiltViewModel.CustomColorName = viewModel.CustomColorName;
 
             return View(rebuiltViewModel);
         }
@@ -353,11 +357,6 @@ namespace VehicleContractSystem_Final.Controllers
                     existingContract.BuyerIdNumber = contract.BuyerIdNumber;
                     existingContract.VehiclePrice = contract.VehiclePrice;
                     existingContract.Notes = contract.Notes;
-                    existingContract.ProvinceId = contract.ProvinceId;
-                    existingContract.CityId = contract.CityId;
-                    existingContract.Neighborhood = contract.Neighborhood;
-                    existingContract.AlleyNumber = contract.AlleyNumber;
-                    existingContract.HouseNumber = contract.HouseNumber;
                     existingContract.LastModifiedAt = DateTime.Now;
                     existingContract.LastModifiedByUserId = (await _currentUserService.GetCurrentUserAsync())?.Id;
 
@@ -613,6 +612,12 @@ namespace VehicleContractSystem_Final.Controllers
             var licenseNumber = SnapshotOrLegacy(contract.LicenseNumberSnapshot, contract.LicenseNumber);
             var chassisNumber = SnapshotOrLegacy(contract.ChassisNumberSnapshot, contract.ChassisNumber);
             var manufactureYear = contract.ManufactureYearSnapshot ?? contract.ManufactureYear;
+            var vehicleProvinceName = contract.Province?.NameAr switch
+            {
+                "كربلاء" => "كربلاء المقدسة",
+                "النجف" => "النجف الأشرف",
+                _ => contract.Province?.NameAr
+            };
 
             using var ms = new MemoryStream();
             var document = new Document(PageSize.A4, 50, 50, 50, 50);
@@ -649,9 +654,11 @@ namespace VehicleContractSystem_Final.Controllers
             document.Add(new Paragraph("بيانات السيارة:", titleFont));
             document.Add(new Paragraph($"الماركة: {contract.VehicleBrand}", arabicFont));
             document.Add(new Paragraph($"صنف المركبة: {vehicleTypeName}", arabicFont));
-            document.Add(new Paragraph($"الموديل: {vehicleModelName}", arabicFont));
+            document.Add(new Paragraph($"نوع المركبة: {vehicleModelName}", arabicFont));
             document.Add(new Paragraph($"اللون: {vehicleColorName}", arabicFont));
             document.Add(new Paragraph($"سنة الصنع: {manufactureYear}", arabicFont));
+            document.Add(new Paragraph($"رقم السنوية: {contract.AnnualRegistrationNumber}", arabicFont));
+            document.Add(new Paragraph($"محافظة المركبة: {vehicleProvinceName}", arabicFont));
             document.Add(new Paragraph($"رقم المركبة: {licenseNumber}", arabicFont));
             document.Add(new Paragraph($"رقم الشاصي: {chassisNumber}", arabicFont));
             document.Add(new Paragraph(" "));
@@ -691,6 +698,8 @@ namespace VehicleContractSystem_Final.Controllers
             target.CreatedAt = source.CreatedAt;
             target.CreatedByUserId = source.CreatedByUserId;
             target.OfficeId = source.OfficeId;
+            target.ProvinceId = source.ProvinceId;
+            target.Province = source.Province;
             target.Status = source.Status;
             target.VehicleId = source.VehicleId;
             target.Vehicle = source.Vehicle;
@@ -797,6 +806,7 @@ namespace VehicleContractSystem_Final.Controllers
                     ? await _context.Cities.Where(c => c.ProvinceId == contract.ProvinceId).ToListAsync()
                     : new List<City>(),
                 VehicleTypes = await _context.VehicleTypes
+                    .OrderBy(v => v.Id)
                     .Select(v => new SelectListItem
                     {
                         Value = v.Id.ToString(),
@@ -845,16 +855,59 @@ namespace VehicleContractSystem_Final.Controllers
             contract.VehicleColor = color?.NameAr ?? string.Empty;
         }
 
+        private void ValidateCustomColorInput(ContractViewModel viewModel)
+        {
+            var contract = viewModel.Contract;
+            if (contract.ColorId != -1)
+                return;
+
+            var customColorName = (viewModel.CustomColorName ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(customColorName))
+            {
+                ModelState.AddModelError(nameof(viewModel.CustomColorName), "يرجى إدخال لون المركبة");
+            }
+        }
+
+        private async Task EnsureCustomColorAsync(ContractViewModel viewModel)
+        {
+            var contract = viewModel.Contract;
+            if (contract.ColorId != -1)
+                return;
+
+            var customColorName = (viewModel.CustomColorName ?? string.Empty).Trim();
+
+            var color = await _context.Colors
+                .FirstOrDefaultAsync(c => c.NameAr == customColorName);
+
+            if (color == null)
+            {
+                color = new VehicleContractSystem_Final.Models.Color
+                {
+                    NameAr = customColorName,
+                    NameEn = customColorName
+                };
+
+                _context.Colors.Add(color);
+                await _context.SaveChangesAsync();
+            }
+
+            contract.ColorId = color.Id;
+            contract.VehicleColor = color.NameAr;
+        }
+
         private async Task ValidateVehicleLookupsAsync(Contract contract)
         {
-            if (!contract.ColorId.HasValue || !await _context.Colors.AnyAsync(c => c.Id == contract.ColorId.Value))
+            if (contract.ColorId != -1 &&
+                (!contract.ColorId.HasValue || !await _context.Colors.AnyAsync(c => c.Id == contract.ColorId.Value)))
+            {
                 ModelState.AddModelError("Contract.ColorId", "يرجى اختيار لون مركبة صحيح");
+            }
 
             if (!contract.VehicleTypeId.HasValue || !await _context.VehicleTypes.AnyAsync(t => t.Id == contract.VehicleTypeId.Value))
                 ModelState.AddModelError("Contract.VehicleTypeId", "يرجى اختيار صنف مركبة صحيح");
 
             if (string.IsNullOrWhiteSpace(contract.VehicleModel))
-                ModelState.AddModelError("Contract.VehicleModel", "يرجى إدخال موديل المركبة");
+                ModelState.AddModelError("Contract.VehicleModel", "يرجى إدخال نوع المركبة");
         }
 
         private void ValidateCreateFinancialValues(ContractViewModel viewModel)
