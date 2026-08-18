@@ -156,12 +156,12 @@ namespace VehicleContractSystem_Final.Controllers
             ModelState.Remove("Contract.Vehicle");
             ModelState.Remove("Contract.VehicleId");
             ModelState.Remove("Contract.VehicleModelId");
+            ModelState.Remove("Contract.ColorId");
             ModelState.Remove("Contract.VehicleCategory");
-            ModelState.Remove("Contract.VehicleColor");
             await ApplyVehicleLookupValuesAsync(contract);
-            ValidateCustomColorInput(viewModel);
             await ValidateVehicleLookupsAsync(contract);
             NormalizeManualVehicleModel(contract);
+            NormalizeManualVehicleColor(contract);
             NormalizeVehicleIdentityFields(contract);
             ValidateCreateFinancialValues(viewModel);
             await ValidateVehicleIsNotBlockedForCreateAsync(contract);
@@ -185,7 +185,7 @@ namespace VehicleContractSystem_Final.Controllers
                     }
 
                     EnsureVerificationToken(contract);
-                    await EnsureCustomColorAsync(viewModel);
+                    await EnsureManualColorAsync(contract);
                     await ApplyVehicleLookupValuesAsync(contract);
 
                     var vehicle = await GetOrCreateVehicleForNewContractAsync(contract, existingVehicle);
@@ -243,7 +243,6 @@ namespace VehicleContractSystem_Final.Controllers
             LogModelStateErrors();
             var rebuiltViewModel = await BuildContractViewModelAsync(contract);
             rebuiltViewModel.InitialPaidAmount = viewModel.InitialPaidAmount;
-            rebuiltViewModel.CustomColorName = viewModel.CustomColorName;
 
             return View(rebuiltViewModel);
         }
@@ -847,44 +846,29 @@ namespace VehicleContractSystem_Final.Controllers
             var vehicleType = contract.VehicleTypeId.HasValue
                 ? await _context.VehicleTypes.FindAsync(contract.VehicleTypeId.Value)
                 : null;
-            var color = contract.ColorId.HasValue
+            var color = contract.ColorId.HasValue && string.IsNullOrWhiteSpace(contract.VehicleColor)
                 ? await _context.Colors.FindAsync(contract.ColorId.Value)
                 : null;
 
             contract.VehicleCategory = vehicleType?.NameAr ?? string.Empty;
-            contract.VehicleColor = color?.NameAr ?? string.Empty;
+            contract.VehicleColor = !string.IsNullOrWhiteSpace(contract.VehicleColor)
+                ? contract.VehicleColor.Trim()
+                : color?.NameAr ?? string.Empty;
         }
 
-        private void ValidateCustomColorInput(ContractViewModel viewModel)
+        private async Task EnsureManualColorAsync(Contract contract)
         {
-            var contract = viewModel.Contract;
-            if (contract.ColorId != -1)
-                return;
-
-            var customColorName = (viewModel.CustomColorName ?? string.Empty).Trim();
-            if (string.IsNullOrWhiteSpace(customColorName))
-            {
-                ModelState.AddModelError(nameof(viewModel.CustomColorName), "يرجى إدخال لون المركبة");
-            }
-        }
-
-        private async Task EnsureCustomColorAsync(ContractViewModel viewModel)
-        {
-            var contract = viewModel.Contract;
-            if (contract.ColorId != -1)
-                return;
-
-            var customColorName = (viewModel.CustomColorName ?? string.Empty).Trim();
+            var colorName = (contract.VehicleColor ?? string.Empty).Trim();
 
             var color = await _context.Colors
-                .FirstOrDefaultAsync(c => c.NameAr == customColorName);
+                .FirstOrDefaultAsync(c => c.NameAr == colorName);
 
             if (color == null)
             {
                 color = new VehicleContractSystem_Final.Models.Color
                 {
-                    NameAr = customColorName,
-                    NameEn = customColorName
+                    NameAr = colorName,
+                    NameEn = colorName
                 };
 
                 _context.Colors.Add(color);
@@ -897,10 +881,9 @@ namespace VehicleContractSystem_Final.Controllers
 
         private async Task ValidateVehicleLookupsAsync(Contract contract)
         {
-            if (contract.ColorId != -1 &&
-                (!contract.ColorId.HasValue || !await _context.Colors.AnyAsync(c => c.Id == contract.ColorId.Value)))
+            if (string.IsNullOrWhiteSpace(contract.VehicleColor))
             {
-                ModelState.AddModelError("Contract.ColorId", "يرجى اختيار لون مركبة صحيح");
+                ModelState.AddModelError("Contract.VehicleColor", "يرجى إدخال لون المركبة");
             }
 
             if (!contract.VehicleTypeId.HasValue || !await _context.VehicleTypes.AnyAsync(t => t.Id == contract.VehicleTypeId.Value))
@@ -931,6 +914,11 @@ namespace VehicleContractSystem_Final.Controllers
         private static void NormalizeManualVehicleModel(Contract contract)
         {
             contract.VehicleModel = (contract.VehicleModel ?? string.Empty).Trim();
+        }
+
+        private static void NormalizeManualVehicleColor(Contract contract)
+        {
+            contract.VehicleColor = (contract.VehicleColor ?? string.Empty).Trim();
         }
 
         private static void NormalizeVehicleIdentityFields(Contract contract)

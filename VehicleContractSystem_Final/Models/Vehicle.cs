@@ -32,6 +32,7 @@ namespace VehicleContractSystem_Final.Models
         public string LicenseNumber { get; set; } = string.Empty;
 
         [Display(Name = "سنة الصنع")]
+        [Range(1000, 9999, ErrorMessage = "سنة الصنع يجب أن تكون بصيغة أربع أرقام yyyy")]
         public int ManufactureYear { get; set; }
 
         [Required(ErrorMessage = "رقم الشاصي مطلوب")]

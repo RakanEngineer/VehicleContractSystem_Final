@@ -129,47 +129,11 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="border rounded p-2 h-100">
-                                    <div class="text-muted small">عنوان المالك</div>
-                                    <strong>@Model.Contract.CurrentOwnerAddress</strong>
+                                    <div class="text-muted small">رقم المركبة</div>
+                                    <strong>@licenseNumber</strong>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="border rounded p-2 h-100">
-                                    <div class="text-muted small">الماركة</div>
-                                    <strong>@Model.Contract.VehicleBrand</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="border rounded p-2 h-100">
-                                    <div class="text-muted small">صنف المركبة</div>
-                                    <strong>@vehicleTypeName</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="border rounded p-2 h-100">
-                                    <div class="text-muted small">نوع المركبة</div>
-                                    <strong>@vehicleModelName</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="border rounded p-2 h-100">
-                                    <div class="text-muted small">اللون</div>
-                                    <strong>@vehicleColorName</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="border rounded p-2 h-100">
-                                    <div class="text-muted small">سنة الصنع</div>
-                                    <strong>@manufactureYear</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="border rounded p-2 h-100">
-                                    <div class="text-muted small">رقم السنوية</div>
-                                    <strong>@Model.Contract.AnnualRegistrationNumber</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="border rounded p-2 h-100">
                                     <div class="text-muted small">محافظة المركبة</div>
                                     <strong>@vehicleProvinceName</strong>
@@ -177,14 +141,50 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="border rounded p-2 h-100">
-                                    <div class="text-muted small">رقم المركبة</div>
-                                    <strong>@licenseNumber</strong>
+                                    <div class="text-muted small">رقم السنوية</div>
+                                    <strong>@Model.Contract.AnnualRegistrationNumber</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">صنف المركبة</div>
+                                    <strong>@vehicleTypeName</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">سنة الصنع</div>
+                                    <strong>@manufactureYear</strong>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="border rounded p-2 h-100">
                                     <div class="text-muted small">رقم الشاصي</div>
                                     <strong>@chassisNumber</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">الماركة</div>
+                                    <strong>@Model.Contract.VehicleBrand</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">نوع المركبة</div>
+                                    <strong>@vehicleModelName</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">لون المركبة</div>
+                                    <strong>@vehicleColorName</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border rounded p-2 h-100">
+                                    <div class="text-muted small">عنوان المالك</div>
+                                    <strong>@Model.Contract.CurrentOwnerAddress</strong>
                                 </div>
                             </div>
                         </div>

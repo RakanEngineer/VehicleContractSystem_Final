@@ -18,6 +18,8 @@ namespace VehicleContractSystem_Final.Models.ViewModel
         [Display(Name = "لون المركبة")]
         public int? ColorId { get; set; }
 
+        [Display(Name = "سنة الصنع")]
+        [Range(1000, 9999, ErrorMessage = "سنة الصنع يجب أن تكون بصيغة أربع أرقام yyyy")]
         public int ManufactureYear { get; set; }
         public string LicenseNumber { get; set; } = string.Empty;
         public string ChassisNumber { get; set; } = string.Empty;

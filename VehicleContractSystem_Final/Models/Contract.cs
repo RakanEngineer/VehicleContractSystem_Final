@@ -103,13 +103,15 @@ namespace VehicleContractSystem_Final.Models
         public string VehicleModel { get; set; } = string.Empty;
 
         [Required]
+        [Range(1000, 9999, ErrorMessage = "سنة الصنع يجب أن تكون بصيغة أربع أرقام yyyy")]
         [Display(Name = "سنة الصنع")]
         public int ManufactureYear { get; set; }
 
         [Display(Name = "صنف المركبة")]
         public string VehicleCategory { get; set; } = string.Empty;
 
-        [Display(Name = "اللون")]
+        [Required(ErrorMessage = "يرجى إدخال لون المركبة")]
+        [Display(Name = "لون المركبة")]
         public string VehicleColor { get; set; } = string.Empty;
 
         [Required]

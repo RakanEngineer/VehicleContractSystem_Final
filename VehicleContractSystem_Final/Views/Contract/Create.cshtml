@@ -110,6 +110,20 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
+                                <label asp-for="Contract.LicenseNumber" class="form-label"></label>
+                                <input asp-for="Contract.LicenseNumber" class="form-control" />
+                                <span asp-validation-for="Contract.LicenseNumber" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Contract.ProvinceId" class="form-label"></label>
+                                <select asp-for="Contract.ProvinceId" asp-items="Model.ProvinceList" class="form-select">
+                                    <option value="">اختر محافظة المركبة</option>
+                                </select>
+                                <span asp-validation-for="Contract.ProvinceId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
                                 <label asp-for="Contract.AnnualRegistrationNumber" class="form-label"></label>
                                 <input asp-for="Contract.AnnualRegistrationNumber" class="form-control" />
                                 <span asp-validation-for="Contract.AnnualRegistrationNumber" class="text-danger"></span>
@@ -124,11 +138,21 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.ProvinceId" class="form-label"></label>
-                                <select asp-for="Contract.ProvinceId" asp-items="Model.ProvinceList" class="form-select">
-                                    <option value="">اختر محافظة المركبة</option>
-                                </select>
-                                <span asp-validation-for="Contract.ProvinceId" class="text-danger"></span>
+                                <label asp-for="Contract.ManufactureYear" class="form-label"></label>
+                                <input asp-for="Contract.ManufactureYear"
+                                       class="form-control"
+                                       type="text"
+                                       inputmode="numeric"
+                                       pattern="[0-9]{4}"
+                                       maxlength="4"
+                                       placeholder="yyyy" />
+                                <span asp-validation-for="Contract.ManufactureYear" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Contract.ChassisNumber" class="form-label"></label>
+                                <input asp-for="Contract.ChassisNumber" class="form-control" />
+                                <span asp-validation-for="Contract.ChassisNumber" class="text-danger"></span>
                             </div>
 
                             <div class="col-md-6 mb-3">
@@ -144,43 +168,9 @@
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.ColorId" class="form-label"></label>
-                                <select asp-for="Contract.ColorId" asp-items="Model.ColorList" class="form-select" id="colorSelect">
-                                    <option value="">اختر لون المركبة</option>
-                                    @if (Model.Contract.ColorId == -1)
-                                    {
-                                        <option value="-1" selected>لون آخر</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="-1">لون آخر</option>
-                                    }
-                                </select>
-                                <span asp-validation-for="Contract.ColorId" class="text-danger"></span>
-                            </div>
-
-                            <div class="col-md-6 mb-3" id="customColorBox" style="display:none;">
-                                <label asp-for="CustomColorName" class="form-label">أدخل لون المركبة</label>
-                                <input asp-for="CustomColorName" class="form-control" placeholder="مثال: زيتي، ذهبي، عنابي" />
-                                <span asp-validation-for="CustomColorName" class="text-danger"></span>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.ManufactureYear" class="form-label"></label>
-                                <input asp-for="Contract.ManufactureYear" class="form-control" type="number" min="1990" max="2026" />
-                                <span asp-validation-for="Contract.ManufactureYear" class="text-danger"></span>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.LicenseNumber" class="form-label"></label>
-                                <input asp-for="Contract.LicenseNumber" class="form-control" />
-                                <span asp-validation-for="Contract.LicenseNumber" class="text-danger"></span>
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="Contract.ChassisNumber" class="form-label"></label>
-                                <input asp-for="Contract.ChassisNumber" class="form-control" />
-                                <span asp-validation-for="Contract.ChassisNumber" class="text-danger"></span>
+                                <label asp-for="Contract.VehicleColor" class="form-label">لون المركبة</label>
+                                <input asp-for="Contract.VehicleColor" class="form-control" placeholder="مثال: أبيض، أسود، زيتي، ذهبي" />
+                                <span asp-validation-for="Contract.VehicleColor" class="text-danger"></span>
                             </div>
                         </div>
                     </div>
@@ -278,14 +268,6 @@
 
             $('#vehiclePrice, #initialPaidAmount').on('input', calculateRemaining);
             calculateRemaining();
-
-            function toggleCustomColor() {
-                var isCustomColor = $('#colorSelect').val() === '-1';
-                $('#customColorBox').toggle(isCustomColor);
-            }
-
-            $('#colorSelect').on('change', toggleCustomColor);
-            toggleCustomColor();
 
         });
     </script>

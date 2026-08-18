@@ -185,48 +185,46 @@
                     <h5 class="mb-0"><i class="bi bi-car-front"></i> بيانات المركبة</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <strong>الماركة:</strong><br />
-                            @Model.VehicleBrand
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <strong>اسم المالك:</strong><br />
+                            @Model.CurrentOwnerName
                         </div>
-                        <div class="col-md-3">
-                            <strong>نوع المركبة:</strong><br />
-                            @vehicleModelName
+                        <div class="col-md-6">
+                            <strong>رقم المركبة:</strong><br />
+                            <span class="fs-5 text-primary">@licenseNumber</span>
                         </div>
-                        <div class="col-md-3">
-                            <strong>اللون:</strong><br />
-                            @vehicleColorName
-                        </div>
-                        <div class="col-md-3">
-                            <strong>سنة الصنع:</strong><br />
-                            @manufactureYear
-                        </div>
-                    </div>
-                    <hr />
-                    <div class="row">
-                        <div class="col-md-4">
-                            <strong>صنف المركبة:</strong><br />
-                            @vehicleTypeName
-                        </div>
-                        <div class="col-md-4">
-                            <strong>رقم السنوية:</strong><br />
-                            @Model.AnnualRegistrationNumber
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <strong>محافظة المركبة:</strong><br />
                             @vehicleProvinceName
                         </div>
-                    </div>
-                    <hr />
-                    <div class="row">
                         <div class="col-md-6">
-                            <strong>رقم اللوحة:</strong><br />
-                            <span class="fs-5 text-primary">@licenseNumber</span>
+                            <strong>رقم السنوية:</strong><br />
+                            @Model.AnnualRegistrationNumber
+                        </div>
+                        <div class="col-md-6">
+                            <strong>صنف المركبة:</strong><br />
+                            @vehicleTypeName
+                        </div>
+                        <div class="col-md-6">
+                            <strong>سنة الصنع:</strong><br />
+                            @manufactureYear
                         </div>
                         <div class="col-md-6">
                             <strong>رقم الشاصي:</strong><br />
                             <span class="fs-6">@chassisNumber</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>الماركة:</strong><br />
+                            @Model.VehicleBrand
+                        </div>
+                        <div class="col-md-6">
+                            <strong>نوع المركبة:</strong><br />
+                            @vehicleModelName
+                        </div>
+                        <div class="col-md-6">
+                            <strong>لون المركبة:</strong><br />
+                            @vehicleColorName
                         </div>
                     </div>
                 </div>
