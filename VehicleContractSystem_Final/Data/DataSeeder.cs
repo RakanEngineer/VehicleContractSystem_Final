@@ -9,49 +9,100 @@ namespace VehicleContractSystem_Final.Data
 {
     public static class DataSeeder
     {
-        private const string DefaultPassword = "Admin@123";
-
         private static ApplicationDbContext _context = default!;
         private static RoleManager<IdentityRole> _roleManager = default!;
         private static UserManager<ApplicationUser> _userManager = default!;
 
-        public static async Task SeedAsync(
+        public static async Task SeedDevelopmentAsync(
             ApplicationDbContext context,
             IServiceProvider services,
-            IWebHostEnvironment env)
+            IConfiguration configuration)
         {
             _context = context;
             _roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
             _userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
 
-            await SeedCoreAsync();
-
-            if (env.IsDevelopment())
-            {
-                await SeedDemoAsync();
-                await BackfillContractVehiclesAsync();
-                await SyncVehicleStatusesAsync();
-            }
-        }
-
-        private static async Task SeedCoreAsync()
-        {
             await AddRolesAsync([RolesNames.SuperAdmin, RolesNames.OfficeAdmin, RolesNames.User]);
             await SeedCoreReferenceDataAsync();
 
+            if (configuration.GetValue<bool>("DevelopmentSeed:Enabled"))
+            {
+                var developmentPassword = GetRequiredConfigurationValue(
+                    configuration,
+                    "DevelopmentSeed:Password");
+
+                await SeedDevelopmentSuperAdminAsync(developmentPassword);
+                await SeedDemoAsync(developmentPassword);
+            }
+
+            await BackfillContractVehiclesAsync();
+            await SyncVehicleStatusesAsync();
+        }
+
+        public static async Task SeedReferenceDataAsync(
+            ApplicationDbContext context,
+            IServiceProvider services)
+        {
+            _context = context;
+            _roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+            _userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+
+            await AddRolesAsync([RolesNames.SuperAdmin, RolesNames.OfficeAdmin, RolesNames.User]);
+            await SeedCoreReferenceDataAsync();
+        }
+
+        public static async Task ProvisionFirstAdminAsync(
+            ApplicationDbContext context,
+            IServiceProvider services,
+            IConfiguration configuration)
+        {
+            if (!configuration.GetValue<bool>("FirstAdminProvisioning:Enabled"))
+                return;
+
+            _context = context;
+            _roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+            _userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+
+            await AddRolesAsync([RolesNames.SuperAdmin, RolesNames.OfficeAdmin, RolesNames.User]);
+
+            var superAdminUsers = await _userManager.GetUsersInRoleAsync(RolesNames.SuperAdmin);
+            if (superAdminUsers.Any())
+                return;
+
+            var email = GetRequiredProvisioningValue(configuration, "Email");
+            var password = GetRequiredProvisioningValue(configuration, "Password");
+            var firstName = configuration["FirstAdminProvisioning:FirstName"] ?? "مدير";
+            var lastName = configuration["FirstAdminProvisioning:LastName"] ?? "النظام";
+            var personalNumber = GetRequiredProvisioningValue(configuration, "PersonalNumber");
+            var phoneNumber = configuration["FirstAdminProvisioning:PhoneNumber"] ?? string.Empty;
+
+            await CreateUserAsync(
+                email: email,
+                firstName: firstName,
+                lastName: lastName,
+                personalNumber: personalNumber,
+                password: password,
+                phoneNumber: phoneNumber,
+                role: RolesNames.SuperAdmin,
+                officeId: null,
+                isApproved: true);
+        }
+
+        private static async Task SeedDevelopmentSuperAdminAsync(string password)
+        {
             await CreateUserAsync(
                 email: "admin@vehiclecontract.se",
                 firstName: "مدير",
                 lastName: "النظام",
                 personalNumber: "1980010111111",
-                password: DefaultPassword,
+                password: password,
                 phoneNumber: "0760000000",
                 role: RolesNames.SuperAdmin,
                 officeId: null,
                 isApproved: true);
         }
 
-        private static async Task SeedDemoAsync()
+        private static async Task SeedDemoAsync(string password)
         {
             var mainOffice = await CreateOfficeAsync(
                 name: "مكتب بغداد التجريبي",
@@ -72,7 +123,7 @@ namespace VehicleContractSystem_Final.Data
                 firstName: "مدير",
                 lastName: "مكتب بغداد",
                 personalNumber: "1976010111111",
-                password: DefaultPassword,
+                password: password,
                 phoneNumber: "0780000001",
                 role: RolesNames.OfficeAdmin,
                 officeId: mainOffice.Id,
@@ -83,7 +134,7 @@ namespace VehicleContractSystem_Final.Data
                 firstName: "موظف",
                 lastName: "موافق عليه",
                 personalNumber: "1984010122222",
-                password: DefaultPassword,
+                password: password,
                 phoneNumber: "0790000001",
                 role: RolesNames.User,
                 officeId: mainOffice.Id,
@@ -94,7 +145,7 @@ namespace VehicleContractSystem_Final.Data
                 firstName: "مستخدم",
                 lastName: "قيد الموافقة",
                 personalNumber: "1990010133333",
-                password: DefaultPassword,
+                password: password,
                 phoneNumber: "0790000002",
                 role: RolesNames.User,
                 officeId: null,
@@ -231,6 +282,20 @@ namespace VehicleContractSystem_Final.Data
                 if (!result.Succeeded)
                     throw new InvalidOperationException(string.Join("\n", result.Errors.Select(e => e.Description)));
             }
+        }
+
+        private static string GetRequiredProvisioningValue(IConfiguration configuration, string key)
+        {
+            return GetRequiredConfigurationValue(configuration, $"FirstAdminProvisioning:{key}");
+        }
+
+        private static string GetRequiredConfigurationValue(IConfiguration configuration, string key)
+        {
+            var value = configuration[key];
+            if (string.IsNullOrWhiteSpace(value))
+                throw new InvalidOperationException($"{key} is required when the related provisioning option is enabled.");
+
+            return value.Trim();
         }
 
         private static async Task AddRoleToUserAsync(ApplicationUser user, string role)

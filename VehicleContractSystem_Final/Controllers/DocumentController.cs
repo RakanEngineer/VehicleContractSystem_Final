@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 using VehicleContractSystem_Final.Data;
 using VehicleContractSystem_Final.Enums;
 using VehicleContractSystem_Final.Models;
@@ -20,32 +21,35 @@ namespace VehicleContractSystem_Final.Controllers
             ".png"
         };
 
-        private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly IReadOnlyDictionary<string, string> AllowedContentTypesByExtension =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            "application/pdf",
-            "image/jpeg",
-            "image/png"
+            [".pdf"] = "application/pdf",
+            [".jpg"] = "image/jpeg",
+            [".jpeg"] = "image/jpeg",
+            [".png"] = "image/png"
         };
 
         private readonly ApplicationDbContext _context;
         private readonly ICurrentUserService _currentUserService;
         private readonly IAuditService _auditService;
-        private readonly IWebHostEnvironment _environment;
+        private readonly IFileStorage _fileStorage;
 
         public DocumentController(
             ApplicationDbContext context,
             ICurrentUserService currentUserService,
             IAuditService auditService,
-            IWebHostEnvironment environment)
+            IFileStorage fileStorage)
         {
             _context = context;
             _currentUserService = currentUserService;
             _auditService = auditService;
-            _environment = environment;
+            _fileStorage = fileStorage;
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequestSizeLimit(MaxFileSize)]
         public async Task<IActionResult> Upload(
             int contractId,
             ContractDocumentType documentType,
@@ -62,26 +66,18 @@ namespace VehicleContractSystem_Final.Controllers
             if (!await _currentUserService.CanAccessContract(contract))
                 return Forbid();
 
-            var validationError = ValidateFile(file);
-            if (validationError != null)
+            var validationResult = await ValidateAndReadFileAsync(file);
+            if (!validationResult.IsValid)
             {
-                TempData["ErrorMessage"] = validationError;
+                TempData["ErrorMessage"] = validationResult.ErrorMessage;
                 return RedirectToAction("Details", "Contract", new { id = contract.Id });
             }
 
-            var extension = Path.GetExtension(file!.FileName);
-            var storedFileName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
-            var uploadRoot = Path.Combine(_environment.WebRootPath, "uploads", "contracts", contract.Id.ToString());
-            Directory.CreateDirectory(uploadRoot);
-
-            var fullPath = Path.Combine(uploadRoot, storedFileName);
-            await using (var stream = System.IO.File.Create(fullPath))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            var relativePath = Path.Combine("uploads", "contracts", contract.Id.ToString(), storedFileName)
-                .Replace('\\', '/');
+            validationResult.Content.Position = 0;
+            var storedFile = await _fileStorage.SaveContractDocumentAsync(
+                contract.Id,
+                validationResult.Content,
+                validationResult.Extension);
             var currentUser = await _currentUserService.GetCurrentUserAsync();
 
             var document = new ContractDocument
@@ -90,10 +86,13 @@ namespace VehicleContractSystem_Final.Controllers
                 VehicleId = contract.VehicleId,
                 UploadedByUserId = currentUser?.Id,
                 DocumentType = documentType,
-                OriginalFileName = Path.GetFileName(file.FileName),
-                StoredFileName = storedFileName,
-                FilePath = relativePath,
-                ContentType = file.ContentType,
+                OriginalFileName = Path.GetFileName(file!.FileName),
+                StoredFileName = storedFile.StoredFileName,
+                FilePath = storedFile.FilePath,
+                ContentType = validationResult.ContentType,
+                Sha256Hash = validationResult.Sha256Hash,
+                StorageProvider = _fileStorage.ProviderName,
+                MalwareScanStatus = "Pending",
                 FileSize = file.Length,
                 Notes = (notes ?? string.Empty).Trim(),
                 UploadedAt = DateTime.Now,
@@ -107,7 +106,7 @@ namespace VehicleContractSystem_Final.Controllers
                 "رفع مستند",
                 "ContractDocument",
                 document.Id.ToString(),
-                $"تم رفع مستند للعقد رقم {contract.ContractNumber}: {document.OriginalFileName}");
+                $"تم رفع مستند للعقد رقم {contract.ContractNumber}: {document.OriginalFileName}، SHA-256: {document.Sha256Hash}");
 
             TempData["SuccessMessage"] = "تم رفع المستند بنجاح";
             return RedirectToAction("Details", "Contract", new { id = contract.Id });
@@ -127,8 +126,11 @@ namespace VehicleContractSystem_Final.Controllers
             if (!await _currentUserService.CanAccessContract(document.Contract))
                 return Forbid();
 
-            var fullPath = BuildSafeDocumentPath(document);
-            if (fullPath == null || !System.IO.File.Exists(fullPath))
+            var storedFile = await _fileStorage.OpenContractDocumentAsync(
+                document.ContractId,
+                document.StoredFileName,
+                document.FilePath);
+            if (storedFile == null)
                 return NotFound();
 
             await _auditService.LogAsync(
@@ -137,7 +139,7 @@ namespace VehicleContractSystem_Final.Controllers
                 document.Id.ToString(),
                 $"تم تنزيل مستند للعقد رقم {document.Contract.ContractNumber}: {document.OriginalFileName}");
 
-            return PhysicalFile(fullPath, document.ContentType, document.OriginalFileName);
+            return File(storedFile.Content, document.ContentType, document.OriginalFileName);
         }
 
         [HttpPost]
@@ -168,40 +170,124 @@ namespace VehicleContractSystem_Final.Controllers
             return RedirectToAction("Details", "Contract", new { id = document.ContractId });
         }
 
-        private static string? ValidateFile(IFormFile? file)
+        private static async Task<FileValidationResult> ValidateAndReadFileAsync(IFormFile? file)
         {
             if (file == null || file.Length == 0)
-                return "يرجى اختيار ملف للرفع";
+                return FileValidationResult.Invalid("يرجى اختيار ملف للرفع");
 
             if (file.Length > MaxFileSize)
-                return "حجم الملف يجب ألا يتجاوز 5MB";
+                return FileValidationResult.Invalid("حجم الملف يجب ألا يتجاوز 5MB");
 
             var extension = Path.GetExtension(file.FileName);
             if (string.IsNullOrWhiteSpace(extension) || !AllowedExtensions.Contains(extension))
-                return "نوع الملف غير مسموح. الملفات المسموحة: PDF، JPG، PNG";
+                return FileValidationResult.Invalid("نوع الملف غير مسموح. الملفات المسموحة: PDF، JPG، PNG");
 
-            if (string.IsNullOrWhiteSpace(file.ContentType) || !AllowedContentTypes.Contains(file.ContentType))
-                return "نوع محتوى الملف غير مسموح";
+            await using var input = file.OpenReadStream();
+            var content = new MemoryStream();
+            await input.CopyToAsync(content);
 
-            return null;
+            if (content.Length != file.Length || content.Length > MaxFileSize)
+                return FileValidationResult.Invalid("حجم الملف غير صالح");
+
+            content.Position = 0;
+            if (!TryDetectContentType(content, extension, out var detectedContentType))
+                return FileValidationResult.Invalid("محتوى الملف لا يطابق نوع الملف المسموح");
+
+            if (!AllowedContentTypesByExtension.TryGetValue(extension, out var expectedContentType) ||
+                !string.Equals(expectedContentType, detectedContentType, StringComparison.OrdinalIgnoreCase))
+            {
+                return FileValidationResult.Invalid("امتداد الملف لا يطابق محتواه الفعلي");
+            }
+
+            content.Position = 0;
+            var sha256Hash = Convert.ToHexString(await SHA256.HashDataAsync(content)).ToLowerInvariant();
+            content.Position = 0;
+
+            return FileValidationResult.Valid(
+                content,
+                extension.ToLowerInvariant(),
+                detectedContentType,
+                sha256Hash);
         }
 
-        private string? BuildSafeDocumentPath(ContractDocument document)
+        private static bool TryDetectContentType(Stream content, string extension, out string contentType)
         {
-            if (document.ContractId <= 0 || string.IsNullOrWhiteSpace(document.StoredFileName))
-                return null;
+            contentType = string.Empty;
+            Span<byte> header = stackalloc byte[8];
+            content.Position = 0;
+            var bytesRead = content.Read(header);
+            content.Position = 0;
 
-            var fileName = Path.GetFileName(document.StoredFileName);
-            var uploadRoot = Path.GetFullPath(Path.Combine(
-                _environment.WebRootPath,
-                "uploads",
-                "contracts",
-                document.ContractId.ToString()));
-            var fullPath = Path.GetFullPath(Path.Combine(uploadRoot, fileName));
+            if (bytesRead >= 5 &&
+                header[0] == 0x25 &&
+                header[1] == 0x50 &&
+                header[2] == 0x44 &&
+                header[3] == 0x46 &&
+                header[4] == 0x2D)
+            {
+                contentType = "application/pdf";
+                return true;
+            }
 
-            return fullPath.StartsWith(uploadRoot, StringComparison.OrdinalIgnoreCase)
-                ? fullPath
-                : null;
+            if (bytesRead >= 3 &&
+                header[0] == 0xFF &&
+                header[1] == 0xD8 &&
+                header[2] == 0xFF)
+            {
+                contentType = "image/jpeg";
+                return true;
+            }
+
+            if (bytesRead >= 8 &&
+                header[0] == 0x89 &&
+                header[1] == 0x50 &&
+                header[2] == 0x4E &&
+                header[3] == 0x47 &&
+                header[4] == 0x0D &&
+                header[5] == 0x0A &&
+                header[6] == 0x1A &&
+                header[7] == 0x0A)
+            {
+                contentType = "image/png";
+                return true;
+            }
+
+            return false;
+        }
+
+        private sealed class FileValidationResult
+        {
+            public bool IsValid { get; private init; }
+            public string ErrorMessage { get; private init; } = string.Empty;
+            public MemoryStream Content { get; private init; } = new();
+            public string Extension { get; private init; } = string.Empty;
+            public string ContentType { get; private init; } = string.Empty;
+            public string Sha256Hash { get; private init; } = string.Empty;
+
+            public static FileValidationResult Invalid(string errorMessage)
+            {
+                return new FileValidationResult
+                {
+                    IsValid = false,
+                    ErrorMessage = errorMessage
+                };
+            }
+
+            public static FileValidationResult Valid(
+                MemoryStream content,
+                string extension,
+                string contentType,
+                string sha256Hash)
+            {
+                return new FileValidationResult
+                {
+                    IsValid = true,
+                    Content = content,
+                    Extension = extension,
+                    ContentType = contentType,
+                    Sha256Hash = sha256Hash
+                };
+            }
         }
     }
 }

@@ -45,6 +45,7 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<IFileStorage, LocalPrivateFileStorage>();
 builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>();
 builder.Services.AddHttpContextAccessor();
 
@@ -54,7 +55,19 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
-    await DataSeeder.SeedAsync(context, services, app.Environment);
+    if (app.Environment.IsDevelopment())
+    {
+        await DataSeeder.SeedDevelopmentAsync(context, services, app.Configuration);
+    }
+    else
+    {
+        if (app.Configuration.GetValue<bool>("Seed:EnableReferenceData"))
+        {
+            await DataSeeder.SeedReferenceDataAsync(context, services);
+        }
+
+        await DataSeeder.ProvisionFirstAdminAsync(context, services, app.Configuration);
+    }
 }
 
 // Configure the HTTP request pipeline.
@@ -70,6 +83,16 @@ else
 }
 
 app.UseHttpsRedirection();
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/uploads/contracts", StringComparison.OrdinalIgnoreCase))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+
+    await next();
+});
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();

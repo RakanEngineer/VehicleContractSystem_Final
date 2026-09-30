@@ -39,6 +39,18 @@ namespace VehicleContractSystem_Final.Models
         [Display(Name = "نوع المحتوى")]
         public string ContentType { get; set; } = string.Empty;
 
+        [MaxLength(64)]
+        [Display(Name = "بصمة SHA-256")]
+        public string? Sha256Hash { get; set; }
+
+        [MaxLength(100)]
+        [Display(Name = "مزود التخزين")]
+        public string? StorageProvider { get; set; }
+
+        [MaxLength(50)]
+        [Display(Name = "حالة فحص الحماية")]
+        public string? MalwareScanStatus { get; set; }
+
         [Display(Name = "حجم الملف")]
         public long FileSize { get; set; }
 
