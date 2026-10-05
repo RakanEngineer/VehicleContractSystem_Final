@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VehicleContractSystem_Final.Data;
@@ -5,6 +6,16 @@ using VehicleContractSystem_Final.Models;
 using VehicleContractSystem_Final.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var dataProtectionKeysPath =
+    builder.Configuration["DataProtection:KeysPath"];
+
+if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+{
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath))
+        .SetApplicationName("VehicleContractSystem");
+}
 
 builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation();
