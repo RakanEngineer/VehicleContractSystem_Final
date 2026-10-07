@@ -1,9 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Text;
+using System.Text.Encodings.Web;
 using VehicleContractSystem_Final.Data;
 using VehicleContractSystem_Final.Models;
 using VehicleContractSystem_Final.Models.ViewModel;
@@ -21,6 +25,8 @@ namespace VehicleContractSystem_Final.Controllers
         private readonly IEmailService _emailService;
         private readonly IWhatsAppService _whatsAppService;
         private readonly IAuditService _auditService;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<AccountController> _logger;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -30,7 +36,9 @@ namespace VehicleContractSystem_Final.Controllers
             INotificationService notificationService,
             IEmailService emailService,
             IWhatsAppService whatsAppService,
-            IAuditService auditService)
+            IAuditService auditService,
+            IConfiguration configuration,
+            ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -40,15 +48,18 @@ namespace VehicleContractSystem_Final.Controllers
             _emailService = emailService;
             _whatsAppService = whatsAppService;
             _auditService = auditService;
+            _configuration = configuration;
+            _logger = logger;
         }
 
         // GET: Account/Register
         [AllowAnonymous]
-        public IActionResult Register()
+        public async Task<IActionResult> Register()
         {
             if (User.Identity?.IsAuthenticated == true)
                 return RedirectToAction("Index", "Home");
 
+            await SetGoogleLoginAvailabilityAsync();
             return View();
         }
 
@@ -58,6 +69,8 @@ namespace VehicleContractSystem_Final.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
+            await SetGoogleLoginAvailabilityAsync();
+
             if (ModelState.IsValid)
             {
                 var user = new ApplicationUser
@@ -112,12 +125,13 @@ namespace VehicleContractSystem_Final.Controllers
 
         // GET: Account/Login
         [AllowAnonymous]
-        public IActionResult Login(string? returnUrl = null)
+        public async Task<IActionResult> Login(string? returnUrl = null)
         {
             if (User.Identity?.IsAuthenticated == true)
                 return RedirectToAction("Index", "Home");
 
             ViewData["ReturnUrl"] = returnUrl;
+            await SetGoogleLoginAvailabilityAsync();
             return View();
         }
 
@@ -128,6 +142,7 @@ namespace VehicleContractSystem_Final.Controllers
         public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
+            await SetGoogleLoginAvailabilityAsync();
 
             if (ModelState.IsValid)
             {
@@ -177,6 +192,123 @@ namespace VehicleContractSystem_Final.Controllers
             }
 
             return View(model);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ForgotPassword()
+        {
+            return View(new ForgotPasswordViewModel());
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userManager.FindByEmailAsync(model.Email.Trim());
+            if (user != null && user.IsApproved && !string.IsNullOrWhiteSpace(user.Email))
+            {
+                if (TryGetPublicBaseUrl(out var publicBaseUrl))
+                {
+                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+                    var resetUrl = BuildResetPasswordUrl(publicBaseUrl, user.Email, encodedToken);
+                    var encodedResetUrl = HtmlEncoder.Default.Encode(resetUrl);
+                    var body = $"""
+                        <div dir="rtl" style="font-family: Tahoma, Arial, sans-serif; text-align: right;">
+                            <h2>إعادة تعيين كلمة المرور</h2>
+                            <p>تلقينا طلباً لإعادة تعيين كلمة المرور الخاصة بحسابك.</p>
+                            <p><a href="{encodedResetUrl}">اضغط هنا لاختيار كلمة مرور جديدة</a></p>
+                            <p>إذا لم تطلب إعادة تعيين كلمة المرور، يمكنك تجاهل هذه الرسالة.</p>
+                        </div>
+                        """;
+
+                    await _emailService.SendEmailAsync(
+                        user.Email,
+                        "إعادة تعيين كلمة المرور",
+                        body);
+                }
+                else
+                {
+                    _logger.LogError(
+                        "Password reset email could not be generated because Application:PublicBaseUrl is missing or invalid.");
+                }
+            }
+
+            return RedirectToAction(nameof(ForgotPasswordConfirmation));
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPassword(string? email, string? token)
+        {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token))
+            {
+                TempData["ErrorMessage"] = "رابط إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية";
+                return RedirectToAction(nameof(ForgotPassword));
+            }
+
+            return View(new ResetPasswordViewModel
+            {
+                Email = email,
+                Token = token
+            });
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            string decodedToken;
+            try
+            {
+                decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(model.Token));
+            }
+            catch (FormatException)
+            {
+                ModelState.AddModelError(string.Empty, "رابط إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية");
+                return View(model);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email.Trim());
+            if (user == null || !user.IsApproved)
+            {
+                ModelState.AddModelError(string.Empty, "رابط إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية");
+                return View(model);
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, decodedToken, model.NewPassword);
+            if (result.Succeeded)
+                return RedirectToAction(nameof(ResetPasswordConfirmation));
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, GetSafeIdentityError(error));
+            }
+
+            return View(model);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPasswordConfirmation()
+        {
+            return View();
         }
 
         // POST: Account/Logout
@@ -233,8 +365,16 @@ namespace VehicleContractSystem_Final.Controllers
         // GET: Account/ExternalLogin
         [AllowAnonymous]
         [HttpPost]
-        public IActionResult ExternalLogin(string provider, string? returnUrl = null)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ExternalLogin(string provider, string? returnUrl = null)
         {
+            if (!string.Equals(provider, GoogleDefaults.AuthenticationScheme, StringComparison.Ordinal) ||
+                !await IsGoogleLoginAvailableAsync())
+            {
+                TempData["ErrorMessage"] = "تسجيل الدخول بواسطة Google غير متاح حالياً";
+                return RedirectToAction(nameof(Login));
+            }
+
             var redirectUrl = Url.Action("ExternalLoginCallback", "Account", new { returnUrl });
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
             return Challenge(properties, provider);
@@ -246,8 +386,9 @@ namespace VehicleContractSystem_Final.Controllers
         {
             if (remoteError != null)
             {
-                TempData["ErrorMessage"] = $"خطأ في تسجيل الدخول: {remoteError}";
-                return RedirectToAction("Login");
+                _logger.LogWarning("Google authentication returned an error: {RemoteError}", remoteError);
+                TempData["ErrorMessage"] = "تعذر إكمال تسجيل الدخول بواسطة Google";
+                return RedirectToAction(nameof(Login));
             }
 
             var info = await _signInManager.GetExternalLoginInfoAsync();
@@ -261,7 +402,7 @@ namespace VehicleContractSystem_Final.Controllers
                 info.LoginProvider,
                 info.ProviderKey,
                 isPersistent: false,
-                bypassTwoFactor: true
+                bypassTwoFactor: false
             );
 
             if (result.Succeeded)
@@ -277,17 +418,42 @@ namespace VehicleContractSystem_Final.Controllers
                 return RedirectToLocal(returnUrl);
             }
 
+            if (result.RequiresTwoFactor)
+            {
+                TempData["ErrorMessage"] = "يتطلب هذا الحساب تحققاً إضافياً لإكمال تسجيل الدخول";
+                return RedirectToAction(nameof(Login));
+            }
+
+            if (result.IsLockedOut)
+            {
+                TempData["ErrorMessage"] = "تعذر تسجيل الدخول إلى الحساب حالياً";
+                return RedirectToAction(nameof(Login));
+            }
+
             // Create new user if doesn't exist
             ViewData["ReturnUrl"] = returnUrl;
             ViewData["Provider"] = info.LoginProvider;
 
-            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            if (!TryGetVerifiedExternalEmail(info, out var email))
+            {
+                _logger.LogWarning("Google authentication did not provide a verified email claim.");
+                TempData["ErrorMessage"] = "تعذر التحقق من البريد الإلكتروني لحساب Google";
+                return RedirectToAction(nameof(Login));
+            }
+
+            if (await _userManager.FindByEmailAsync(email) != null)
+            {
+                _logger.LogWarning("Google login was not linked because its email belongs to an existing local account.");
+                TempData["ErrorMessage"] = "يتعذر ربط حساب Google بهذا الحساب تلقائياً. استخدم طريقة تسجيل الدخول الحالية";
+                return RedirectToAction(nameof(Login));
+            }
+
             var firstName = info.Principal.FindFirstValue(ClaimTypes.GivenName) ?? "";
             var lastName = info.Principal.FindFirstValue(ClaimTypes.Surname) ?? "";
 
             return View("ExternalLoginConfirmation", new ExternalLoginViewModel
             {
-                Email = email ?? "",
+                Email = email,
                 FirstName = firstName,
                 LastName = lastName
             });
@@ -299,18 +465,31 @@ namespace VehicleContractSystem_Final.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ExternalLoginConfirmation(ExternalLoginViewModel model, string? returnUrl = null)
         {
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null ||
+                !string.Equals(info.LoginProvider, GoogleDefaults.AuthenticationScheme, StringComparison.Ordinal) ||
+                !TryGetVerifiedExternalEmail(info, out var providerEmail))
+            {
+                TempData["ErrorMessage"] = "تعذر التحقق من بيانات حساب Google";
+                return RedirectToAction(nameof(Login));
+            }
+
+            ModelState.Remove(nameof(ExternalLoginViewModel.Email));
+            model.Email = providerEmail;
+
             if (ModelState.IsValid)
             {
-                var info = await _signInManager.GetExternalLoginInfoAsync();
-                if (info == null)
+                if (await _userManager.FindByEmailAsync(providerEmail) != null)
                 {
-                    return RedirectToAction("Login");
+                    _logger.LogWarning("Google account creation was rejected because its email belongs to an existing account.");
+                    TempData["ErrorMessage"] = "يتعذر ربط حساب Google بهذا الحساب تلقائياً. استخدم طريقة تسجيل الدخول الحالية";
+                    return RedirectToAction(nameof(Login));
                 }
 
                 var user = new ApplicationUser
                 {
-                    UserName = model.Email,
-                    Email = model.Email,
+                    UserName = providerEmail,
+                    Email = providerEmail,
                     FirstName = model.FirstName,
                     LastName = model.LastName,
                     PersonalNumber = model.PersonalNumber,
@@ -326,7 +505,14 @@ namespace VehicleContractSystem_Final.Controllers
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
                     {
-                        await _userManager.AddToRoleAsync(user, "User");
+                        var roleResult = await _userManager.AddToRoleAsync(user, "User");
+                        if (!roleResult.Succeeded)
+                        {
+                            await _userManager.DeleteAsync(user);
+                            AddIdentityErrors(roleResult);
+                            ViewData["ReturnUrl"] = returnUrl;
+                            return View(model);
+                        }
 
                         // إشعار الـ Admins
                         await _notificationService.NotifyAdminsAboutNewUserAsync(user);
@@ -334,12 +520,11 @@ namespace VehicleContractSystem_Final.Controllers
                         TempData["SuccessMessage"] = "تم التسجيل بنجاح! حسابك في انتظار موافقة المدير.";
                         return RedirectToAction("Login");
                     }
+
+                    await _userManager.DeleteAsync(user);
                 }
 
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
+                AddIdentityErrors(result);
             }
 
             ViewData["ReturnUrl"] = returnUrl;
@@ -714,6 +899,86 @@ namespace VehicleContractSystem_Final.Controllers
         public IActionResult AccessDenied()
         {
             return View();
+        }
+
+        private async Task SetGoogleLoginAvailabilityAsync()
+        {
+            ViewData["GoogleLoginEnabled"] = await IsGoogleLoginAvailableAsync();
+        }
+
+        private async Task<bool> IsGoogleLoginAvailableAsync()
+        {
+            var schemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
+            return schemes.Any(scheme =>
+                string.Equals(scheme.Name, GoogleDefaults.AuthenticationScheme, StringComparison.Ordinal));
+        }
+
+        private bool TryGetPublicBaseUrl(out string publicBaseUrl)
+        {
+            var configuredUrl = _configuration["Application:PublicBaseUrl"]?.Trim();
+            if (Uri.TryCreate(configuredUrl, UriKind.Absolute, out var uri) &&
+                string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) &&
+                string.IsNullOrEmpty(uri.Query) &&
+                string.IsNullOrEmpty(uri.Fragment))
+            {
+                publicBaseUrl = configuredUrl!.TrimEnd('/');
+                return true;
+            }
+
+            publicBaseUrl = string.Empty;
+            return false;
+        }
+
+        private static string BuildResetPasswordUrl(string publicBaseUrl, string email, string token)
+        {
+            return $"{publicBaseUrl}/Account/ResetPassword" +
+                $"?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}";
+        }
+
+        private static bool TryGetVerifiedExternalEmail(
+            ExternalLoginInfo info,
+            out string email)
+        {
+            email = info.Principal.FindFirstValue(ClaimTypes.Email)?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(email))
+                return false;
+
+            var emailVerifiedClaim = info.Principal.Claims.FirstOrDefault(claim =>
+                string.Equals(claim.Type, "email_verified", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(claim.Type, "urn:google:email_verified", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(
+                    claim.Type,
+                    "http://schemas.google.com/identity/claims/emailverified",
+                    StringComparison.OrdinalIgnoreCase));
+
+            return emailVerifiedClaim != null &&
+                bool.TryParse(emailVerifiedClaim.Value, out var verified) &&
+                verified;
+        }
+
+        private void AddIdentityErrors(IdentityResult result)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, GetSafeIdentityError(error));
+            }
+        }
+
+        private static string GetSafeIdentityError(IdentityError error)
+        {
+            return error.Code switch
+            {
+                "PasswordTooShort" => "كلمة المرور أقصر من الحد الأدنى المطلوب",
+                "PasswordRequiresDigit" => "يجب أن تحتوي كلمة المرور على رقم واحد على الأقل",
+                "PasswordRequiresLower" => "يجب أن تحتوي كلمة المرور على حرف إنجليزي صغير واحد على الأقل",
+                "PasswordRequiresUpper" => "يجب أن تحتوي كلمة المرور على حرف إنجليزي كبير واحد على الأقل",
+                "PasswordRequiresNonAlphanumeric" => "يجب أن تحتوي كلمة المرور على رمز واحد على الأقل",
+                "PasswordRequiresUniqueChars" => "يجب أن تحتوي كلمة المرور على عدد أكبر من الأحرف المختلفة",
+                "InvalidToken" => "رابط إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية",
+                "DuplicateEmail" => "تعذر إنشاء الحساب باستخدام بيانات Google المقدمة",
+                "DuplicateUserName" => "تعذر إنشاء الحساب باستخدام بيانات Google المقدمة",
+                _ => error.Description
+            };
         }
 
         private IActionResult RedirectToLocal(string? returnUrl)

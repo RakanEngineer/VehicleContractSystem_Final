@@ -39,12 +39,21 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-builder.Services.AddAuthentication()
-    .AddGoogle(options =>
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+var googleAuthenticationEnabled =
+    IsConfiguredCredential(googleClientId) &&
+    IsConfiguredCredential(googleClientSecret);
+
+var authenticationBuilder = builder.Services.AddAuthentication();
+if (googleAuthenticationEnabled)
+{
+    authenticationBuilder.AddGoogle(options =>
     {
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"] ?? "";
-        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? "";
+        options.ClientId = googleClientId!;
+        options.ClientSecret = googleClientSecret!;
     });
+}
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -61,6 +70,12 @@ builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
+
+if (!googleAuthenticationEnabled)
+{
+    app.Logger.LogWarning(
+        "Google authentication is disabled because its configuration is missing or contains placeholder values.");
+}
 
 using (var scope = app.Services.CreateScope())
 {
@@ -120,3 +135,9 @@ app.MapRazorPages()
    .WithStaticAssets();
 
 app.Run();
+
+static bool IsConfiguredCredential(string? value)
+{
+    return !string.IsNullOrWhiteSpace(value) &&
+        !value.StartsWith("YOUR_", StringComparison.OrdinalIgnoreCase);
+}
