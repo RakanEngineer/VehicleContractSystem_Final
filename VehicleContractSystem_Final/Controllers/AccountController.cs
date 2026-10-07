@@ -188,6 +188,48 @@ namespace VehicleContractSystem_Final.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        // GET: Account/ChangePassword
+        [HttpGet]
+        [Authorize]
+        public IActionResult ChangePassword()
+        {
+            return View(new ChangePasswordViewModel());
+        }
+
+        // POST: Account/ChangePassword
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Challenge();
+
+            var result = await _userManager.ChangePasswordAsync(
+                user,
+                model.CurrentPassword,
+                model.NewPassword);
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                return View(model);
+            }
+
+            await _signInManager.RefreshSignInAsync(user);
+            TempData["SuccessMessage"] = "تم تغيير كلمة المرور بنجاح";
+
+            return RedirectToAction(nameof(ChangePassword));
+        }
+
         // GET: Account/ExternalLogin
         [AllowAnonymous]
         [HttpPost]
