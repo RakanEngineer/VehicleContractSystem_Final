@@ -81,7 +81,10 @@
                     <button type="submit" class="btn btn-primary w-100 mb-3">
                         <i class="bi bi-person-check"></i> تسجيل
                     </button>
+                </form>
 
+                @if (ViewData["GoogleLoginEnabled"] as bool? == true)
+                {
                     <div class="text-center mb-3">
                         <div class="d-flex align-items-center mb-3">
                             <hr class="flex-grow-1">
@@ -96,11 +99,11 @@
                             </button>
                         </form>
                     </div>
+                }
 
-                    <div class="text-center">
-                        <p class="mb-0">لديك حساب بالفعل؟ <a asp-action="Login">تسجيل الدخول</a></p>
-                    </div>
-                </form>
+                <div class="text-center">
+                    <p class="mb-0">لديك حساب بالفعل؟ <a asp-action="Login">تسجيل الدخول</a></p>
+                </div>
             </div>
         </div>
 

@@ -14,10 +14,14 @@ namespace VehicleContractSystem_Final.Services
     public class EmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
+        private readonly ILogger<EmailService> _logger;
 
-        public EmailService(IConfiguration configuration)
+        public EmailService(
+            IConfiguration configuration,
+            ILogger<EmailService> logger)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task SendEmailAsync(string toEmail, string subject, string body)
@@ -34,7 +38,7 @@ namespace VehicleContractSystem_Final.Services
                     string.IsNullOrWhiteSpace(userName) ||
                     string.IsNullOrWhiteSpace(password))
                 {
-                    Console.WriteLine("Email settings not configured");
+                    _logger.LogError("Email delivery is unavailable because SMTP configuration is incomplete.");
                     return;
                 }
 
@@ -66,8 +70,7 @@ namespace VehicleContractSystem_Final.Services
             }
             catch (Exception ex)
             {
-                // Log the error
-                Console.WriteLine($"Error sending email: {ex.Message}");
+                _logger.LogError(ex, "Email delivery failed.");
             }
         }
 

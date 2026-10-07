@@ -44,11 +44,14 @@
                     <button type="submit" class="btn btn-primary w-100 mb-3">
                         <i class="bi bi-box-arrow-in-right"></i> دخول
                     </button>
+                </form>
 
-                    <div class="text-center mb-3">
-                        <a href="#">نسيت كلمة المرور؟</a>
-                    </div>
+                <div class="text-center mb-3">
+                    <a asp-action="ForgotPassword">نسيت كلمة المرور؟</a>
+                </div>
 
+                @if (ViewData["GoogleLoginEnabled"] as bool? == true)
+                {
                     <div class="text-center mb-3">
                         <div class="d-flex align-items-center mb-3">
                             <hr class="flex-grow-1">
@@ -64,11 +67,11 @@
                             </button>
                         </form>
                     </div>
+                }
 
-                    <div class="text-center">
-                        <p class="mb-0">ليس لديك حساب؟ <a asp-action="Register">تسجيل جديد</a></p>
-                    </div>
-                </form>
+                <div class="text-center">
+                    <p class="mb-0">ليس لديك حساب؟ <a asp-action="Register">تسجيل جديد</a></p>
+                </div>
             </div>
         </div>
     </div>
