@@ -2,6 +2,8 @@
 using MimeKit;
 using MailKit.Net.Smtp;
 
+using System.Text.Encodings.Web;
+
 namespace VehicleContractSystem_Final.Services
 {
     public interface IEmailService
@@ -77,9 +79,10 @@ namespace VehicleContractSystem_Final.Services
         public async Task SendWelcomeEmailAsync(string toEmail, string userName)
         {
             var subject = "مرحباً بك في نظام إدارة عقود السيارات";
+            var encodedUserName = HtmlEncoder.Default.Encode(userName);
             var body = $@"
                 <div dir='rtl' style='font-family: Arial, sans-serif;'>
-                    <h2>مرحباً {userName}،</h2>
+                    <h2>مرحباً {encodedUserName}،</h2>
                     <p>شكراً لتسجيلك في نظام إدارة عقود السيارات.</p>
                     <p>حسابك الآن في انتظار موافقة المدير. سنرسل لك إشعاراً عند تفعيل حسابك.</p>
                     <br>
@@ -93,10 +96,11 @@ namespace VehicleContractSystem_Final.Services
         public async Task SendApprovalNotificationAsync(string toEmail, string userName, bool approved)
         {
             var subject = approved ? "تم تفعيل حسابك" : "تحديث بشأن طلب التسجيل";
+            var encodedUserName = HtmlEncoder.Default.Encode(userName);
             var body = approved
                 ? $@"
                     <div dir='rtl' style='font-family: Arial, sans-serif;'>
-                        <h2>مرحباً {userName}،</h2>
+                        <h2>مرحباً {encodedUserName}،</h2>
                         <p>نسعد بإخبارك أنه تم تفعيل حسابك!</p>
                         <p>يمكنك الآن تسجيل الدخول واستخدام النظام بالكامل.</p>
                         <br>
@@ -105,7 +109,7 @@ namespace VehicleContractSystem_Final.Services
                 "
                 : $@"
                     <div dir='rtl' style='font-family: Arial, sans-serif;'>
-                        <h2>مرحباً {userName}،</h2>
+                        <h2>مرحباً {encodedUserName}،</h2>
                         <p>نأسف لإخبارك أنه لم تتم الموافقة على طلب التسجيل الخاص بك في الوقت الحالي.</p>
                         <p>للمزيد من المعلومات، يرجى التواصل مع الإدارة.</p>
                         <br>

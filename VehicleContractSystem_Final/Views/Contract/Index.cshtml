@@ -126,7 +126,7 @@
         $(document).ready(function() {
             $('#contractsTable').DataTable({
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/ar.json'
+                    url: '@Url.Content("~/lib/datatables/i18n/ar.json")'
                 },
                 order: [[4, 'desc']], // ترتيب حسب التاريخ
                 pageLength: 25

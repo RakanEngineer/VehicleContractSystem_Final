@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.RateLimiting;
 using VehicleContractSystem_Final.Data;
 using VehicleContractSystem_Final.Models;
 using VehicleContractSystem_Final.Services;
@@ -59,6 +62,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.SlidingExpiration = true;
     options.Events.OnRedirectToLogin = context =>
     {
         var returnUrl = context.Request.PathBase + context.Request.Path + context.Request.QueryString;
@@ -66,6 +73,67 @@ builder.Services.ConfigureApplicationCookie(options =>
         context.Response.Redirect(accessRequiredUrl);
         return Task.CompletedTask;
     };
+});
+
+builder.Services.ConfigureExternalCookie(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+});
+
+builder.Services.AddAntiforgery(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+});
+
+builder.Services.Configure<CookieTempDataProviderOptions>(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+});
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            context.HttpContext.Response.Headers.RetryAfter =
+                Math.Ceiling(retryAfter.TotalSeconds).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        context.HttpContext.Response.ContentType = "text/plain; charset=utf-8";
+        await context.HttpContext.Response.WriteAsync(
+            "تم تجاوز عدد المحاولات المسموح بها. يرجى المحاولة لاحقاً.",
+            cancellationToken);
+    };
+
+    options.AddPolicy("Authentication", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetRateLimitPartitionKey(context),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("PasswordRecovery", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            GetRateLimitPartitionKey(context),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(15),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
 });
 
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -118,6 +186,52 @@ else
 app.UseHttpsRedirection();
 app.Use(async (context, next) =>
 {
+    context.Response.OnStarting(() =>
+    {
+        var isAccountPage = context.Request.Path.StartsWithSegments(
+            "/Account",
+            StringComparison.OrdinalIgnoreCase);
+        var scriptPolicy = isAccountPage
+            ? "script-src 'self'"
+            : "script-src 'self' 'unsafe-inline'";
+        var contentSecurityPolicy = string.Join("; ",
+            "default-src 'self'",
+            scriptPolicy,
+            "style-src 'self' 'unsafe-inline'",
+            "img-src 'self' data: blob:",
+            "font-src 'self' data:",
+            "connect-src 'self'",
+            "form-action 'self'",
+            "base-uri 'self'",
+            "frame-ancestors 'none'",
+            "object-src 'none'");
+
+        if (!app.Environment.IsDevelopment())
+        {
+            contentSecurityPolicy += "; upgrade-insecure-requests";
+        }
+
+        context.Response.Headers.TryAdd("Content-Security-Policy", contentSecurityPolicy);
+        context.Response.Headers.TryAdd("X-Content-Type-Options", "nosniff");
+        context.Response.Headers.TryAdd("X-Frame-Options", "DENY");
+        context.Response.Headers.TryAdd("Referrer-Policy", "strict-origin-when-cross-origin");
+        context.Response.Headers.TryAdd(
+            "Permissions-Policy",
+            "camera=(), microphone=(), geolocation=(), payment=(), usb=()");
+
+        if (isAccountPage)
+        {
+            context.Response.Headers.TryAdd("Cache-Control", "no-store, max-age=0");
+            context.Response.Headers.TryAdd("Pragma", "no-cache");
+        }
+
+        return Task.CompletedTask;
+    });
+
+    await next();
+});
+app.Use(async (context, next) =>
+{
     if (context.Request.Path.StartsWithSegments("/uploads/contracts", StringComparison.OrdinalIgnoreCase))
     {
         context.Response.StatusCode = StatusCodes.Status404NotFound;
@@ -128,6 +242,7 @@ app.Use(async (context, next) =>
 });
 app.UseStaticFiles();
 app.UseRouting();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -147,4 +262,9 @@ static bool IsConfiguredCredential(string? value)
 {
     return !string.IsNullOrWhiteSpace(value) &&
         !value.StartsWith("YOUR_", StringComparison.OrdinalIgnoreCase);
+}
+
+static string GetRateLimitPartitionKey(HttpContext context)
+{
+    return context.Connection.RemoteIpAddress?.ToString() ?? "unknown-client";
 }

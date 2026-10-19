@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -67,6 +68,7 @@ namespace VehicleContractSystem_Final.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("Authentication")]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             await SetGoogleLoginAvailabilityAsync();
@@ -139,6 +141,7 @@ namespace VehicleContractSystem_Final.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("Authentication")]
         public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
@@ -156,14 +159,14 @@ namespace VehicleContractSystem_Final.Controllers
 
                 if (user == null)
                 {
-                    ModelState.AddModelError(string.Empty, "البريد الإلكتروني أو رقم الهاتف غير صحيح");
+                    ModelState.AddModelError(string.Empty, GetGenericLoginFailureMessage());
                     return View(model);
                 }
 
                 // التحقق من الموافقة
                 if (!user.IsApproved)
                 {
-                    ModelState.AddModelError(string.Empty, "حسابك في انتظار موافقة المدير");
+                    ModelState.AddModelError(string.Empty, GetGenericLoginFailureMessage());
                     return View(model);
                 }
 
@@ -184,11 +187,11 @@ namespace VehicleContractSystem_Final.Controllers
 
                 if (result.IsLockedOut)
                 {
-                    ModelState.AddModelError(string.Empty, "حسابك محظور مؤقتاً بسبب محاولات تسجيل دخول فاشلة");
+                    ModelState.AddModelError(string.Empty, GetGenericLoginFailureMessage());
                     return View(model);
                 }
 
-                ModelState.AddModelError(string.Empty, "كلمة المرور غير صحيحة");
+                ModelState.AddModelError(string.Empty, GetGenericLoginFailureMessage());
             }
 
             return View(model);
@@ -204,6 +207,7 @@ namespace VehicleContractSystem_Final.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("PasswordRecovery")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
             if (!ModelState.IsValid)
@@ -269,6 +273,7 @@ namespace VehicleContractSystem_Final.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("PasswordRecovery")]
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
             if (!ModelState.IsValid)
@@ -366,6 +371,7 @@ namespace VehicleContractSystem_Final.Controllers
         [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("Authentication")]
         public async Task<IActionResult> ExternalLogin(string provider, string? returnUrl = null)
         {
             if (!string.Equals(provider, GoogleDefaults.AuthenticationScheme, StringComparison.Ordinal) ||
@@ -463,6 +469,7 @@ namespace VehicleContractSystem_Final.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("Authentication")]
         public async Task<IActionResult> ExternalLoginConfirmation(ExternalLoginViewModel model, string? returnUrl = null)
         {
             var info = await _signInManager.GetExternalLoginInfoAsync();
@@ -962,6 +969,11 @@ namespace VehicleContractSystem_Final.Controllers
             {
                 ModelState.AddModelError(string.Empty, GetSafeIdentityError(error));
             }
+        }
+
+        private static string GetGenericLoginFailureMessage()
+        {
+            return "تعذر تسجيل الدخول. تحقق من بيانات الدخول أو تواصل مع الإدارة.";
         }
 
         private static string GetSafeIdentityError(IdentityError error)

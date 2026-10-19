@@ -98,11 +98,11 @@ else
                             </div>
                         </form>
 
-                        <form asp-action="RejectUser" method="post" class="mt-2">
+                        <form asp-action="RejectUser" method="post" class="mt-2"
+                              data-confirm-message="هل أنت متأكد من رفض هذا الطلب؟ سيتم حذف الحساب نهائياً.">
                             <input type="hidden" name="userId" value="@user.Id" />
                             <div class="d-grid">
-                                <button type="submit" class="btn btn-danger btn-sm"
-                                        onclick="return confirm('هل أنت متأكد من رفض هذا الطلب؟ سيتم حذف الحساب نهائياً.')">
+                                <button type="submit" class="btn btn-danger btn-sm">
                                     <i class="bi bi-x-lg"></i> رفض
                                 </button>
                             </div>
