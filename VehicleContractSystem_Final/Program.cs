@@ -59,6 +59,13 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
+    options.Events.OnRedirectToLogin = context =>
+    {
+        var returnUrl = context.Request.PathBase + context.Request.Path + context.Request.QueryString;
+        var accessRequiredUrl = "/Home/AccessRequired?returnUrl=" + Uri.EscapeDataString(returnUrl);
+        context.Response.Redirect(accessRequiredUrl);
+        return Task.CompletedTask;
+    };
 });
 
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();

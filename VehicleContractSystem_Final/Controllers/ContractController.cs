@@ -36,8 +36,12 @@ namespace VehicleContractSystem_Final.Controllers
         }
 
         // GET: Contract
+        [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
+            if (User.Identity?.IsAuthenticated != true)
+                return View("~/Views/Home/Public.cshtml");
+
             var currentUser = await _currentUserService.GetCurrentUserAsync();
             if (currentUser == null)
                 return Challenge();

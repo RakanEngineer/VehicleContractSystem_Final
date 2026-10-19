@@ -24,8 +24,12 @@ namespace VehicleContractSystem_Final.Controllers
             _currentUserService = currentUserService;
         }
 
+        [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
+            if (User.Identity?.IsAuthenticated != true)
+                return View("Public");
+
             var currentUser = await _currentUserService.GetCurrentUserAsync();
             if (currentUser == null)
                 return Challenge();
@@ -170,6 +174,16 @@ namespace VehicleContractSystem_Final.Controllers
         [AllowAnonymous]
         public IActionResult Privacy()
         {
+            return View();
+        }
+
+        [AllowAnonymous]
+        public IActionResult AccessRequired(string? returnUrl = null)
+        {
+            ViewData["ReturnUrl"] = Url.IsLocalUrl(returnUrl)
+                ? returnUrl
+                : Url.Action(nameof(Index));
+
             return View();
         }
 

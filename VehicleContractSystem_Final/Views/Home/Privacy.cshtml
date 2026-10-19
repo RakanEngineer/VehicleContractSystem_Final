@@ -3,17 +3,17 @@
 }
 <h1>@ViewData["Title"]</h1> *@
 
-<p>Use this page to detail your site's privacy policy.</p>
+<p class="visually-hidden">سياسة الخصوصية لنظام إدارة عقود المركبات</p>
 
 @{
-    ViewData["Title"] = "الخصوصية";
+    ViewData["Title"] = "سياسة الخصوصية";
 }
 
 <div class="container" dir="rtl">
     <div class="row mb-4">
         <div class="col">
             <h1><i class="bi bi-shield-check"></i> سياسة الخصوصية</h1>
-            <p class="text-muted">آخر تحديث: @DateTime.Now.ToString("yyyy-MM-dd")</p>
+            <p class="text-muted">معلومات التعامل مع البيانات داخل نظام إدارة عقود المركبات</p>
         </div>
     </div>
 
@@ -44,12 +44,11 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h4 class="card-title"><i class="bi bi-lock"></i> حماية البيانات</h4>
-                    <p>يتم حماية البيانات وفق صلاحيات المستخدمين</p>
+                    <p>يتم تقييد الوصول إلى البيانات وفق حساب المستخدم ودوره والمكتب المرتبط به</p>
                     <ul>
-                        <li>يتم استخدام الحماية المناسبة للبيانات</li>
-                        <li>خوادم آمنة</li>
-                        <li>التحكم بالوصول</li>
-                        <li>يتم أخذ نسخ احتياطية دورية</li>
+                        <li>المصادقة مطلوبة للوصول إلى وظائف النظام الداخلية</li>
+                        <li>الصلاحيات تحدد العمليات والبيانات المتاحة لكل مستخدم</li>
+                        <li>يجب عدم مشاركة كلمة المرور أو رمز استعادة الحساب</li>
                     </ul>
                 </div>
             </div>
@@ -57,10 +56,10 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h4 class="card-title"><i class="bi bi-people"></i> مشاركة البيانات</h4>
-                    <p>لا تتم مشاركة البيانات إلا عند الحاجة القانونية أو التشغيلية</p>
+                    <p>تتم معالجة البيانات للأغراض التشغيلية والقانونية المرتبطة بإدارة العقود والخدمات المساندة.</p>
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i>
-                        لا توجد مشاركة مع أطراف ثالثة
+                        لا يطلب الموقع بيانات بطاقات مصرفية ولا يطلب تنزيل أو تثبيت برامج.
                     </div>
                 </div>
             </div>
@@ -68,12 +67,11 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h4 class="card-title"><i class="bi bi-person-check"></i> حقوقك</h4>
-                    <p>يمكنك طلب مراجعة أو تصحيح البيانات وفق الصلاحيات المتاحة</p>
+                    <p>يمكن طلب مراجعة البيانات أو تصحيحها من إدارة المكتب التي أنشأت الحساب أو اعتمدته.</p>
                     <ul>
-                        <li>حق الوصول</li>
-                        <li>حق التصحيح</li>
-                        <li>حق الحذف</li>
-                        <li>حق التصدير</li>
+                        <li>مراجعة بيانات الحساب</li>
+                        <li>طلب تصحيح البيانات غير الدقيقة</li>
+                        <li>الاستفسار عن صلاحيات الوصول</li>
                     </ul>
                 </div>
             </div>
@@ -88,11 +86,7 @@
             <div class="card mb-4 border-warning">
                 <div class="card-body">
                     <h4 class="card-title"><i class="bi bi-envelope"></i> تواصل معنا</h4>
-                    <p>للاستفسار حول الخصوصية يرجى التواصل مع إدارة النظام</p>
-                    <p>
-                        <strong>البريد الإلكتروني:</strong> privacy@vehiclecontract.com<br />
-                        <strong>الهاتف:</strong> 07701234567
-                    </p>
+                    <p>للاستفسار حول الخصوصية، يرجى التواصل مع إدارة المكتب التي منحتك الحساب.</p>
                 </div>
             </div>
 

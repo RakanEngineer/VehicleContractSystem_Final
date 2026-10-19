@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "نظام إدارة عقود المركبات";
+}
+
+<div dir="rtl" class="mx-auto" style="max-width: 1040px;">
+    <section class="py-4 border-bottom">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-8">
+                <p class="text-primary fw-semibold mb-2">منصة إدارة أعمال خاصة</p>
+                <h1 class="h2 mb-3">نظام إدارة عقود المركبات</h1>
+                <p class="lead text-secondary mb-4">
+                    بوابة مخصصة للمكاتب والمستخدمين المعتمدين لإدارة عقود المركبات والدفعات والمستندات ضمن صلاحيات وصول محددة.
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-primary">
+                        <i class="bi bi-box-arrow-in-right"></i> دخول المستخدمين
+                    </a>
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-outline-secondary">
+                        <i class="bi bi-person-plus"></i> طلب حساب جديد
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center" aria-hidden="true">
+                <i class="bi bi-file-earmark-text text-primary" style="font-size: 7rem;"></i>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-4">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <h2 class="h5"><i class="bi bi-person-check text-success"></i> وصول معتمد</h2>
+                <p class="text-secondary mb-0">لا يمكن استخدام وظائف النظام الداخلية قبل اعتماد الحساب وتسجيل الدخول.</p>
+            </div>
+            <div class="col-md-4">
+                <h2 class="h5"><i class="bi bi-shield-lock text-success"></i> حماية الوصول</h2>
+                <p class="text-secondary mb-0">العقود والمستندات محمية بصلاحيات مرتبطة بالمستخدم والمكتب.</p>
+            </div>
+            <div class="col-md-4">
+                <h2 class="h5"><i class="bi bi-info-circle text-success"></i> استخدام آمن</h2>
+                <p class="text-secondary mb-0">لا يطلب الموقع بيانات بطاقات مصرفية ولا يطلب تنزيل أو تثبيت أي برامج.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="border-top py-4 small text-secondary">
+        <p class="mb-2">تحقق دائمًا من عنوان الموقع قبل إدخال بيانات الدخول، ولا تشارك كلمة المرور أو رمز استعادة الحساب.</p>
+        <a asp-controller="Home" asp-action="Privacy">قراءة سياسة الخصوصية</a>
+    </section>
+</div>
